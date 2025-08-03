@@ -228,8 +228,8 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Category: ${supply.category}'),
-                      Text('Current Stock: ${supply.currentStock} ${supply.unit}'),
+                      Text('Category: ${supply.category.displayName}'),
+                      Text('Current Stock: ${supply.quantity} ${supply.unit}'),
                       if (supply.expirationDate != null)
                         Text('Expires: ${supply.expirationDate!.toLocal().toString().split(' ')[0]}'),
                     ],

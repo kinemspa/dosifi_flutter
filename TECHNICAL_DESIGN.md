@@ -92,20 +92,37 @@ CREATE TABLE schedules (
 );
 ```
 
-**inventory**
+**supplies**
 ```sql
-CREATE TABLE inventory (
+CREATE TABLE supplies (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  medication_id INTEGER NOT NULL,
-  quantity REAL NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  current_stock REAL NOT NULL,
   unit TEXT NOT NULL,
-  reorder_level REAL,
-  expiry_date TEXT,
-  batch_number TEXT,
+  minimum_stock REAL DEFAULT 0,
+  expiration_date TEXT,
+  cost_per_unit REAL,
+  supplier TEXT,
   location TEXT,
   notes TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+```
+
+**dose_logs**
+```sql
+CREATE TABLE dose_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  schedule_id INTEGER NOT NULL,
+  medication_id INTEGER NOT NULL,
+  scheduled_time TEXT NOT NULL,
+  actual_time TEXT,
+  status TEXT NOT NULL, -- 'taken', 'missed', 'skipped'
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (schedule_id) REFERENCES schedules (id),
   FOREIGN KEY (medication_id) REFERENCES medications (id)
 );
 ```
@@ -141,7 +158,8 @@ The application uses Riverpod for state management, providing:
 Key providers:
 - `medicationListProvider`: Manages the list of medications
 - `scheduleProvider`: Handles medication schedules
-- `inventoryProvider`: Tracks medication inventory
+- `supplyListProvider`: Manages supply inventory
+- `doseLogProvider`: Tracks dose taking history
 - `databaseProvider`: Provides database access
 
 ### 3.3 Navigation
@@ -201,14 +219,25 @@ Features:
 - Schedule history tracking
 - Missed dose tracking
 
-### 4.4 Inventory Management
+### 4.4 Supply Management
 
 Features:
-- Stock level tracking
-- Reorder alerts
+- Stock level tracking for medical supplies
+- Category-based organization
 - Expiry date warnings
 - Location tracking
-- Usage analytics
+- Cost tracking per unit
+- Supplier information management
+- Integrated with medication screen via tabbed interface
+
+### 4.5 Dose Logging
+
+Features:
+- Track when medications are taken
+- Record missed or skipped doses
+- Historical dose tracking
+- Schedule adherence analytics
+- Integration with medication schedules
 
 ## 5. Security Considerations
 
@@ -251,58 +280,113 @@ Features:
 - Full user workflows
 - Performance benchmarks
 
-## 8. Future Enhancements
+## 8. Recent UI Improvements (v1.1.0)
 
-### 8.1 Cloud Sync
+### 8.1 Medication Screen Enhancements
+
+**Tabbed Interface Implementation:**
+- Integrated medications and supplies into a single screen with Material 3 tabs
+- Consistent navigation and state management across both tabs
+- Unified floating action button for adding both medications and supplies
+
+**Supplies Tab Integration:**
+- Replaced placeholder "Coming Soon" message with fully functional supply management
+- Real-time data loading using `supplyListProvider`
+- Card-based layout showing supply details (name, category, stock, expiration)
+- Integrated CRUD operations with confirmation dialogs
+- Error handling and loading states
+- Pull-to-refresh functionality
+- Empty state handling with user guidance
+
+**Navigation Improvements:**
+- Removed duplicate "Dose Schedules" button from home dashboard
+- Streamlined navigation flow to reduce user confusion
+- Maintained consistency with existing UI patterns
+
+### 8.2 Data Model Enhancements
+
+**New Models Added:**
+- `DoseLog`: Tracks medication taking history with status tracking
+- Enhanced `Supply` model with comprehensive fields for inventory management
+
+**Repository Pattern:**
+- Implemented consistent repository pattern for data access
+- Added proper error handling and data validation
+- Standardized CRUD operations across all entities
+
+### 8.3 State Management Improvements
+
+**Provider Architecture:**
+- Added `doseLogProvider` for tracking medication adherence
+- Enhanced `supplyListProvider` with full CRUD capabilities
+- Improved error handling across all providers
+- Consistent loading and error states
+
+### 8.4 Technical Debt Reduction
+
+**Code Organization:**
+- Standardized widget structure and naming conventions
+- Improved separation of concerns between UI and business logic
+- Enhanced error handling patterns
+- Consistent Material 3 design language implementation
+
+**Performance Optimizations:**
+- Efficient state updates using Riverpod's reactive patterns
+- Reduced unnecessary widget rebuilds
+- Optimized database queries with proper indexing
+
+## 9. Future Enhancements
+
+### 9.1 Cloud Sync
 - Firebase integration
 - Real-time synchronization
 - Multi-device support
 
-### 8.2 Advanced Features
+### 9.2 Advanced Features
 - AI-powered medication recommendations
 - Drug interaction warnings
 - Healthcare provider integration
 - Export/import functionality
 
-### 8.3 Platform Extensions
+### 9.3 Platform Extensions
 - Wear OS support
 - iOS widgets
 - Android widgets
 - Desktop applications
 
-## 9. Development Guidelines
+## 10. Development Guidelines
 
-### 9.1 Code Style
+### 10.1 Code Style
 - Follow Dart style guide
 - Use meaningful variable names
 - Comment complex logic
 - Keep functions small and focused
 
-### 9.2 Git Workflow
+### 10.2 Git Workflow
 - Feature branches
 - Meaningful commit messages
 - Code reviews
 - Automated testing
 
-### 9.3 Documentation
+### 10.3 Documentation
 - Inline code documentation
 - API documentation
 - User guides
 - Release notes
 
-## 10. Deployment
+## 11. Deployment
 
-### 10.1 Android
+### 11.1 Android
 - Minimum SDK: 21 (Android 5.0)
 - Target SDK: Latest stable
 - ProGuard rules for release builds
 
-### 10.2 iOS
+### 11.2 iOS
 - Minimum iOS: 11.0
 - Swift version: Latest stable
 - App Store guidelines compliance
 
-### 10.3 CI/CD
+### 11.3 CI/CD
 - GitHub Actions for automated builds
 - Automated testing on PR
 - Release builds on tags
