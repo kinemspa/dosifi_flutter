@@ -41,7 +41,7 @@ class MedicationDetailsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _buildInfoCard(context, 'Dosage Information', [
                   _buildInfoRow('Strength', medication.displayStrength),
-                  if (medication.numberOfUnits > 0)
+                  if (medication.stockQuantity > 0)
                     _buildInfoRow('Stock', medication.stockDisplay),
                   if (medication.instructions != null)
                     _buildInfoRow('Instructions', medication.instructions!),

@@ -52,7 +52,7 @@ class _EditMedicationScreenState extends ConsumerState<EditMedicationScreen> {
         _selectedType = medication.type;
         _strengthController.text = medication.strengthPerUnit.toString();
         _selectedStrengthUnit = medication.strengthUnit;
-        _numberOfUnitsController.text = medication.numberOfUnits.toString();
+        _numberOfUnitsController.text = medication.stockQuantity.toString();
         _instructionsController.text = medication.instructions ?? '';
         _notesController.text = medication.notes ?? '';
         _batchNumberController.text = medication.lotBatchNumber ?? '';
@@ -294,7 +294,7 @@ class _EditMedicationScreenState extends ConsumerState<EditMedicationScreen> {
         type: _selectedType,
         strengthPerUnit: double.parse(_strengthController.text),
         strengthUnit: _selectedStrengthUnit,
-        numberOfUnits: int.parse(_numberOfUnitsController.text),
+        stockQuantity: double.parse(_numberOfUnitsController.text),
         instructions: _instructionsController.text.isEmpty ? null : _instructionsController.text,
         lotBatchNumber: _batchNumberController.text.isEmpty ? null : _batchNumberController.text,
         expirationDate: _expirationDate,

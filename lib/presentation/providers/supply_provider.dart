@@ -1,14 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/supply.dart';
 import '../../data/repositories/supply_repository.dart';
-import '../../core/services/database_service.dart';
 
-// Supply repository provider
+// Repository provider
 final supplyRepositoryProvider = Provider<SupplyRepository>((ref) {
   return SupplyRepository();
 });
 
-// Supply list notifier
+// State notifier for managing supplies
 class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
   final SupplyRepository _repository;
 
@@ -17,54 +16,71 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
   }
 
   Future<void> loadSupplies() async {
+    state = const AsyncValue.loading();
     try {
-      state = const AsyncValue.loading();
-      final supplies = await _repository.getAll();
+      final supplies = await _repository.getAllSupplies();
       state = AsyncValue.data(supplies);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
   Future<void> addSupply(Supply supply) async {
     try {
-      final id = await _repository.insert(supply);
+      final id = await _repository.insertSupply(supply);
       final newSupply = supply.copyWith(id: id);
       
       state.whenData((supplies) {
         state = AsyncValue.data([...supplies, newSupply]);
       });
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
   Future<void> updateSupply(Supply supply) async {
     try {
-      await _repository.update(supply);
+      await _repository.updateSupply(supply);
       
       state.whenData((supplies) {
-        state = AsyncValue.data([
-          for (final s in supplies)
-            if (s.id == supply.id) supply else s,
-        ]);
+        final updatedList = supplies.map((s) {
+          return s.id == supply.id ? supply : s;
+        }).toList();
+        state = AsyncValue.data(updatedList);
       });
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
   Future<void> deleteSupply(int id) async {
     try {
-      await _repository.delete(id);
+      await _repository.deleteSupply(id);
       
       state.whenData((supplies) {
-        state = AsyncValue.data(
-          supplies.where((s) => s.id != id).toList(),
-        );
+        final updatedList = supplies.where((s) => s.id != id).toList();
+        state = AsyncValue.data(updatedList);
       });
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> updateQuantity(int id, int newQuantity) async {
+    try {
+      await _repository.updateQuantity(id, newQuantity);
+      
+      state.whenData((supplies) {
+        final updatedList = supplies.map((s) {
+          if (s.id == id) {
+            return s.copyWith(quantity: newQuantity);
+          }
+          return s;
+        }).toList();
+        state = AsyncValue.data(updatedList);
+      });
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
@@ -72,85 +88,105 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
     try {
       await _repository.adjustQuantity(id, adjustment);
       
-      final updatedSupply = await _repository.getById(id);
-      if (updatedSupply != null) {
-        state.whenData((supplies) {
-          state = AsyncValue.data([
-            for (final s in supplies)
-              if (s.id == id) updatedSupply else s,
-          ]);
-        });
-      }
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      state.whenData((supplies) {
+        final updatedList = supplies.map((s) {
+          if (s.id == id) {
+            final newQuantity = (s.quantity + adjustment).clamp(0, double.infinity).toInt();
+            return s.copyWith(quantity: newQuantity);
+          }
+          return s;
+        }).toList();
+        state = AsyncValue.data(updatedList);
+      });
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 }
 
-// Supply list provider
-final supplyListProvider = StateNotifierProvider<SupplyListNotifier, AsyncValue<List<Supply>>>((ref) {
+// Provider for the supply list state notifier
+final supplyListProvider = 
+    StateNotifierProvider<SupplyListNotifier, AsyncValue<List<Supply>>>((ref) {
   final repository = ref.watch(supplyRepositoryProvider);
   return SupplyListNotifier(repository);
 });
 
-// Get supply by ID
+// Provider for getting supply by ID
 final supplyByIdProvider = FutureProvider.family<Supply?, int>((ref, id) async {
   final repository = ref.watch(supplyRepositoryProvider);
-  return repository.getById(id);
+  return await repository.getSupplyById(id);
 });
 
-// Low stock supplies
-final lowStockSuppliesProvider = FutureProvider<List<Supply>>((ref) async {
+// Provider for getting supplies by category
+final suppliesByCategoryProvider = FutureProvider.family<List<Supply>, SupplyCategory>((ref, category) async {
   final repository = ref.watch(supplyRepositoryProvider);
-  return repository.getLowStock();
+  return await repository.getSuppliesByCategory(category);
 });
 
-// Expiring supplies
-final expiringSuppliesProvider = FutureProvider<List<Supply>>((ref) async {
-  final repository = ref.watch(supplyRepositoryProvider);
-  return repository.getExpiring();
-});
-
-// Supply statistics
-final supplyStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final repository = ref.watch(supplyRepositoryProvider);
-  return repository.getStatistics();
-});
-
-// Supply search
-final supplySearchQueryProvider = StateProvider<String>((ref) => '');
-
-final searchedSuppliesProvider = Provider<AsyncValue<List<Supply>>>((ref) {
-  final searchQuery = ref.watch(supplySearchQueryProvider);
-  final supplies = ref.watch(supplyListProvider);
-
-  return supplies.whenData((supplyList) {
-    if (searchQuery.isEmpty) {
-      return supplyList;
-    }
-
-    return supplyList.where((supply) {
-      final searchLower = searchQuery.toLowerCase();
-      return supply.name.toLowerCase().contains(searchLower) ||
-          (supply.brand?.toLowerCase().contains(searchLower) ?? false) ||
-          (supply.size?.toLowerCase().contains(searchLower) ?? false) ||
-          supply.category.displayName.toLowerCase().contains(searchLower);
-    }).toList();
+// Provider for low stock supplies
+final lowStockSuppliesProvider = Provider<AsyncValue<List<Supply>>>((ref) {
+  final allSupplies = ref.watch(supplyListProvider);
+  
+  return allSupplies.whenData((supplies) {
+    return supplies.where((supply) => supply.isLowStock).toList();
   });
 });
 
-// Supply category filter
-final supplyCategoryFilterProvider = StateProvider<SupplyCategory?>((ref) => null);
-
-final filteredSuppliesProvider = Provider<AsyncValue<List<Supply>>>((ref) {
-  final categoryFilter = ref.watch(supplyCategoryFilterProvider);
-  final searchedSupplies = ref.watch(searchedSuppliesProvider);
-
-  return searchedSupplies.whenData((supplyList) {
-    if (categoryFilter == null) {
-      return supplyList;
-    }
-
-    return supplyList.where((supply) => supply.category == categoryFilter).toList();
+// Provider for expiring supplies (within 30 days)
+final expiringSuppliesProvider = Provider<AsyncValue<List<Supply>>>((ref) {
+  final allSupplies = ref.watch(supplyListProvider);
+  
+  return allSupplies.whenData((supplies) {
+    return supplies.where((supply) => supply.isExpiringSoon).toList();
   });
+});
+
+// Provider for expired supplies
+final expiredSuppliesProvider = Provider<AsyncValue<List<Supply>>>((ref) {
+  final allSupplies = ref.watch(supplyListProvider);
+  
+  return allSupplies.whenData((supplies) {
+    return supplies.where((supply) => supply.isExpired).toList();
+  });
+});
+
+// Provider for supply statistics
+final supplyStatsProvider = Provider<Map<String, dynamic>>((ref) {
+  final suppliesAsync = ref.watch(supplyListProvider);
+  
+  return suppliesAsync.maybeWhen(
+    data: (supplies) {
+      final totalSupplies = supplies.length;
+      final lowStockSupplies = supplies.where((s) => s.isLowStock).length;
+      final expiringSupplies = supplies.where((s) => s.isExpiringSoon).length;
+      final expiredSupplies = supplies.where((s) => s.isExpired).length;
+      
+      return {
+        'total': totalSupplies,
+        'lowStock': lowStockSupplies,
+        'expiring': expiringSupplies,
+        'expired': expiredSupplies,
+      };
+    },
+    orElse: () => {
+      'total': 0,
+      'lowStock': 0,
+      'expiring': 0,
+      'expired': 0,
+    },
+  );
+});
+
+// Provider for searching supplies
+final supplySearchProvider = FutureProvider.family<List<Supply>, String>((ref, query) async {
+  if (query.isEmpty) {
+    final allSupplies = ref.watch(supplyListProvider);
+    return allSupplies.maybeWhen(
+      data: (supplies) => supplies,
+      orElse: () => <Supply>[],
+    );
+  }
+  
+  final repository = ref.watch(supplyRepositoryProvider);
+  return await repository.searchSupplies(query);
 });

@@ -103,10 +103,27 @@ class Medication {
   final String? brandManufacturer;
   final double strengthPerUnit;
   final StrengthUnit strengthUnit;
-  // Stock
-  final int numberOfUnits;
+  // Stock - for vials, this represents liquid volume per vial in mL
+  // for tablets/capsules, this represents number of units
+  final double stockQuantity;
+  final StrengthUnit? stockUnit; // Unit for stock quantity (mL, IU, Units)
   final String? lotBatchNumber;
   final DateTime? expirationDate;
+  
+  // Alerts and Notifications
+  final bool alertOnLowStock;
+  final String? notificationSet;
+  
+  // Storage Information
+  final String? storageInstructions;
+  final bool requiresRefrigeration;
+  
+  // Reconstitution Info (for lyophilized vials)
+  final double? reconstitutionVolume; // mL of diluent added
+  final double? finalConcentration; // units per mL after reconstitution
+  final String? reconstitutionNotes;
+  final String? reconstitutionFluid; // Supply item for reconstitution
+  
   // Additional Info
   final String? description;
   final String? instructions;
@@ -124,9 +141,18 @@ class Medication {
     this.brandManufacturer,
     required this.strengthPerUnit,
     required this.strengthUnit,
-    required this.numberOfUnits,
+    required this.stockQuantity,
+    this.stockUnit,
     this.lotBatchNumber,
     this.expirationDate,
+    this.alertOnLowStock = false,
+    this.notificationSet,
+    this.storageInstructions,
+    this.requiresRefrigeration = false,
+    this.reconstitutionVolume,
+    this.finalConcentration,
+    this.reconstitutionNotes,
+    this.reconstitutionFluid,
     this.description,
     this.instructions,
     this.notes,
@@ -143,9 +169,18 @@ class Medication {
     String? brandManufacturer,
     required double strengthPerUnit,
     required StrengthUnit strengthUnit,
-    required int numberOfUnits,
+    required double stockQuantity,
+    StrengthUnit? stockUnit,
     String? lotBatchNumber,
     DateTime? expirationDate,
+    bool alertOnLowStock = false,
+    String? notificationSet,
+    String? storageInstructions,
+    bool requiresRefrigeration = false,
+    double? reconstitutionVolume,
+    double? finalConcentration,
+    String? reconstitutionNotes,
+    String? reconstitutionFluid,
     String? description,
     String? instructions,
     String? notes,
@@ -159,9 +194,18 @@ class Medication {
       brandManufacturer: brandManufacturer,
       strengthPerUnit: strengthPerUnit,
       strengthUnit: strengthUnit,
-      numberOfUnits: numberOfUnits,
+      stockQuantity: stockQuantity,
+      stockUnit: stockUnit,
       lotBatchNumber: lotBatchNumber,
       expirationDate: expirationDate,
+      alertOnLowStock: alertOnLowStock,
+      notificationSet: notificationSet,
+      storageInstructions: storageInstructions,
+      requiresRefrigeration: requiresRefrigeration,
+      reconstitutionVolume: reconstitutionVolume,
+      finalConcentration: finalConcentration,
+      reconstitutionNotes: reconstitutionNotes,
+      reconstitutionFluid: reconstitutionFluid,
       description: description,
       instructions: instructions,
       notes: notes,
@@ -180,9 +224,12 @@ class Medication {
       'brand_manufacturer': brandManufacturer,
       'strength_per_unit': strengthPerUnit,
       'strength_unit': strengthUnit.displayName,
-      'number_of_units': numberOfUnits,
+      'stock_quantity': stockQuantity,
       'lot_batch_number': lotBatchNumber,
       'expiration_date': expirationDate?.toIso8601String(),
+      'reconstitution_volume': reconstitutionVolume,
+      'final_concentration': finalConcentration,
+      'reconstitution_notes': reconstitutionNotes,
       'description': description,
       'instructions': instructions,
       'notes': notes,
@@ -202,11 +249,18 @@ class Medication {
       brandManufacturer: map['brand_manufacturer'] as String?,
       strengthPerUnit: (map['strength_per_unit'] as num).toDouble(),
       strengthUnit: StrengthUnit.fromString(map['strength_unit'] as String),
-      numberOfUnits: map['number_of_units'] as int,
+      stockQuantity: (map['stock_quantity'] ?? map['number_of_units'] ?? 0).toDouble(),
       lotBatchNumber: map['lot_batch_number'] as String?,
       expirationDate: map['expiration_date'] != null 
           ? DateTime.parse(map['expiration_date'] as String)
           : null,
+      reconstitutionVolume: map['reconstitution_volume'] != null 
+          ? (map['reconstitution_volume'] as num).toDouble() 
+          : null,
+      finalConcentration: map['final_concentration'] != null 
+          ? (map['final_concentration'] as num).toDouble() 
+          : null,
+      reconstitutionNotes: map['reconstitution_notes'] as String?,
       description: map['description'] as String?,
       instructions: map['instructions'] as String?,
       notes: map['notes'] as String?,
@@ -225,9 +279,12 @@ class Medication {
     String? brandManufacturer,
     double? strengthPerUnit,
     StrengthUnit? strengthUnit,
-    int? numberOfUnits,
+    double? stockQuantity,
     String? lotBatchNumber,
     DateTime? expirationDate,
+    double? reconstitutionVolume,
+    double? finalConcentration,
+    String? reconstitutionNotes,
     String? description,
     String? instructions,
     String? notes,
@@ -244,9 +301,12 @@ class Medication {
       brandManufacturer: brandManufacturer ?? this.brandManufacturer,
       strengthPerUnit: strengthPerUnit ?? this.strengthPerUnit,
       strengthUnit: strengthUnit ?? this.strengthUnit,
-      numberOfUnits: numberOfUnits ?? this.numberOfUnits,
+      stockQuantity: stockQuantity ?? this.stockQuantity,
       lotBatchNumber: lotBatchNumber ?? this.lotBatchNumber,
       expirationDate: expirationDate ?? this.expirationDate,
+      reconstitutionVolume: reconstitutionVolume ?? this.reconstitutionVolume,
+      finalConcentration: finalConcentration ?? this.finalConcentration,
+      reconstitutionNotes: reconstitutionNotes ?? this.reconstitutionNotes,
       description: description ?? this.description,
       instructions: instructions ?? this.instructions,
       notes: notes ?? this.notes,
@@ -264,17 +324,19 @@ class Medication {
   String get stockDisplay {
     switch (type) {
       case MedicationType.tablet:
-        return '$numberOfUnits tablets';
+        return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} tablets';
       case MedicationType.capsule:
-        return '$numberOfUnits capsules';
+        return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} capsules';
       case MedicationType.preFilledSyringe:
       case MedicationType.injection:
-        return '$numberOfUnits syringes';
+        return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} syringes';
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        return '$numberOfUnits vials';
+        return '${stockQuantity.toStringAsFixed(1)} mL per vial';
+      case MedicationType.liquid:
+        return '${stockQuantity.toStringAsFixed(1)} mL';
       default:
-        return '$numberOfUnits units';
+        return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} units';
     }
   }
 

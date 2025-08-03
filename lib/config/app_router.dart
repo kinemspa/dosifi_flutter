@@ -7,12 +7,13 @@ import '../presentation/screens/splash_screen.dart';
 import '../presentation/screens/home_screen.dart';
 import '../presentation/screens/medication_list_screen.dart';
 import '../presentation/screens/add_medication_screen.dart';
+import '../presentation/screens/add_medication_screen_comprehensive.dart';
+import '../presentation/screens/medication_screen.dart';
 import '../presentation/screens/edit_medication_screen.dart';
 import '../presentation/screens/medication_details_screen.dart';
 import '../presentation/screens/reconstitution_calculator_screen.dart';
 import '../presentation/screens/schedule_screen.dart';
-import '../presentation/screens/inventory_screen.dart';
-// import '../presentation/screens/inventory_screen.dart';
+import '../presentation/screens/supply_inventory_screen.dart';
 // import '../presentation/screens/settings_screen.dart';
 // import '../presentation/screens/analytics_screen.dart';
 
@@ -49,6 +50,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           },
         ),
         routes: [
+          GoRoute(
+            path: 'supply-inventory',
+            name: 'supply-inventory',
+            pageBuilder: (context, state) => MaterialPage(
+              key: state.pageKey,
+              child: const SupplyInventoryScreen(),
+            ),
+          ),
           GoRoute(
             path: 'medications',
             name: 'medications',
@@ -106,14 +115,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: 'inventory',
-            name: 'inventory',
-            pageBuilder: (context, state) => MaterialPage(
-              key: state.pageKey,
-              child: const InventoryScreen(),
-            ),
-          ),
-          GoRoute(
             path: 'analytics',
             name: 'analytics',
             pageBuilder: (context, state) => MaterialPage(
@@ -130,6 +131,31 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ],
+      ),
+      // Top-level routes for comprehensive screens
+      GoRoute(
+        path: '/add-medication-comprehensive',
+        name: 'add-medication-comprehensive',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const AddMedicationScreenComprehensive(),
+        ),
+      ),
+      GoRoute(
+        path: '/medication-screen',
+        name: 'medication-screen',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const MedicationScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/supply-inventory',
+        name: 'supply-inventory-top',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const SupplyInventoryScreen(),
+        ),
       ),
     ],
     errorPageBuilder: (context, state) => MaterialPage(

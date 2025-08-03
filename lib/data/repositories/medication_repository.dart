@@ -1,7 +1,6 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../../core/services/database_service.dart';
 import '../models/medication.dart';
-import '../models/inventory.dart';
 import '../models/schedule.dart';
 
 class MedicationRepository {
@@ -117,16 +116,6 @@ class MedicationRepository {
 
     final db = await _db;
     
-    // Get inventory
-    final inventoryMaps = await db.query(
-      'inventory',
-      where: 'medication_id = ?',
-      whereArgs: [id],
-    );
-    final inventory = inventoryMaps.isNotEmpty 
-        ? Inventory.fromMap(inventoryMaps.first) 
-        : null;
-
     // Get schedules
     final scheduleMaps = await db.query(
       'schedules',
@@ -138,7 +127,6 @@ class MedicationRepository {
 
     return {
       'medication': medication,
-      'inventory': inventory,
       'schedules': schedules,
     };
   }

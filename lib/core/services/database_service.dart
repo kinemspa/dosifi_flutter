@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 4;
+  static const int _databaseVersion = 6;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -51,7 +51,10 @@ class DatabaseService {
         brand_manufacturer TEXT,
         strength_per_unit REAL NOT NULL,
         strength_unit TEXT NOT NULL,
-        number_of_units INTEGER NOT NULL,
+        stock_quantity REAL NOT NULL,
+        reconstitution_volume REAL,
+        final_concentration REAL,
+        reconstitution_notes TEXT,
         lot_batch_number TEXT,
         expiration_date TEXT,
         description TEXT,
@@ -84,23 +87,6 @@ class DatabaseService {
       )
     ''');
 
-    // Create inventory table
-    await db.execute('''
-      CREATE TABLE inventory (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        medication_id INTEGER NOT NULL,
-        quantity REAL NOT NULL,
-        unit TEXT NOT NULL,
-        reorder_level REAL,
-        batch_number TEXT,
-        expiry_date TEXT,
-        location TEXT,
-        notes TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
-      )
-    ''');
 
     // Create dose_logs table
     await db.execute('''
@@ -298,6 +284,123 @@ class DatabaseService {
           updated_at TEXT NOT NULL
         )
       ''');
+    }
+    
+    if (oldVersion < 5) {
+      // Migration from version 4 to 5: Update medications table and remove inventory table
+      
+      // Drop inventory table as it's now redundant
+      await db.execute('DROP TABLE IF EXISTS inventory');
+      
+      // Backup existing medications data
+      await db.execute('ALTER TABLE medications RENAME TO medications_backup');
+      
+      // Create new medications table with updated schema
+      await db.execute('''
+        CREATE TABLE medications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          brand_manufacturer TEXT,
+          strength_per_unit REAL NOT NULL,
+          strength_unit TEXT NOT NULL,
+          stock_quantity REAL NOT NULL,
+          reconstitution_volume REAL,
+          final_concentration REAL,
+          reconstitution_notes TEXT,
+          lot_batch_number TEXT,
+          expiration_date TEXT,
+          description TEXT,
+          instructions TEXT,
+          notes TEXT,
+          barcode TEXT,
+          photo_path TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      
+      // Migrate existing data (with defaults for new columns)
+      await db.execute('''
+        INSERT INTO medications (
+          id, name, type, brand_manufacturer, strength_per_unit, strength_unit, 
+          stock_quantity, lot_batch_number, expiration_date,
+          description, instructions, notes, barcode, photo_path, is_active,
+          created_at, updated_at
+        )
+        SELECT 
+          id, name, type, brand_manufacturer, strength_per_unit, strength_unit,
+          COALESCE(number_of_units, 0), lot_batch_number, expiration_date,
+          description, instructions, notes, barcode, photo_path, is_active,
+          created_at, updated_at
+        FROM medications_backup
+      ''');
+      
+      // Drop the backup table
+      await db.execute('DROP TABLE medications_backup');
+    }
+    
+    if (oldVersion < 6) {
+      // Migration from version 5 to 6: Fix stock_quantity column name
+      try {
+        // Check if medications table has number_of_units column
+        final result = await db.rawQuery('PRAGMA table_info(medications)');
+        final hasNumberOfUnits = result.any((col) => col['name'] == 'number_of_units');
+        final hasStockQuantity = result.any((col) => col['name'] == 'stock_quantity');
+        
+        if (hasNumberOfUnits && !hasStockQuantity) {
+          // Rename number_of_units to stock_quantity
+          await db.execute('ALTER TABLE medications RENAME COLUMN number_of_units TO stock_quantity');
+        }
+      } catch (e) {
+        // If the above fails, do a full table recreation
+        await db.execute('ALTER TABLE medications RENAME TO medications_backup_v6');
+        
+        // Create new medications table
+        await db.execute('''
+          CREATE TABLE medications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL,
+            brand_manufacturer TEXT,
+            strength_per_unit REAL NOT NULL,
+            strength_unit TEXT NOT NULL,
+            stock_quantity REAL NOT NULL,
+            reconstitution_volume REAL,
+            final_concentration REAL,
+            reconstitution_notes TEXT,
+            lot_batch_number TEXT,
+            expiration_date TEXT,
+            description TEXT,
+            instructions TEXT,
+            notes TEXT,
+            barcode TEXT,
+            photo_path TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        ''');
+        
+        // Migrate data
+        await db.execute('''
+          INSERT INTO medications (
+            id, name, type, brand_manufacturer, strength_per_unit, strength_unit, 
+            stock_quantity, lot_batch_number, expiration_date,
+            description, instructions, notes, barcode, photo_path, is_active,
+            created_at, updated_at
+          )
+          SELECT 
+            id, name, type, brand_manufacturer, strength_per_unit, strength_unit,
+            COALESCE(number_of_units, stock_quantity, 0), lot_batch_number, expiration_date,
+            description, instructions, notes, barcode, photo_path, is_active,
+            created_at, updated_at
+          FROM medications_backup_v6
+        ''');
+        
+        await db.execute('DROP TABLE medications_backup_v6');
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-// Supply Categories
+/// Supply Categories for medical supplies used across medications
 enum SupplyCategory {
   syringe,
   needle,

@@ -21,7 +21,7 @@ class HomeScreen extends ConsumerWidget {
             context,
             icon: Icons.medical_services,
             label: 'Medications',
-            onTap: () => context.navigateToMedications(),
+            onTap: () => context.push('/medication-screen'),
           ),
           _buildDashboardTile(
             context,
@@ -31,21 +31,15 @@ class HomeScreen extends ConsumerWidget {
           ),
           _buildDashboardTile(
             context,
-            icon: Icons.inventory,
-            label: 'Med Inventory',
-            onTap: () => context.navigateToInventory(),
+            icon: Icons.inventory_2,
+            label: 'Supply Inventory',
+            onTap: () => context.push('/supply-inventory'),
           ),
           _buildDashboardTile(
             context,
             icon: Icons.calculate,
             label: 'Reconstitution',
             onTap: () => context.navigateToReconstitution(),
-          ),
-          _buildDashboardTile(
-            context,
-            icon: Icons.healing,
-            label: 'Supplies',
-            onTap: () => context.push('/supplies'),
           ),
           _buildDashboardTile(
             context,

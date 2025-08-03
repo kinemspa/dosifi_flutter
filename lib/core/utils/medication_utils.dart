@@ -81,14 +81,14 @@ class MedicationUtils {
         return 'Number of Syringes';
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        return 'Number of Vials';
+        return 'Liquid Volume per Vial (mL)';
       case MedicationType.liquid:
-        return 'Volume (ml)';
+        return 'Total Volume (mL)';
       case MedicationType.cream:
       case MedicationType.ointment:
-        return 'Volume/Weight (g or ml)';
+        return 'Volume/Weight (g or mL)';
       case MedicationType.drops:
-        return 'Volume (ml)';
+        return 'Total Volume (mL)';
       case MedicationType.inhaler:
         return 'Number of Doses';
       case MedicationType.patch:
