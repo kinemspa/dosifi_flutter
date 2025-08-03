@@ -3,9 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Import screens when created
-// import '../presentation/screens/splash_screen.dart';
-// import '../presentation/screens/home_screen.dart';
-// import '../presentation/screens/medication_list_screen.dart';
+import '../presentation/screens/splash_screen.dart';
+import '../presentation/screens/home_screen.dart';
+import '../presentation/screens/medication_list_screen.dart';
 // import '../presentation/screens/add_medication_screen.dart';
 // import '../presentation/screens/reconstitution_calculator_screen.dart';
 // import '../presentation/screens/schedule_screen.dart';
@@ -23,19 +23,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'splash',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: Container(
-            color: Theme.of(context).colorScheme.primary,
-            child: const Center(
-              child: Text(
-                'Dosifi',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ), // Replace with SplashScreen(),
+          child: const SplashScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,
@@ -49,7 +37,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'home',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: Container(), // Replace with HomeScreen(),
+        child: const HomeScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,
@@ -63,7 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'medications',
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
-              child: Container(), // Replace with MedicationListScreen(),
+              child: const MedicationListScreen(),
             ),
             routes: [
               GoRoute(
