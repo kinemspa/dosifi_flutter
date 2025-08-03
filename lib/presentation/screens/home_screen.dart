@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/app_router.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -31,8 +32,20 @@ class HomeScreen extends ConsumerWidget {
           _buildDashboardTile(
             context,
             icon: Icons.inventory,
-            label: 'Inventory',
+            label: 'Med Inventory',
             onTap: () => context.navigateToInventory(),
+          ),
+          _buildDashboardTile(
+            context,
+            icon: Icons.calculate,
+            label: 'Reconstitution',
+            onTap: () => context.navigateToReconstitution(),
+          ),
+          _buildDashboardTile(
+            context,
+            icon: Icons.healing,
+            label: 'Supplies',
+            onTap: () => context.push('/supplies'),
           ),
           _buildDashboardTile(
             context,

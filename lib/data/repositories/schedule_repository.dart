@@ -84,5 +84,20 @@ class ScheduleRepository {
       whereArgs: [id],
     );
   }
+
+  // Additional methods for schedule provider
+  Future<List<Schedule>> getSchedulesByMedication(int medicationId) async {
+    return getSchedulesForMedication(medicationId);
+  }
+
+  Future<void> updateScheduleStatus(int id, bool isActive) async {
+    final db = await _db;
+    await db.update(
+      'schedules',
+      {'is_active': isActive ? 1 : 0, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }
 

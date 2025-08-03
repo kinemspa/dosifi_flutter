@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 4;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -48,14 +48,16 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
-        dosage_amount REAL NOT NULL,
-        dosage_unit TEXT NOT NULL,
-        frequency TEXT,
+        brand_manufacturer TEXT,
+        strength_per_unit REAL NOT NULL,
+        strength_unit TEXT NOT NULL,
+        number_of_units INTEGER NOT NULL,
+        lot_batch_number TEXT,
+        expiration_date TEXT,
+        description TEXT,
         instructions TEXT,
-        barcode TEXT,
-        batch_number TEXT,
-        expiry_date TEXT,
         notes TEXT,
+        barcode TEXT,
         photo_path TEXT,
         is_active INTEGER DEFAULT 1,
         created_at TEXT NOT NULL,
@@ -87,13 +89,15 @@ class DatabaseService {
       CREATE TABLE inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         medication_id INTEGER NOT NULL,
-        current_stock REAL NOT NULL,
+        quantity REAL NOT NULL,
         unit TEXT NOT NULL,
         reorder_level REAL,
-        supplier_name TEXT,
-        supplier_contact TEXT,
-        cost_per_unit REAL,
-        last_updated TEXT NOT NULL,
+        batch_number TEXT,
+        expiry_date TEXT,
+        location TEXT,
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
         FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
       )
     ''');
@@ -174,6 +178,27 @@ class DatabaseService {
       )
     ''');
 
+    // Create supplies table
+    await db.execute('''
+      CREATE TABLE supplies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        brand TEXT,
+        size TEXT,
+        quantity INTEGER NOT NULL DEFAULT 0,
+        reorder_level INTEGER,
+        unit TEXT DEFAULT 'pieces',
+        lot_number TEXT,
+        expiration_date TEXT,
+        location TEXT,
+        notes TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_medications_name ON medications(name)');
     await db.execute('CREATE INDEX idx_schedules_medication ON schedules(medication_id)');
@@ -184,8 +209,95 @@ class DatabaseService {
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // Handle database migrations
     if (oldVersion < 2) {
-      // Future migration example
-      // await db.execute('ALTER TABLE medications ADD COLUMN new_field TEXT');
+      // Migration from version 1 to 2: Update inventory table
+      await db.execute('DROP TABLE IF EXISTS inventory');
+      await db.execute('''
+        CREATE TABLE inventory (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          medication_id INTEGER NOT NULL,
+          quantity REAL NOT NULL,
+          unit TEXT NOT NULL,
+          reorder_level REAL,
+          batch_number TEXT,
+          expiry_date TEXT,
+          location TEXT,
+          notes TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
+        )
+      ''');
+    }
+    
+    if (oldVersion < 3) {
+      // Migration from version 2 to 3: Update medications table
+      // First, backup existing data
+      await db.execute('ALTER TABLE medications RENAME TO medications_backup');
+      
+      // Create new medications table with updated schema
+      await db.execute('''
+        CREATE TABLE medications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          brand_manufacturer TEXT,
+          strength_per_unit REAL NOT NULL,
+          strength_unit TEXT NOT NULL,
+          number_of_units INTEGER NOT NULL,
+          lot_batch_number TEXT,
+          expiration_date TEXT,
+          description TEXT,
+          instructions TEXT,
+          notes TEXT,
+          barcode TEXT,
+          photo_path TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      
+      // Migrate existing data (with defaults for new columns)
+      await db.execute('''
+        INSERT INTO medications (
+          id, name, type, strength_per_unit, strength_unit, 
+          number_of_units, lot_batch_number, expiration_date,
+          instructions, notes, barcode, photo_path, is_active,
+          created_at, updated_at
+        )
+        SELECT 
+          id, name, type, dosage_amount, dosage_unit,
+          0, batch_number, expiry_date,
+          instructions, notes, barcode, photo_path, is_active,
+          created_at, updated_at
+        FROM medications_backup
+      ''');
+      
+      // Drop the backup table
+      await db.execute('DROP TABLE medications_backup');
+    }
+    
+    if (oldVersion < 4) {
+      // Migration from version 3 to 4: Add supplies table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS supplies (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          category TEXT NOT NULL,
+          brand TEXT,
+          size TEXT,
+          quantity INTEGER NOT NULL DEFAULT 0,
+          reorder_level INTEGER,
+          unit TEXT DEFAULT 'pieces',
+          lot_number TEXT,
+          expiration_date TEXT,
+          location TEXT,
+          notes TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
     }
   }
 

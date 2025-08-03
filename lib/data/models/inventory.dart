@@ -4,44 +4,51 @@ import 'package:flutter/foundation.dart';
 class Inventory {
   final int? id;
   final int medicationId;
-  final double currentStock;
+  final double quantity;
   final String unit;
   final double? reorderLevel;
-  final String? supplierName;
-  final String? supplierContact;
-  final double? costPerUnit;
-  final DateTime lastUpdated;
+  final String? batchNumber;
+  final DateTime? expiryDate;
+  final String? location;
+  final String? notes;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Inventory({
     this.id,
     required this.medicationId,
-    required this.currentStock,
+    required this.quantity,
     required this.unit,
     this.reorderLevel,
-    this.supplierName,
-    this.supplierContact,
-    this.costPerUnit,
-    required this.lastUpdated,
+    this.batchNumber,
+    this.expiryDate,
+    this.location,
+    this.notes,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Inventory.create({
     required int medicationId,
-    required double currentStock,
+    required double quantity,
     required String unit,
     double? reorderLevel,
-    String? supplierName,
-    String? supplierContact,
-    double? costPerUnit,
+    String? batchNumber,
+    DateTime? expiryDate,
+    String? location,
+    String? notes,
   }) {
     return Inventory(
       medicationId: medicationId,
-      currentStock: currentStock,
+      quantity: quantity,
       unit: unit,
       reorderLevel: reorderLevel,
-      supplierName: supplierName,
-      supplierContact: supplierContact,
-      costPerUnit: costPerUnit,
-      lastUpdated: DateTime.now(),
+      batchNumber: batchNumber,
+      expiryDate: expiryDate,
+      location: location,
+      notes: notes,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 
@@ -49,13 +56,15 @@ class Inventory {
     return {
       'id': id,
       'medication_id': medicationId,
-      'current_stock': currentStock,
+      'quantity': quantity,
       'unit': unit,
       'reorder_level': reorderLevel,
-      'supplier_name': supplierName,
-      'supplier_contact': supplierContact,
-      'cost_per_unit': costPerUnit,
-      'last_updated': lastUpdated.toIso8601String(),
+      'batch_number': batchNumber,
+      'expiry_date': expiryDate?.toIso8601String(),
+      'location': location,
+      'notes': notes,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
@@ -63,55 +72,65 @@ class Inventory {
     return Inventory(
       id: map['id'] as int?,
       medicationId: map['medication_id'] as int,
-      currentStock: (map['current_stock'] as num).toDouble(),
+      quantity: (map['quantity'] as num).toDouble(),
       unit: map['unit'] as String,
       reorderLevel: map['reorder_level'] != null 
           ? (map['reorder_level'] as num).toDouble()
           : null,
-      supplierName: map['supplier_name'] as String?,
-      supplierContact: map['supplier_contact'] as String?,
-      costPerUnit: map['cost_per_unit'] != null 
-          ? (map['cost_per_unit'] as num).toDouble()
+      batchNumber: map['batch_number'] as String?,
+      expiryDate: map['expiry_date'] != null
+          ? DateTime.parse(map['expiry_date'] as String)
           : null,
-      lastUpdated: DateTime.parse(map['last_updated'] as String),
+      location: map['location'] as String?,
+      notes: map['notes'] as String?,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'] as String)
+          : null,
+      updatedAt: map['updated_at'] != null
+          ? DateTime.parse(map['updated_at'] as String)
+          : null,
     );
   }
 
   Inventory copyWith({
     int? id,
     int? medicationId,
-    double? currentStock,
+    double? quantity,
     String? unit,
     double? reorderLevel,
-    String? supplierName,
-    String? supplierContact,
-    double? costPerUnit,
-    DateTime? lastUpdated,
+    String? batchNumber,
+    DateTime? expiryDate,
+    String? location,
+    String? notes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Inventory(
       id: id ?? this.id,
       medicationId: medicationId ?? this.medicationId,
-      currentStock: currentStock ?? this.currentStock,
+      quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
       reorderLevel: reorderLevel ?? this.reorderLevel,
-      supplierName: supplierName ?? this.supplierName,
-      supplierContact: supplierContact ?? this.supplierContact,
-      costPerUnit: costPerUnit ?? this.costPerUnit,
-      lastUpdated: lastUpdated ?? DateTime.now(),
+      batchNumber: batchNumber ?? this.batchNumber,
+      expiryDate: expiryDate ?? this.expiryDate,
+      location: location ?? this.location,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 
   // Helper methods
-  bool get isLowStock => reorderLevel != null && currentStock <= reorderLevel!;
+  bool get isLowStock => reorderLevel != null && quantity <= reorderLevel!;
   
-  bool get isOutOfStock => currentStock <= 0;
+  bool get isOutOfStock => quantity <= 0;
   
-  double get totalValue => costPerUnit != null ? currentStock * costPerUnit! : 0.0;
+  double get totalValue => 0.0; // Can be extended if cost tracking is added
 
   // Calculate days until stock runs out based on usage rate
   int? calculateDaysUntilEmpty(double dailyUsageRate) {
     if (dailyUsageRate <= 0) return null;
-    return (currentStock / dailyUsageRate).ceil();
+    return (quantity / dailyUsageRate).ceil();
   }
 
   @override

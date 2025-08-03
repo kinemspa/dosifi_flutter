@@ -6,9 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/screens/splash_screen.dart';
 import '../presentation/screens/home_screen.dart';
 import '../presentation/screens/medication_list_screen.dart';
-// import '../presentation/screens/add_medication_screen.dart';
-// import '../presentation/screens/reconstitution_calculator_screen.dart';
-// import '../presentation/screens/schedule_screen.dart';
+import '../presentation/screens/add_medication_screen.dart';
+import '../presentation/screens/edit_medication_screen.dart';
+import '../presentation/screens/medication_details_screen.dart';
+import '../presentation/screens/reconstitution_calculator_screen.dart';
+import '../presentation/screens/schedule_screen.dart';
+import '../presentation/screens/inventory_screen.dart';
 // import '../presentation/screens/inventory_screen.dart';
 // import '../presentation/screens/settings_screen.dart';
 // import '../presentation/screens/analytics_screen.dart';
@@ -37,7 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'home',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-        child: const HomeScreen(),
+          child: const HomeScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,
@@ -59,7 +62,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 name: 'add-medication',
                 pageBuilder: (context, state) => MaterialPage(
                   key: state.pageKey,
-                  child: Container(), // Replace with AddMedicationScreen(),
+                  child: const AddMedicationScreen(),
                 ),
               ),
               GoRoute(
@@ -69,7 +72,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final medicationId = state.pathParameters['id']!;
                   return MaterialPage(
                     key: state.pageKey,
-                    child: Container(), // Replace with EditMedicationScreen(medicationId: medicationId),
+                  child: EditMedicationScreen(medicationId: medicationId),
                   );
                 },
               ),
@@ -80,7 +83,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final medicationId = state.pathParameters['id']!;
                   return MaterialPage(
                     key: state.pageKey,
-                    child: Container(), // Replace with MedicationDetailsScreen(medicationId: medicationId),
+                    child: MedicationDetailsScreen(medicationId: medicationId),
                   );
                 },
               ),
@@ -91,7 +94,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'reconstitution',
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
-              child: Container(), // Replace with ReconstitutionCalculatorScreen(),
+              child: const ReconstitutionCalculatorScreen(),
             ),
           ),
           GoRoute(
@@ -99,7 +102,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'schedule',
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
-              child: Container(), // Replace with ScheduleScreen(),
+              child: const ScheduleScreen(),
             ),
           ),
           GoRoute(
@@ -107,7 +110,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'inventory',
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
-              child: Container(), // Replace with InventoryScreen(),
+              child: const InventoryScreen(),
             ),
           ),
           GoRoute(

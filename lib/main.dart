@@ -8,9 +8,11 @@ import 'core/services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  print('Main: Starting app initialization...');
   // Initialize services
   await _initializeApp();
   
+  print('Main: Running app...');
   runApp(
     const ProviderScope(
       child: DosifiApp(),
@@ -26,15 +28,15 @@ Future<void> _initializeApp() async {
   ]);
   
   // Initialize database
-  try {
-    await DatabaseService.database;
-    final isIntegrityOk = await DatabaseService.checkDatabaseIntegrity();
-    if (!isIntegrityOk) {
-      debugPrint('Database integrity check failed');
-    }
-  } catch (e) {
-    debugPrint('Database initialization error: $e');
-  }
+  // try {
+  //   await DatabaseService.database;
+  //   final isIntegrityOk = await DatabaseService.checkDatabaseIntegrity();
+  //   if (!isIntegrityOk) {
+  //     debugPrint('Database integrity check failed');
+  //   }
+  // } catch (e) {
+  //   debugPrint('Database initialization error: $e');
+  // }
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(

@@ -137,8 +137,8 @@ class _MedicationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isExpired = medication.expiryDate != null &&
-        medication.expiryDate!.isBefore(DateTime.now());
+    final isExpired = medication.expirationDate != null &&
+        medication.expirationDate!.isBefore(DateTime.now());
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -146,7 +146,7 @@ class _MedicationCard extends ConsumerWidget {
         leading: CircleAvatar(
           backgroundColor: isExpired ? Colors.red : theme.colorScheme.primary,
           child: Icon(
-            _getIconForType(medication.type),
+            _getIconForType(medication.type.displayName),
             color: Colors.white,
           ),
         ),
@@ -160,12 +160,12 @@ class _MedicationCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${medication.dosageAmount} ${medication.dosageUnit} - ${medication.type}',
+              '${medication.displayStrength} - ${medication.type.displayName}',
               style: theme.textTheme.bodyMedium,
             ),
-            if (medication.frequency != null)
+            if (medication.instructions != null && medication.instructions!.isNotEmpty)
               Text(
-                'Frequency: ${medication.frequency}',
+                medication.instructions!,
                 style: theme.textTheme.bodySmall,
               ),
             if (isExpired)

@@ -19,9 +19,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 2));
+    print('SplashScreen: Starting navigation delay...');
+    await Future.delayed(const Duration(seconds: 3));
+    print('SplashScreen: Delay complete, checking mounted state...');
     if (mounted) {
+      print('SplashScreen: Navigating to home...');
       context.go('/');
+    } else {
+      print('SplashScreen: Widget not mounted, skipping navigation');
     }
   }
 
@@ -41,8 +46,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 size: 100,
                 color: Colors.white,
               ).animate()
-                .fade(duration: 500.ms)
-                .scale(delay: 300.ms, duration: 500.ms),
+                .fade(duration: const Duration(milliseconds: 500))
+                .scale(delay: const Duration(milliseconds: 300), duration: const Duration(milliseconds: 500)),
               const SizedBox(height: 24),
               Text(
                 'Dosifi',
@@ -51,8 +56,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ).animate()
-                .fade(delay: 500.ms, duration: 500.ms)
-                .slideY(begin: 0.3, end: 0, delay: 500.ms, duration: 500.ms),
+                .fade(delay: const Duration(milliseconds: 500), duration: const Duration(milliseconds: 500))
+                .slideY(begin: 0.3, end: 0, delay: const Duration(milliseconds: 500), duration: const Duration(milliseconds: 500)),
               const SizedBox(height: 8),
               Text(
                 'Your Personal Medication Manager',
@@ -60,12 +65,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   color: Colors.white70,
                 ),
               ).animate()
-                .fade(delay: 800.ms, duration: 500.ms),
+                .fade(delay: const Duration(milliseconds: 800), duration: const Duration(milliseconds: 500)),
               const SizedBox(height: 48),
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ).animate()
-                .fade(delay: 1.s, duration: 500.ms),
+                .fade(delay: const Duration(seconds: 1), duration: const Duration(milliseconds: 500)),
             ],
           ),
         ),
