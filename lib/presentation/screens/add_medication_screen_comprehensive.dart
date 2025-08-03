@@ -275,8 +275,10 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
       _buildExpirationDateField(),
       const SizedBox(height: 16),
       _buildAlertOnLowStockToggle(),
-      const SizedBox(height: 16),
-      _buildNotificationSetDropdown(),
+      if (_alertOnLowStock) ...[
+        const SizedBox(height: 16),
+        _buildNotificationSetDropdown(),
+      ],
     ]);
     
     return widgets;

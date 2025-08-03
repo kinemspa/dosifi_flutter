@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 6;
+  static const int _databaseVersion = 7;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -80,6 +80,10 @@ class DatabaseService {
         end_date TEXT,
         cycle_days_on INTEGER,
         cycle_days_off INTEGER,
+        dose_amount REAL NOT NULL,
+        dose_unit TEXT NOT NULL,
+        dose_form TEXT NOT NULL,
+        strength_per_unit REAL NOT NULL,
         is_active INTEGER DEFAULT 1,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
@@ -400,6 +404,81 @@ class DatabaseService {
         ''');
         
         await db.execute('DROP TABLE medications_backup_v6');
+      }
+    }
+    
+    if (oldVersion < 7) {
+      // Migration from version 6 to 7: Add dose columns to schedules table
+      try {
+        // Check if schedules table already has dose columns
+        final result = await db.rawQuery('PRAGMA table_info(schedules)');
+        final hasDoseAmount = result.any((col) => col['name'] == 'dose_amount');
+        
+        if (!hasDoseAmount) {
+          // Add dose columns to schedules table
+          await db.execute('ALTER TABLE schedules ADD COLUMN dose_amount REAL DEFAULT 1.0');
+          await db.execute('ALTER TABLE schedules ADD COLUMN dose_unit TEXT DEFAULT "tablet"');
+          await db.execute('ALTER TABLE schedules ADD COLUMN dose_form TEXT DEFAULT "tablet"');
+          await db.execute('ALTER TABLE schedules ADD COLUMN strength_per_unit REAL DEFAULT 1.0');
+          
+          // Update existing schedules with default values
+          await db.execute('''
+            UPDATE schedules 
+            SET dose_amount = 1.0, 
+                dose_unit = 'tablet',
+                dose_form = 'tablet',
+                strength_per_unit = 1.0
+            WHERE dose_amount IS NULL
+          ''');
+          
+          // Make dose columns NOT NULL
+          await db.execute('ALTER TABLE schedules RENAME TO schedules_backup_v7');
+          
+          // Create new schedules table with proper schema
+          await db.execute('''
+            CREATE TABLE schedules (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              medication_id INTEGER NOT NULL,
+              schedule_type TEXT NOT NULL,
+              time_of_day TEXT NOT NULL,
+              days_of_week TEXT,
+              start_date TEXT NOT NULL,
+              end_date TEXT,
+              cycle_days_on INTEGER,
+              cycle_days_off INTEGER,
+              dose_amount REAL NOT NULL,
+              dose_unit TEXT NOT NULL,
+              dose_form TEXT NOT NULL,
+              strength_per_unit REAL NOT NULL,
+              is_active INTEGER DEFAULT 1,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL,
+              FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
+            )
+          ''');
+          
+          // Migrate data
+          await db.execute('''
+            INSERT INTO schedules (
+              id, medication_id, schedule_type, time_of_day, days_of_week,
+              start_date, end_date, cycle_days_on, cycle_days_off,
+              dose_amount, dose_unit, dose_form, strength_per_unit,
+              is_active, created_at, updated_at
+            )
+            SELECT 
+              id, medication_id, schedule_type, time_of_day, days_of_week,
+              start_date, end_date, cycle_days_on, cycle_days_off,
+              COALESCE(dose_amount, 1.0), COALESCE(dose_unit, 'tablet'),
+              COALESCE(dose_form, 'tablet'), COALESCE(strength_per_unit, 1.0),
+              is_active, created_at, updated_at
+            FROM schedules_backup_v7
+          ''');
+          
+          await db.execute('DROP TABLE schedules_backup_v7');
+        }
+      } catch (e) {
+        // If migration fails, log error but continue
+        print('Schedule table migration error: $e');
       }
     }
   }

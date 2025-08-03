@@ -142,7 +142,7 @@ final filteredMedicationsProvider = Provider<AsyncValue<List<Medication>>>((ref)
 
     // Apply type filter
     if (typeFilter != null) {
-      filtered = filtered.where((medication) => medication.type == typeFilter).toList();
+      filtered = filtered.where((medication) => medication.type.name == typeFilter).toList();
     }
 
     return filtered;

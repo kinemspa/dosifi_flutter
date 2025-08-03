@@ -8,6 +8,7 @@ import '../../data/models/medication.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/dose_log_provider.dart';
 import '../providers/medication_provider.dart';
+import '../../data/dose_options.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -253,7 +254,22 @@ void _showAddScheduleDialog() {
                         overflow: TextOverflow.ellipsis,
                       ),
                     )).toList(),
-                    onChanged: (value) => setState(() => selectedMedicationId = value),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedMedicationId = value;
+                        // Reset dose unit when medication changes and populate strength
+                        if (value != null) {
+                          final medication = medications.firstWhere((med) => med.id == value);
+                          final availableOptions = getDoseOptions(medication.type);
+                          if (availableOptions.isNotEmpty) {
+                            doseUnit = availableOptions.first.unit;
+                          }
+                          // Set strength per unit from medication
+                          strengthPerUnit = medication.strengthPerUnit;
+                          doseForm = medication.type.name;
+                        }
+                      });
+                    },
                     validator: (value) => value == null ? 'Please select a medication' : null,
                   ),
                   loading: () => const CircularProgressIndicator(),
@@ -396,20 +412,45 @@ void _showAddScheduleDialog() {
                 
                 // Dose Unit
                 DropdownButtonFormField<String>(
-                  value: doseUnit,
+                  value: selectedMedicationId != null ? doseUnit : null,
                   decoration: const InputDecoration(
                     labelText: 'Dose Unit *',
                     border: OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'tablet', child: Text('tablet(s)')),
-                    DropdownMenuItem(value: 'capsule', child: Text('capsule(s)')),
-                    DropdownMenuItem(value: 'ml', child: Text('ml')),
-                    DropdownMenuItem(value: 'mg', child: Text('mg')),
-                    DropdownMenuItem(value: 'drops', child: Text('drop(s)')),
-                    DropdownMenuItem(value: 'puffs', child: Text('puff(s)')),
-                  ],
-                  onChanged: (value) => setState(() => doseUnit = value!),
+                  items: selectedMedicationId != null
+                      ? medicationsAsync.when(
+                          data: (medications) {
+                            final medication = medications.firstWhere((med) => med.id == selectedMedicationId);
+                            final availableOptions = getDoseOptions(medication.type);
+                            return availableOptions.map((option) =>
+                              DropdownMenuItem(value: option.unit, child: Text(option.displayName))
+                            ).toList();
+                          },
+                          loading: () => <DropdownMenuItem<String>>[],
+                          error: (_, __) => <DropdownMenuItem<String>>[],
+                        )
+                      : <DropdownMenuItem<String>>[],
+                    onChanged: (value) {
+                      setState(() {
+                        final previousUnit = doseUnit;
+                        doseUnit = value!;
+                        
+                        // Convert dose amount based on unit change
+                        if (strengthPerUnit > 0) {
+                          if (previousUnit == 'tablet' || previousUnit == 'capsule') {
+                            // Converting from tablet/capsule to mg
+                            if (doseUnit == 'mg') {
+                              doseAmount = doseAmount * strengthPerUnit;
+                            }
+                          } else if (previousUnit == 'mg') {
+                            // Converting from mg to tablet/capsule
+                            if (doseUnit == 'tablet' || doseUnit == 'capsule') {
+                              doseAmount = doseAmount / strengthPerUnit;
+                            }
+                          }
+                        }
+                      });
+                    },
                 ),
                 const SizedBox(height: 12),
                 

@@ -6,28 +6,55 @@ Dosifi is a comprehensive medication management Flutter application designed to 
 
 ### Core Features
 1. **Medication Management**
-   - Add, edit, and delete medications
+   - Add, edit, and delete medications with comprehensive forms
    - Track medication details including dosage, frequency, and instructions
-   - Search and filter medications
+   - Search and filter medications with real-time results
    - Support for various medication types (tablets, capsules, liquids, injections, etc.)
+   - Automatic dose calculations based on medication strength
+   - Medication schedule tracking with tabs for different time periods
 
-2. **Reconstitution Calculator**
+2. **Supply Inventory Management**
+   - Comprehensive inventory tracking with category-based organization
+   - Search and filter supplies by name and category
+   - Visual stats cards displaying total supplies, low stock alerts, and categories
+   - Edit, adjust quantities, and delete supplies with intuitive popup menus
+   - Color-coded categories (Medication, Equipment, Supplements)
+   - Stock level monitoring with visual indicators
+
+3. **Reconstitution Calculator**
    - Calculate reconstitution volumes for lyophilized medications
    - Support for different concentration options (concentrated, average, diluted)
    - Flexible unit support (mg, mcg, Units, IU)
-   - Syringe size calculations
+   - Syringe size calculations with multiple size options
    - Optional vial size specifications
+   - Clear step-by-step calculation results
 
-3. **Dashboard**
-   - Quick access to all features
-   - Visual overview of medication status
-   - Easy navigation between features
+4. **Enhanced Dashboard**
+   - Welcome card with personalized greeting
+   - Today's medication schedule overview
+   - Quick statistics cards (medications, supplies, schedules)
+   - Recent activities timeline
+   - Smart alerts and notifications
+   - Quick action buttons for common tasks
+   - Bottom navigation bar for seamless app navigation
+   - System-level back button handling with exit confirmation
+
+5. **Analytics & Insights**
+   - Medication adherence tracking and visualization
+   - Usage pattern analysis with charts and graphs
+   - Supply consumption tracking
+   - Personalized insights and recommendations
+   - Export capabilities for healthcare providers
 
 ### Planned Features
-- **Schedule Management**: Set reminders and track medication schedules
+- **Schedule Management**: Set reminders and track medication schedules with automatic dose calculations
 - **Inventory Tracking**: Monitor medication stock levels
 - **Analytics**: View medication adherence and usage patterns
 - **Settings**: Customize app preferences and notifications
+
+### Automatic Dose Calculations
+The app now supports automatic dose calculations to ensure users enter correct dosage based on the medication's strength. Users can select the medication and adjust the dose unit, and the app will accurately convert dose amounts between tablets/capsules and mg as necessary.
+For example, selecting a 2mg medication with 1 tablet as a dose will automatically update to 2mg. Changing to "mg" will convert the dose to the equivalent in tablets if applicable.
 
 ## Reconstitution Calculator
 
@@ -49,14 +76,36 @@ Dosifi is a comprehensive medication management Flutter application designed to 
 - **Average Option**: 5mL reconstitution → 50 IU on syringe
 - **Diluted Option**: 9mL reconstitution → 90 IU on syringe
 
+## Recent Improvements
+
+### Navigation & UX Enhancements (Latest Update)
+- **Restructured Router Configuration**: Fixed child routes as top-level routes for proper back button functionality
+- **Consistent Navigation Flow**: Removed redundant manual back buttons, allowing Flutter's default navigation to work seamlessly
+- **System Back Button Handling**: Added exit confirmation dialog on dashboard for better UX
+- **Bottom Navigation Bar**: Implemented intuitive navigation between main app sections
+- **Proper AppBar Implementation**: Consistent AppBars across all screens with appropriate titles and controls
+
+### UI & Theme Consistency
+- **Color Scheme Compliance**: Fixed text/background color mismatches across all screens
+- **Theme Integration**: All UI elements now use consistent theme colors and gradients
+- **Visual Polish**: Enhanced cards, buttons, and layout spacing for professional appearance
+- **Icon Consistency**: Standardized icons across the app with proper sizing and colors
+- **Responsive Design**: Improved layout adaptability across different screen sizes
+
+### Code Quality Improvements
+- **Route Optimization**: Eliminated duplicate routes and streamlined navigation paths
+- **Component Reusability**: Enhanced widget modularity and reusability
+- **Performance Optimization**: Reduced unnecessary rebuilds and improved app responsiveness
+- **Clean Architecture**: Better separation of concerns and code organization
+
 ## Technical Stack
 
 - **Framework**: Flutter (Dart)
 - **State Management**: Riverpod
 - **Database**: SQLite with SQLCipher encryption
-- **Navigation**: GoRouter
+- **Navigation**: GoRouter with optimized route configuration
 - **Storage**: Flutter Secure Storage
-- **UI**: Material Design 3
+- **UI**: Material Design 3 with custom theming
 
 ## Project Structure
 
