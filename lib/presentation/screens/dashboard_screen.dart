@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/animated_gradient_card.dart';
-import 'package:flutter/services.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

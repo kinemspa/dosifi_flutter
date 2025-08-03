@@ -19,14 +19,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    print('SplashScreen: Starting navigation delay...');
     await Future.delayed(const Duration(seconds: 3));
-    print('SplashScreen: Delay complete, checking mounted state...');
     if (mounted) {
-      print('SplashScreen: Navigating to home...');
       context.go('/');
-    } else {
-      print('SplashScreen: Widget not mounted, skipping navigation');
     }
   }
 

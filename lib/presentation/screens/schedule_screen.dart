@@ -4,7 +4,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/schedule.dart';
 import '../../data/models/dose_log.dart';
-import '../../data/models/medication.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/dose_log_provider.dart';
 import '../providers/medication_provider.dart';
@@ -35,6 +34,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Medication Schedule'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Column(
         children: [

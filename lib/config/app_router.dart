@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Import screens when created
 import '../presentation/screens/splash_screen.dart';
-import '../presentation/screens/home_screen.dart';
 import '../presentation/screens/medication_list_screen.dart';
 import '../presentation/screens/add_medication_screen.dart';
 import '../presentation/screens/add_medication_screen_comprehensive.dart';

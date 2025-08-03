@@ -3,16 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'config/app_router.dart';
-import 'core/services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('Main: Starting app initialization...');
   // Initialize services
   await _initializeApp();
-  
-  print('Main: Running app...');
   runApp(
     const ProviderScope(
       child: DosifiApp(),

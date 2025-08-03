@@ -6,7 +6,6 @@ import '../../data/models/supply.dart';
 import '../providers/medication_provider.dart';
 import '../providers/supply_provider.dart';
 import '../widgets/medication_card.dart';
-import '../screens/supply_inventory_screen.dart';
 
 class MedicationScreen extends ConsumerStatefulWidget {
   const MedicationScreen({Key? key}) : super(key: key);
@@ -43,8 +42,16 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
       appBar: AppBar(
         title: const Text('Medications'),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/'),
+        ),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
           tabs: const [
             Tab(text: 'Medications', icon: Icon(Icons.medication)),
             Tab(text: 'Supplies', icon: Icon(Icons.inventory_2)),

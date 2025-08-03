@@ -1,6 +1,7 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseService {
   static Database? _database;
@@ -478,7 +479,7 @@ class DatabaseService {
         }
       } catch (e) {
         // If migration fails, log error but continue
-        print('Schedule table migration error: $e');
+        debugPrint('Schedule table migration error: $e');
       }
     }
   }
@@ -497,9 +498,9 @@ class DatabaseService {
   // Backup database
   static Future<void> backupDatabase() async {
     // Implement encrypted backup functionality
-    final db = await database;
-    final databasePath = await getDatabasesPath();
-    final backupPath = join(databasePath, 'dosifi_backup_${DateTime.now().millisecondsSinceEpoch}.db');
+    // final db = await database;
+    // final databasePath = await getDatabasesPath();
+    // final backupPath = join(databasePath, 'dosifi_backup_${DateTime.now().millisecondsSinceEpoch}.db');
     
     // TODO: Implement secure backup with encryption
   }

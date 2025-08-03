@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   // Medical app color palette - professional and calming
   static const _primaryColor = Color(0xFF1b7292); // Primary color as requested
-  static const _primaryDark = Color(0xFF135663); // Darker variant
   static const _secondaryColor = Color(0xFFc76223); // Secondary color as requested
   static const _accentColor = Color(0xFF4CAF50); // Success green
   static const _errorColor = Color(0xFFD32F2F);
@@ -20,14 +19,11 @@ class AppTheme {
   static const _lightBackground = Color(0xFFF5F7FA);
   static const _lightSurfaceVariant = Color(0xFFECEFF3);
   static const _lightOnSurface = Color(0xFF1A1C1E);
-  static const _lightOnBackground = Color(0xFF2C2F33);
   
   // Dark theme colors
   static const _darkSurface = Color(0xFF1E1E1E);
   static const _darkBackground = Color(0xFF121212);
   static const _darkSurfaceVariant = Color(0xFF2D2D2D);
-  static const _darkOnSurface = Color(0xFFE1E3E6);
-  static const _darkOnBackground = Color(0xFFE1E3E6);
 
   static ThemeData lightTheme() {
     final ColorScheme colorScheme = const ColorScheme.light(
@@ -40,8 +36,7 @@ class AppTheme {
       error: _errorColor,
       errorContainer: Color(0xFFFECDD3),
       surface: _lightSurface,
-      surfaceVariant: _lightSurfaceVariant,
-      background: _lightBackground,
+      surfaceContainerHighest: _lightSurfaceVariant,
       onPrimary: Colors.white,
       onPrimaryContainer: Color(0xFF003544), // Dark text on light primary container
       onSecondary: Colors.white,
@@ -49,7 +44,6 @@ class AppTheme {
       onTertiary: Colors.white,
       onError: Colors.white,
       onSurface: _lightOnSurface,
-      onBackground: _lightOnBackground,
       outline: Color(0xFFCBD5E1),
     );
 
@@ -150,8 +144,7 @@ class AppTheme {
       tertiary: _accentColor,
       error: _errorColor,
       surface: Color(0xFF1E1E1E),
-      surfaceVariant: _darkSurfaceVariant,
-      background: _darkBackground,
+      surfaceContainerHighest: _darkSurfaceVariant,
       onPrimary: Colors.white,
       onPrimaryContainer: Color(0xFFB8E0ED), // Light text on dark primary container
       onSecondary: Colors.white,
@@ -159,7 +152,6 @@ class AppTheme {
       onTertiary: Colors.white,
       onError: Colors.white,
       onSurface: Color(0xFFE0E0E0),
-      onBackground: _darkOnBackground,
     );
 
     return ThemeData(
