@@ -11,6 +11,10 @@ class Schedule {
   final DateTime? endDate;
   final int? cycleDaysOn;
   final int? cycleDaysOff;
+  final double doseAmount;
+  final String doseUnit;
+  final String doseForm;
+  final double strengthPerUnit;
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -25,6 +29,10 @@ class Schedule {
     this.endDate,
     this.cycleDaysOn,
     this.cycleDaysOff,
+    required this.doseAmount,
+    required this.doseUnit,
+    required this.doseForm,
+    required this.strengthPerUnit,
     this.isActive = true,
     required this.createdAt,
     required this.updatedAt,
@@ -39,6 +47,10 @@ class Schedule {
     DateTime? endDate,
     int? cycleDaysOn,
     int? cycleDaysOff,
+    required double doseAmount,
+    required String doseUnit,
+    required String doseForm,
+    required double strengthPerUnit,
   }) {
     final now = DateTime.now();
     return Schedule(
@@ -50,6 +62,10 @@ class Schedule {
       endDate: endDate,
       cycleDaysOn: cycleDaysOn,
       cycleDaysOff: cycleDaysOff,
+      doseAmount: doseAmount,
+      doseUnit: doseUnit,
+      doseForm: doseForm,
+      strengthPerUnit: strengthPerUnit,
       createdAt: now,
       updatedAt: now,
     );
@@ -66,6 +82,10 @@ class Schedule {
       'end_date': endDate?.toIso8601String(),
       'cycle_days_on': cycleDaysOn,
       'cycle_days_off': cycleDaysOff,
+      'dose_amount': doseAmount,
+      'dose_unit': doseUnit,
+      'dose_form': doseForm,
+      'strength_per_unit': strengthPerUnit,
       'is_active': isActive ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -90,6 +110,10 @@ class Schedule {
           : null,
       cycleDaysOn: map['cycle_days_on'] as int?,
       cycleDaysOff: map['cycle_days_off'] as int?,
+      doseAmount: (map['dose_amount'] as num).toDouble(),
+      doseUnit: map['dose_unit'] as String,
+      doseForm: map['dose_form'] as String,
+      strengthPerUnit: (map['strength_per_unit'] as num).toDouble(),
       isActive: (map['is_active'] as int) == 1,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -106,6 +130,10 @@ class Schedule {
     DateTime? endDate,
     int? cycleDaysOn,
     int? cycleDaysOff,
+    double? doseAmount,
+    String? doseUnit,
+    String? doseForm,
+    double? strengthPerUnit,
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -120,6 +148,10 @@ class Schedule {
       endDate: endDate ?? this.endDate,
       cycleDaysOn: cycleDaysOn ?? this.cycleDaysOn,
       cycleDaysOff: cycleDaysOff ?? this.cycleDaysOff,
+      doseAmount: doseAmount ?? this.doseAmount,
+      doseUnit: doseUnit ?? this.doseUnit,
+      doseForm: doseForm ?? this.doseForm,
+      strengthPerUnit: strengthPerUnit ?? this.strengthPerUnit,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),

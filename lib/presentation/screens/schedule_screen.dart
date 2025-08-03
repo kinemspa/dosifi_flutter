@@ -222,6 +222,12 @@ void _showAddScheduleDialog() {
     DateTime? startDate;
     DateTime? endDate;
     var scheduleType = ScheduleType.daily;
+    
+    // Dose fields
+    var doseAmount = 1.0;
+    var doseUnit = 'tablet';
+    var doseForm = 'tablet';
+    var strengthPerUnit = 1.0;
 
     showDialog(
       context: context,
@@ -359,6 +365,82 @@ void _showAddScheduleDialog() {
                       },
                     )).toList(),
                   ),
+                const SizedBox(height: 16),
+                
+                // Dose Information Section
+                Text(
+                  'Dose Information',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                
+                // Dose Amount
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Dose Amount *',
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g., 1',
+                  ),
+                  keyboardType: TextInputType.number,
+                  initialValue: doseAmount.toString(),
+                  onChanged: (value) {
+                    final parsed = double.tryParse(value);
+                    if (parsed != null) {
+                      setState(() => doseAmount = parsed);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                
+                // Dose Unit
+                DropdownButtonFormField<String>(
+                  value: doseUnit,
+                  decoration: const InputDecoration(
+                    labelText: 'Dose Unit *',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'tablet', child: Text('tablet(s)')),
+                    DropdownMenuItem(value: 'capsule', child: Text('capsule(s)')),
+                    DropdownMenuItem(value: 'ml', child: Text('ml')),
+                    DropdownMenuItem(value: 'mg', child: Text('mg')),
+                    DropdownMenuItem(value: 'drops', child: Text('drop(s)')),
+                    DropdownMenuItem(value: 'puffs', child: Text('puff(s)')),
+                  ],
+                  onChanged: (value) => setState(() => doseUnit = value!),
+                ),
+                const SizedBox(height: 12),
+                
+                // Dose Form
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Dose Form *',
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g., tablet, capsule, liquid',
+                  ),
+                  initialValue: doseForm,
+                  onChanged: (value) => setState(() => doseForm = value),
+                ),
+                const SizedBox(height: 12),
+                
+                // Strength Per Unit
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Strength Per Unit (mg) *',
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g., 2.0 (for 2mg per tablet)',
+                  ),
+                  keyboardType: TextInputType.number,
+                  initialValue: strengthPerUnit.toString(),
+                  onChanged: (value) {
+                    final parsed = double.tryParse(value);
+                    if (parsed != null) {
+                      setState(() => strengthPerUnit = parsed);
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -380,6 +462,10 @@ void _showAddScheduleDialog() {
                     daysOfWeek: daysOfWeek.isNotEmpty ? daysOfWeek.toList() : null,
                     startDate: startDate!,
                     endDate: endDate,
+                    doseAmount: doseAmount,
+                    doseUnit: doseUnit,
+                    doseForm: doseForm,
+                    strengthPerUnit: strengthPerUnit,
                   );
                   await ref.read(scheduleListProvider.notifier).addSchedule(schedule);
                   Navigator.pop(context);
