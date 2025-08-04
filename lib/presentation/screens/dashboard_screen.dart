@@ -10,28 +10,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        context.go('/');
-        break;
-      case 1:
-        context.go('/inventory');
-        break;
-      case 2:
-        context.go('/schedule');
-        break;
-      case 3:
-        context.go('/settings');
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,19 +71,6 @@ int _selectedIndex = 0;
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventory'),
-          BottomNavigationBarItem(icon: Icon(Icons.schedule), label: 'Schedules'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-        onTap: _onItemTapped,
       ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../presentation/providers/supply_provider.dart';
 import '../../data/models/supply.dart';
 
@@ -22,6 +23,10 @@ class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Supply Inventory'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),

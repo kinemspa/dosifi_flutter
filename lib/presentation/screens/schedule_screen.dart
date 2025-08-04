@@ -35,6 +35,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Medication Schedule'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+        ),
       ),
       body: Column(
         children: [

@@ -16,6 +16,7 @@ import '../presentation/screens/supply_inventory_screen.dart';
 import '../presentation/screens/settings_screen.dart';
 import '../presentation/screens/analytics_screen.dart';
 import '../presentation/screens/dashboard_screen.dart';
+import '../presentation/screens/main_shell_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -39,50 +40,59 @@ final routerProvider = Provider<GoRouter>((ref) {
           },
         ),
       ),
-      GoRoute(
+GoRoute(
         path: '/',
         name: 'home',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const DashboardScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const DashboardScreen(),
+          ),
         ),
       ),
-      GoRoute(
+GoRoute(
         path: '/inventory',
         name: 'inventory',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const MedicationScreen(),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const MedicationScreen(),
+          ),
         ),
       ),
-      GoRoute(
+GoRoute(
         path: '/schedule',
         name: 'schedule',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const ScheduleScreen(),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const ScheduleScreen(),
+          ),
         ),
       ),
-      GoRoute(
+GoRoute(
         path: '/analytics',
         name: 'analytics',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const AnalyticsScreen(),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const AnalyticsScreen(),
+          ),
         ),
       ),
-      GoRoute(
+GoRoute(
         path: '/settings',
         name: 'settings',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const SettingsScreen(),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const SettingsScreen(),
+          ),
         ),
       ),
       GoRoute(
