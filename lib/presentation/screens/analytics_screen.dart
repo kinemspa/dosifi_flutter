@@ -35,7 +35,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 Text(
                   'Analytics and Usage Reports',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -45,7 +45,7 @@ class AnalyticsScreen extends ConsumerWidget {
                   child: Text(
                     'View your medication adherence patterns, usage statistics, and more. Detailed reports and charts will be available here.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground.withValues(alpha: 0.8),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
                     textAlign: TextAlign.center,
                   ),

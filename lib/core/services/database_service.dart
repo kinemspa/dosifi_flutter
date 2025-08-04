@@ -2,6 +2,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 
 class DatabaseService {
   static Database? _database;
@@ -496,13 +497,26 @@ class DatabaseService {
   }
 
   // Backup database
-  static Future<void> backupDatabase() async {
-    // Implement encrypted backup functionality
-    // final db = await database;
-    // final databasePath = await getDatabasesPath();
-    // final backupPath = join(databasePath, 'dosifi_backup_${DateTime.now().millisecondsSinceEpoch}.db');
-    
-    // TODO: Implement secure backup with encryption
+  static Future<String> backupDatabase() async {
+    try {
+      final db = await database;
+      final databasePath = await getDatabasesPath();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final backupPath = join(databasePath, 'dosifi_backup_$timestamp.db');
+      
+      // Copy database file to backup location
+      final sourceFile = File(join(databasePath, 'dosifi.db'));
+      if (await sourceFile.exists()) {
+        await sourceFile.copy(backupPath);
+        debugPrint('Database backup created at: $backupPath');
+        return backupPath;
+      } else {
+        throw Exception('Source database file not found');
+      }
+    } catch (e) {
+      debugPrint('Backup failed: $e');
+      rethrow;
+    }
   }
 
   // Close database

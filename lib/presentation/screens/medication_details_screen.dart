@@ -123,7 +123,7 @@ class MedicationDetailsScreen extends ConsumerWidget {
                         children: [
                           Chip(
                             label: Text(medication.type.displayName),
-                            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                            backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                           ),
                           if (isExpired) ...[
                             const SizedBox(width: 8),
@@ -194,10 +194,7 @@ class MedicationDetailsScreen extends ConsumerWidget {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () {
-              // TODO: Navigate to schedule screen with this medication
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Schedule feature coming soon')),
-              );
+              context.go('/schedule?medicationId=${medication.id}');
             },
             icon: const Icon(Icons.schedule),
             label: const Text('Set Schedule'),
@@ -207,10 +204,7 @@ class MedicationDetailsScreen extends ConsumerWidget {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () {
-              // TODO: Navigate to inventory screen with this medication
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Inventory feature coming soon')),
-              );
+              context.go('/inventory');
             },
             icon: const Icon(Icons.inventory),
             label: const Text('Track Inventory'),

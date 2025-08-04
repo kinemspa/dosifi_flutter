@@ -113,11 +113,43 @@ final todaySchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
       if (schedule.endDate != null && schedule.endDate!.isBefore(today)) return false;
       
       // Check if it matches the repeat pattern for today
-      // TODO: Implement proper repeat pattern matching based on daysOfWeek
-      return true;
+      return _matchesRepeatPattern(schedule, today);
     }).toList();
   });
 });
+
+// Helper function to check if a schedule matches the repeat pattern for a given day
+bool _matchesRepeatPattern(Schedule schedule, DateTime day) {
+  final scheduleType = ScheduleType.fromString(schedule.scheduleType);
+  
+  switch (scheduleType) {
+    case ScheduleType.daily:
+      return true; // Daily schedules match every day
+    
+    case ScheduleType.weekly:
+      if (schedule.daysOfWeek == null || schedule.daysOfWeek!.isEmpty) {
+        return false;
+      }
+      // Convert DateTime weekday (1=Monday, 7=Sunday) to our format (1=Sunday, 7=Saturday)
+      final dayOfWeek = day.weekday == 7 ? 1 : day.weekday + 1;
+      return schedule.daysOfWeek!.contains(dayOfWeek);
+    
+    case ScheduleType.cycle:
+      if (schedule.cycleDaysOn == null || schedule.cycleDaysOff == null) {
+        return false;
+      }
+      final daysSinceStart = day.difference(schedule.startDate).inDays;
+      final cycleLength = schedule.cycleDaysOn! + schedule.cycleDaysOff!;
+      final dayInCycle = daysSinceStart % cycleLength;
+      return dayInCycle < schedule.cycleDaysOn!;
+    
+    case ScheduleType.asNeeded:
+      return false; // As needed schedules don't have automatic patterns
+    
+    default:
+      return true; // Default to true for unknown types
+  }
+}
 
 // Provider for upcoming schedules (next 7 days)
 final upcomingSchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {

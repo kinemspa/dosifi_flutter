@@ -127,7 +127,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           shape: BoxShape.circle,
         ),
         todayDecoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withOpacity(0.5),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
           shape: BoxShape.circle,
         ),
       ),
@@ -513,7 +513,7 @@ void _showAddScheduleDialog() {
                     strengthPerUnit: strengthPerUnit,
                   );
                   await ref.read(scheduleListProvider.notifier).addSchedule(schedule);
-                  Navigator.of(context).pop();
+                  if (context.mounted) Navigator.of(context).pop();
                 } else {
                   // Show validation error
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -560,19 +560,23 @@ void _showAddScheduleDialog() {
 
     try {
       await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Dose marked as taken!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Dose marked as taken!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error marking dose as taken: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error marking dose as taken: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

@@ -390,15 +390,19 @@ List<Widget> _buildReconstitutionSection() {
       );
 
       await ref.read(medicationListProvider.notifier).addMedication(medication);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Medication added successfully')),
-      );
-      context.pop();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Medication added successfully')),
+        );
+        context.pop();
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

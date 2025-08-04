@@ -13,8 +13,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
         // Ask for confirmation before exiting the app
         final shouldPop = await showDialog<bool>(
           context: context,
@@ -33,7 +36,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         );
-        return shouldPop ?? false;
+        
+        if (shouldPop == true && context.mounted) {
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
       appBar: AppBar(
@@ -72,18 +78,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-      ),
-    );
-  }
-
-  Widget _buildUpcomingMedications(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: ListTile(
-        leading: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
-        title: Text('Upcoming Medications', style: Theme.of(context).textTheme.titleLarge),
-        subtitle: Text('Info about next doses and schedules'),
       ),
     );
   }
