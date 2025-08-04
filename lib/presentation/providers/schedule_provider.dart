@@ -134,7 +134,7 @@ bool _matchesRepeatPattern(Schedule schedule, DateTime day) {
       final dayOfWeek = day.weekday == 7 ? 1 : day.weekday + 1;
       return schedule.daysOfWeek!.contains(dayOfWeek);
     
-    case ScheduleType.cycle:
+    case ScheduleType.cyclic:
       if (schedule.cycleDaysOn == null || schedule.cycleDaysOff == null) {
         return false;
       }

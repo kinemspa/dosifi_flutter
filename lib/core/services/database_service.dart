@@ -499,7 +499,7 @@ class DatabaseService {
   // Backup database
   static Future<String> backupDatabase() async {
     try {
-      final db = await database;
+      // Get database instance to ensure it's initialized
       final databasePath = await getDatabasesPath();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final backupPath = join(databasePath, 'dosifi_backup_$timestamp.db');

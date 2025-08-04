@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/medication.dart';
 import '../providers/medication_provider.dart';
 import '../../config/app_router.dart';
