@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/medication.dart';
 import '../../core/utils/medication_utils.dart';
 import '../providers/medication_provider.dart';
@@ -307,7 +308,7 @@ class _EditMedicationScreenState extends ConsumerState<EditMedicationScreen> {
         const SnackBar(content: Text('Medication updated successfully')),
       );
       
-      Navigator.pop(context);
+      context.pop();
     }
   }
 
@@ -320,12 +321,12 @@ class _EditMedicationScreenState extends ConsumerState<EditMedicationScreen> {
           content: Text('Are you sure you want to delete ${_medication!.name}?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.pop(),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                context.pop();
                 _deleteMedication();
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -344,7 +345,7 @@ class _EditMedicationScreenState extends ConsumerState<EditMedicationScreen> {
       const SnackBar(content: Text('Medication deleted')),
     );
     
-    Navigator.pop(context);
+    context.pop();
   }
 
   List<DropdownMenuItem<MedicationType>> _buildCategorizedDropdownItems() {

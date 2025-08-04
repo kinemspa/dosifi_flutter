@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/medication.dart';
 import '../providers/medication_provider.dart';
 import '../../config/app_router.dart';
@@ -222,7 +223,7 @@ class _MedicationCard extends ConsumerWidget {
             leading: const Icon(Icons.edit),
             title: const Text('Edit'),
             onTap: () {
-              Navigator.pop(context);
+              context.pop();
               context.navigateToEditMedication(medication.id.toString());
             },
           ),
@@ -230,7 +231,7 @@ class _MedicationCard extends ConsumerWidget {
             leading: const Icon(Icons.delete, color: Colors.red),
             title: const Text('Delete', style: TextStyle(color: Colors.red)),
             onTap: () async {
-              Navigator.pop(context);
+              context.pop();
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -238,11 +239,11 @@ class _MedicationCard extends ConsumerWidget {
                   content: Text('Are you sure you want to delete ${medication.name}?'),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () => context.pop(false),
                       child: const Text('Cancel'),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () => context.pop(true),
                       child: const Text('Delete', style: TextStyle(color: Colors.red)),
                     ),
                   ],

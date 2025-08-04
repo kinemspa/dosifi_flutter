@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/schedule.dart';
 import '../../data/models/dose_log.dart';
 import '../providers/schedule_provider.dart';
@@ -34,10 +35,6 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Medication Schedule'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
       ),
       body: Column(
         children: [
@@ -490,7 +487,7 @@ void _showAddScheduleDialog() {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -512,7 +509,7 @@ void _showAddScheduleDialog() {
                     strengthPerUnit: strengthPerUnit,
                   );
                   await ref.read(scheduleListProvider.notifier).addSchedule(schedule);
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 } else {
                   // Show validation error
                   ScaffoldMessenger.of(context).showSnackBar(
