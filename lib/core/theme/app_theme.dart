@@ -63,7 +63,7 @@ class AppTheme {
       appBarTheme: const AppBarTheme(
         elevation: 2,
         centerTitle: true,
-        backgroundColor: _appBarColor,
+        backgroundColor: _primaryColor, // Match Good Morning card color
         foregroundColor: _appBarTextColor,
         titleTextStyle: TextStyle(
           color: _appBarTextColor,
@@ -171,7 +171,7 @@ class AppTheme {
       appBarTheme: const AppBarTheme(
         elevation: 2,
         centerTitle: true,
-        backgroundColor: _appBarColor,
+        backgroundColor: _primaryColor, // Match Good Morning card color
         foregroundColor: _appBarTextColor,
         titleTextStyle: TextStyle(
           color: _appBarTextColor,

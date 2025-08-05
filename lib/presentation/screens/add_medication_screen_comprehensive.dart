@@ -51,11 +51,12 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
   @override
   void initState() {
     super.initState();
-    _strengthController.addListener(() {
-      if (mounted && _selectedType != null && MedicationUtils.requiresReconstitution(_selectedType!)) {
-        setState(() {}); // Trigger rebuild to update calculator
-      }
-    });
+    
+    // Add listeners for dynamic summary updates
+    _nameController.addListener(() => setState(() {}));
+    _brandController.addListener(() => setState(() {}));
+    _strengthController.addListener(() => setState(() {}));
+    _stockQuantityController.addListener(() => setState(() {}));
   }
 
   @override
@@ -65,55 +66,70 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
         title: const Text('Add Medication'),
         centerTitle: true,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Medication Type Selection
-              _buildTypeDropdown(),
-              const SizedBox(height: 24),
-              
-              if (_selectedType != null) ...[
-                // Medication Details Section
-                _buildSectionHeader('Medication Details'),
-                const SizedBox(height: 12),
-                _buildTextField(_nameController, 'Medication Name', errorText: 'Required', isRequired: true),
-                const SizedBox(height: 16),
-                _buildTextField(_brandController, 'Brand / Manufacturer'),
-                const SizedBox(height: 24),
-                
-                // Medication Strength Information Section
-                _buildSectionHeader('Medication Strength Information'),
-                const SizedBox(height: 12),
-                _buildStrengthRow(),
-                const SizedBox(height: 24),
-                
-                // Medication Inventory Information Section
-                _buildSectionHeader('Medication Inventory Information'),
-                const SizedBox(height: 12),
-                ..._buildInventorySection(),
-                const SizedBox(height: 24),
-                
-                // Other Section
-                _buildSectionHeader('Other'),
-                const SizedBox(height: 12),
-                _buildTextField(_descriptionController, 'Description'),
-                const SizedBox(height: 16),
-                _buildTextField(_storageInstructionsController, 'Storage Instructions'),
-                const SizedBox(height: 16),
-                _buildRequiresRefrigerationToggle(),
-                const SizedBox(height: 16),
-                _buildTextField(_notesController, 'Notes'),
-                const SizedBox(height: 32),
-                
-                _buildSaveButton(),
-              ],
-            ],
+      body: Column(
+        children: [
+          // Fixed Dynamic Summary at the top
+          if (_selectedType != null)
+            Container(
+              margin: const EdgeInsets.all(16.0),
+              child: _buildDynamicSummary(),
+            ),
+          
+          // Scrollable form content
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Medication Type Selection
+                    _buildTypeDropdown(),
+                    const SizedBox(height: 24),
+                    
+                    if (_selectedType != null) ...[
+                      // Medication Details Section
+                      _buildSectionHeader('Details'),
+                      const SizedBox(height: 12),
+                      _buildTextField(_nameController, 'Name', errorText: 'Required', isRequired: true),
+                      const SizedBox(height: 16),
+                      _buildTextField(_brandController, 'Brand / Manufacturer'),
+                      const SizedBox(height: 24),
+                      
+                      // Medication Strength Information Section
+                      _buildSectionHeader('Strength Information'),
+                      const SizedBox(height: 12),
+                      _buildStrengthRow(),
+                      const SizedBox(height: 24),
+                      
+                      // Medication Inventory Information Section
+                      _buildSectionHeader('Inventory Information'),
+                      const SizedBox(height: 12),
+                      ..._buildInventorySection(),
+                      const SizedBox(height: 24),
+                      
+                      // Other Section
+                      _buildSectionHeader('Other'),
+                      const SizedBox(height: 12),
+                      _buildTextField(_descriptionController, 'Description'),
+                      const SizedBox(height: 16),
+                      _buildTextField(_storageInstructionsController, 'Storage Instructions'),
+                      const SizedBox(height: 16),
+                      _buildRequiresRefrigerationToggle(),
+                      const SizedBox(height: 16),
+                      _buildTextField(_notesController, 'Notes'),
+                      const SizedBox(height: 32),
+                      
+                      _buildSaveButton(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -121,7 +137,7 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.bold,
         color: Theme.of(context).primaryColor,
       ),
@@ -212,7 +228,7 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
           flex: 2,
           child: _buildTextField(
             _strengthController,
-            MedicationUtils.getStrengthLabel(_selectedType!),
+            'Strength per unit',
             errorText: 'Required',
             isNumber: true,
             isRequired: true,
@@ -291,7 +307,7 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
           flex: 2,
           child: _buildTextField(
             _stockQuantityController,
-            MedicationUtils.getInventoryLabel(_selectedType!),
+            'Quantity',
             errorText: 'Required',
             isNumber: true,
             isRequired: true,
@@ -510,15 +526,46 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
   }
 
   Widget _buildRequiresRefrigerationToggle() {
-    return SwitchListTile(
-      title: const Text('Requires Refrigeration'),
-      subtitle: const Text('This medication needs to be stored in refrigerator'),
-      value: _requiresRefrigeration,
-      onChanged: (value) {
-        setState(() {
-          _requiresRefrigeration = value;
-        });
-      },
+    return Column(
+      children: [
+        SwitchListTile(
+          title: const Text('Requires Refrigeration'),
+          subtitle: const Text('This medication needs to be stored in refrigerator'),
+          value: _requiresRefrigeration,
+          onChanged: (value) {
+            setState(() {
+              _requiresRefrigeration = value;
+            });
+          },
+        ),
+        if (_requiresRefrigeration) ...[
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info, color: Colors.blue.shade600, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Store at 2-8°C (36-46°F). Do not freeze. Keep away from light.',
+                    style: TextStyle(
+                      color: Colors.blue.shade700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -601,6 +648,10 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
 
   Future<void> _saveMedication() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Show confirmation dialog
+    final confirmed = await _showSaveConfirmationDialog();
+    if (!confirmed) return;
 
     setState(() {
       _isLoading = true;
@@ -724,6 +775,199 @@ class _AddMedicationScreenComprehensiveState extends ConsumerState<AddMedication
       default:
         return [StrengthUnit.units];
     }
+  }
+
+  Widget _buildDynamicSummary() {
+    List<String> summaryParts = [];
+    
+    // Add medication type
+    if (_selectedType != null) {
+      summaryParts.add(_selectedType!.displayName);
+    }
+    
+    // Add brand name if available
+    if (_brandController.text.isNotEmpty) {
+      summaryParts.add(_brandController.text);
+    }
+    
+    // Add medication name if available
+    if (_nameController.text.isNotEmpty) {
+      summaryParts.add(_nameController.text);
+    }
+    
+    // Add strength information
+    if (_strengthController.text.isNotEmpty && _selectedStrengthUnit != null) {
+      summaryParts.add('${_strengthController.text}${_selectedStrengthUnit!.displayName}');
+    }
+    
+    // Add quantity information
+    if (_stockQuantityController.text.isNotEmpty && _selectedStockUnit != null) {
+      String stockInfo = '';
+      if (_selectedType == MedicationType.tablet) {
+        // For tablets, show quantity x strength format
+        if (_strengthController.text.isNotEmpty && _selectedStrengthUnit != null) {
+          stockInfo = '${_stockQuantityController.text} x ${_strengthController.text}${_selectedStrengthUnit!.displayName} ${_selectedType!.displayName}s';
+        }
+      } else {
+        stockInfo = '${_stockQuantityController.text} ${_selectedStockUnit!.displayName}';
+      }
+      if (stockInfo.isNotEmpty) {
+        summaryParts.add(stockInfo);
+      }
+    }
+    
+    // Create the summary text
+    String summaryText = summaryParts.isEmpty 
+        ? 'Fill in details to see summary'
+        : summaryParts.join(' • ');
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.primaryContainer,
+            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.summarize,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Medication Summary',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            summaryText,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (_requiresRefrigeration) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.ac_unit,
+                  color: Colors.blue,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Refrigeration Required (2-8°C)',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (_expirationDate != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.event,
+                  color: Colors.orange,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Expires: ${DateFormat('MMM dd, yyyy').format(_expirationDate!)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.orange.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _showSaveConfirmationDialog() async {
+    final summaryParts = <String>[];
+    
+    if (_selectedType != null) summaryParts.add(_selectedType!.displayName);
+    if (_nameController.text.isNotEmpty) summaryParts.add(_nameController.text);
+    if (_brandController.text.isNotEmpty) summaryParts.add('by ${_brandController.text}');
+    if (_strengthController.text.isNotEmpty && _selectedStrengthUnit != null) {
+      summaryParts.add('${_strengthController.text}${_selectedStrengthUnit!.displayName}');
+    }
+    if (_stockQuantityController.text.isNotEmpty && _selectedStockUnit != null) {
+      summaryParts.add('Stock: ${_stockQuantityController.text} ${_selectedStockUnit!.displayName}');
+    }
+    if (_expirationDate != null) {
+      summaryParts.add('Expires: ${DateFormat('MMM dd, yyyy').format(_expirationDate!)}');
+    }
+    
+    final summary = summaryParts.join('\n');
+    
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Save Medication'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Please confirm the medication details:'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  summary,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Are you sure you want to save this medication?'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
   }
 
   @override

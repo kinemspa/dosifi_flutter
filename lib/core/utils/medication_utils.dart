@@ -9,7 +9,6 @@ class MedicationUtils {
       case MedicationType.capsule:
         return [StrengthUnit.mcg, StrengthUnit.mg];
       
-      case MedicationType.injection:
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
@@ -44,8 +43,6 @@ class MedicationUtils {
         return 'Strength per Tablet';
       case MedicationType.capsule:
         return 'Strength per Capsule';
-      case MedicationType.injection:
-        return 'Strength per Injection';
       case MedicationType.preFilledSyringe:
         return 'Strength per Syringe';
       case MedicationType.readyMadeVial:
@@ -76,7 +73,6 @@ class MedicationUtils {
         return 'Number of Tablets';
       case MedicationType.capsule:
         return 'Number of Capsules';
-      case MedicationType.injection:
       case MedicationType.preFilledSyringe:
         return 'Number of Syringes';
       case MedicationType.readyMadeVial:
@@ -114,7 +110,6 @@ class MedicationUtils {
         MedicationType.liquid,
       ],
       'Injectable Medications': [
-        MedicationType.injection,
         MedicationType.preFilledSyringe,
         MedicationType.readyMadeVial,
         MedicationType.lyophilizedVial,
@@ -142,8 +137,6 @@ class MedicationUtils {
         return ['Hard Capsule', 'Soft Capsule', 'Extended-Release', 'Enteric-Coated'];
       case MedicationType.liquid:
         return ['Solution', 'Suspension', 'Syrup', 'Elixir'];
-      case MedicationType.injection:
-        return ['Intramuscular', 'Intravenous', 'Subcutaneous', 'Intradermal'];
       case MedicationType.preFilledSyringe:
         return ['Auto-injector', 'Pre-filled Syringe', 'Pen Injector'];
       case MedicationType.readyMadeVial:
@@ -204,7 +197,6 @@ class MedicationUtils {
     switch (type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
-      case MedicationType.injection:
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:

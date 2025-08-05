@@ -96,14 +96,6 @@ GoRoute(
         ),
       ),
       GoRoute(
-        path: '/supply-inventory',
-        name: 'supply-inventory',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const SupplyInventoryScreen(),
-        ),
-      ),
-      GoRoute(
         path: '/reconstitution',
         name: 'reconstitution',
         pageBuilder: (context, state) => MaterialPage(
@@ -157,6 +149,14 @@ GoRoute(
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: const AddMedicationScreenComprehensive(),
+        ),
+      ),
+      GoRoute(
+        path: '/medication-overview',
+        name: 'medication-overview',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const MedicationScreen(),
         ),
       ),
     ],

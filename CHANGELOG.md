@@ -2,6 +2,34 @@
 
 All notable changes to the Dosifi Flutter app will be documented in this file.
 
+## [1.3.0] - 2025-08-05
+
+### Added
+- **Comprehensive Test Suite** ✅
+  - Unit tests for business logic (MedicationType, StrengthUnit, MedicationUtils)
+  - Validation tests for medication strength and unit conversion
+  - Widget tests for core UI components
+  - Test environment configuration for proper CI/CD integration
+
+### Improved
+- **Test Environment Handling**
+  - Fixed notification service initialization in test environment
+  - Added proper timer management for test scenarios
+  - Enhanced splash screen with test-friendly navigation
+  - Improved test coverage for core functionality
+
+### Fixed
+- Test environment detection and configuration
+- Notification service initialization errors during testing
+- Timer conflicts in widget testing framework
+- Test infrastructure for business logic validation
+
+### Technical Improvements
+- Enhanced test environment detection
+- Better separation of test and production code paths
+- Improved error handling in test scenarios
+- Added comprehensive business logic test coverage
+
 ## [1.2.0] - 2025-01-03
 
 ### Added

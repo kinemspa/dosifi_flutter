@@ -1,8 +1,11 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'config/app_router.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +25,19 @@ Future<void> _initializeApp() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  
+  // Initialize notification service (skip in test environment)
+  if (!_isTestEnvironment()) {
+    try {
+      final notificationService = NotificationService();
+      await notificationService.initialize();
+      await notificationService.requestPermissions();
+    } catch (e) {
+      debugPrint('Notification service initialization error: $e');
+    }
+  } else {
+    debugPrint('Skipping notification service initialization in test environment');
+  }
   
   // Initialize database
   // try {
@@ -43,6 +59,11 @@ Future<void> _initializeApp() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
+}
+
+/// Helper function to detect if we're running in a test environment
+bool _isTestEnvironment() {
+  return Platform.environment.containsKey('FLUTTER_TEST') || kIsWeb && kDebugMode;
 }
 
 class DosifiApp extends ConsumerWidget {

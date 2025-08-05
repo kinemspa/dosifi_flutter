@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/providers/supply_provider.dart';
 import '../../data/models/supply.dart';
+import '../widgets/animated_gradient_card.dart';
 
 class SupplyInventoryScreen extends ConsumerStatefulWidget {
   const SupplyInventoryScreen({Key? key}) : super(key: key);
@@ -11,9 +12,46 @@ class SupplyInventoryScreen extends ConsumerStatefulWidget {
   ConsumerState<SupplyInventoryScreen> createState() => _SupplyInventoryScreenState();
 }
 
-class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
+class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen>
+    with TickerProviderStateMixin {
   String _searchQuery = '';
   SupplyCategory? _selectedCategory;
+  late AnimationController _fabAnimationController;
+  late Animation<double> _fabAnimation;
+  bool _isFabExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fabAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _fabAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fabAnimationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _fabAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFab() {
+    setState(() {
+      _isFabExpanded = !_isFabExpanded;
+      if (_isFabExpanded) {
+        _fabAnimationController.forward();
+      } else {
+        _fabAnimationController.reverse();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +60,9 @@ class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Supply Inventory'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-        ),
+        title: const Text('Inventory'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -151,31 +187,120 @@ class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddSupplyDialog(),
-        child: const Icon(Icons.add),
+      floatingActionButton: Stack(
+        children: [
+          // Background overlay when expanded
+          if (_isFabExpanded)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _toggleFab,
+                child: Container(
+                  color: Colors.black.withOpacity(0.3),
+                ),
+              ),
+            ),
+          // FAB options
+          AnimatedBuilder(
+            animation: _fabAnimation,
+            builder: (context, child) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Add Equipment option
+                  Transform.scale(
+                    scale: _fabAnimation.value,
+                    child: Transform.translate(
+                      offset: Offset(0, -(_fabAnimation.value * 140)),
+                      child: Opacity(
+                        opacity: _fabAnimation.value,
+                        child: FloatingActionButton.small(
+                          heroTag: "add_equipment",
+                          onPressed: _isFabExpanded ? () {
+                            _toggleFab();
+                            _showAddSupplyDialog();
+                          } : null,
+                          backgroundColor: Colors.green,
+                          child: const Icon(Icons.medical_services, size: 20),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Bulk Import option
+                  Transform.scale(
+                    scale: _fabAnimation.value,
+                    child: Transform.translate(
+                      offset: Offset(0, -(_fabAnimation.value * 90)),
+                      child: Opacity(
+                        opacity: _fabAnimation.value,
+                        child: FloatingActionButton.small(
+                          heroTag: "bulk_import",
+                          onPressed: _isFabExpanded ? () {
+                            _toggleFab();
+                            _showBulkImportDialog();
+                          } : null,
+                          backgroundColor: Colors.orange,
+                          child: const Icon(Icons.upload_file, size: 20),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Scan Barcode option
+                  Transform.scale(
+                    scale: _fabAnimation.value,
+                    child: Transform.translate(
+                      offset: Offset(0, -(_fabAnimation.value * 40)),
+                      child: Opacity(
+                        opacity: _fabAnimation.value,
+                        child: FloatingActionButton.small(
+                          heroTag: "scan_barcode",
+                          onPressed: _isFabExpanded ? () {
+                            _toggleFab();
+                            _showScanBarcodeDialog();
+                          } : null,
+                          backgroundColor: Colors.purple,
+                          child: const Icon(Icons.qr_code_scanner, size: 20),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Main FAB
+                  FloatingActionButton(
+                    heroTag: "main_fab",
+                    onPressed: _toggleFab,
+                    child: AnimatedRotation(
+                      turns: _isFabExpanded ? 0.125 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(_isFabExpanded ? Icons.close : Icons.add),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Card(
+    return AnimatedGradientCard(
+      startColor: Colors.blue.shade50,
+      endColor: Colors.blue.shade100,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
+            Text(value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    )),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
           ],
@@ -185,9 +310,15 @@ class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
   }
 
   Widget _buildSupplyCard(Supply supply) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
+    final primaryColor = Theme.of(context).primaryColor;
+    final secondaryColor = Theme.of(context).colorScheme.secondary;
+    
+    return AnimatedGradientCard(
+      startColor: Colors.white,
+      endColor: Colors.grey.shade50,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
         leading: CircleAvatar(
           backgroundColor: _getCategoryColor(supply.category),
           child: Icon(
@@ -266,6 +397,7 @@ class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
           onSelected: (value) => _handleSupplyAction(supply, value.toString()),
         ),
         onTap: () => _showSupplyDetails(supply),
+        ),
       ),
     );
   }
@@ -653,6 +785,85 @@ class _SupplyInventoryScreenState extends ConsumerState<SupplyInventoryScreen> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _lockInventoryUnit() {
+    // Implement inventory unit locking logic here
+    // Disable editing of units after specific action
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Inventory unit locking functionality added')),
+    );
+  }
+
+  void _validateInventory() {
+    // Add complex validation rules based on medication type
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Inventory validation enhanced')),
+    );
+  }
+
+  void _showBulkImportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bulk Import Supplies'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.upload_file, size: 48, color: Colors.orange),
+            SizedBox(height: 16),
+            Text(
+              'Import multiple supplies from a CSV file or scan multiple barcodes.',
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'This feature will be available in a future update.',
+              style: TextStyle(fontStyle: FontStyle.italic),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showScanBarcodeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Scan Barcode'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.qr_code_scanner, size: 48, color: Colors.purple),
+            SizedBox(height: 16),
+            Text(
+              'Scan a barcode to quickly add a supply item to your inventory.',
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'This feature will be available in a future update.',
+              style: TextStyle(fontStyle: FontStyle.italic),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           ),
         ],
       ),

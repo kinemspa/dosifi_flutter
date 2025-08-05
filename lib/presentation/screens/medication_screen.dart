@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/models/medication.dart';
 import '../../data/models/supply.dart';
 import '../providers/medication_provider.dart';
@@ -40,12 +41,9 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medications'),
+        title: const Text('Inventory'),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
-        ),
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,

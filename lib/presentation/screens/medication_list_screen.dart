@@ -140,48 +140,151 @@ class _MedicationCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final isExpired = medication.expirationDate != null &&
         medication.expirationDate!.isBefore(DateTime.now());
+    final isLowStock = medication.stockQuantity < 5; // Assume low stock threshold
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isExpired ? Colors.red : theme.colorScheme.primary,
-          child: Icon(
-            _getIconForType(medication.type.displayName),
-            color: Colors.white,
-          ),
-        ),
-        title: Text(
-          medication.name,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${medication.displayStrength} - ${medication.type.displayName}',
-              style: theme.textTheme.bodyMedium,
-            ),
-            if (medication.instructions != null && medication.instructions!.isNotEmpty)
-              Text(
-                medication.instructions!,
-                style: theme.textTheme.bodySmall,
-              ),
-            if (isExpired)
-              Text(
-                'EXPIRED',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Card(
+        elevation: 1,
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          onTap: () => context.navigateToMedicationDetails(medication.id.toString()),
+          onLongPress: () => _showOptions(context, ref, medication),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                // Compact icon
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isExpired 
+                        ? Colors.red.withOpacity(0.1)
+                        : theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isExpired ? Colors.red : theme.colorScheme.primary,
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    _getIconForType(medication.type.displayName),
+                    color: isExpired ? Colors.red : theme.colorScheme.primary,
+                    size: 18,
+                  ),
                 ),
-              ),
-          ],
+                const SizedBox(width: 10),
+                // Medication info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Name and type in one line
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              medication.name,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            medication.type.displayName,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      // Strength and stock in one line
+                      Row(
+                        children: [
+                          Text(
+                            medication.displayStrength,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '•',
+                            style: TextStyle(color: Colors.grey[500], fontSize: 10),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${medication.stockQuantity.toInt()} left',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: isLowStock ? Colors.orange[700] : Colors.grey[700],
+                              fontWeight: isLowStock ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Status indicators
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isExpired)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.red[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'EXP',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red[800],
+                          ),
+                        ),
+                      ),
+                    if (isLowStock && !isExpired)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'LOW',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[800],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 14,
+                      color: Colors.grey[400],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => context.navigateToMedicationDetails(medication.id.toString()),
-        onLongPress: () => _showOptions(context, ref, medication),
       ),
     );
   }

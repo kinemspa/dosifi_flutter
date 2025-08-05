@@ -22,10 +22,6 @@ final doseOptions = {
     DoseOption(displayName: 'ml', unit: 'ml'),
     DoseOption(displayName: 'mg', unit: 'mg'),
   ],
-  MedicationType.injection: [
-    DoseOption(displayName: 'mg', unit: 'mg'),
-    DoseOption(displayName: 'ml', unit: 'ml'),
-  ],
   MedicationType.preFilledSyringe: [
     DoseOption(displayName: 'ml', unit: 'ml'),
     DoseOption(displayName: 'mg', unit: 'mg'),

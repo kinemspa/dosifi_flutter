@@ -5,7 +5,6 @@ enum MedicationType {
   tablet,
   capsule,
   liquid,
-  injection,
   preFilledSyringe,
   readyMadeVial,
   lyophilizedVial,
@@ -25,8 +24,6 @@ enum MedicationType {
         return 'Capsule';
       case MedicationType.liquid:
         return 'Liquid';
-      case MedicationType.injection:
-        return 'Injection';
       case MedicationType.preFilledSyringe:
         return 'Pre-filled Syringe';
       case MedicationType.readyMadeVial:
@@ -328,7 +325,6 @@ class Medication {
       case MedicationType.capsule:
         return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} capsules';
       case MedicationType.preFilledSyringe:
-      case MedicationType.injection:
         return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} syringes';
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:

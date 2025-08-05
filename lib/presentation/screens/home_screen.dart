@@ -14,7 +14,7 @@ class HomeScreen extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'Dosifi Dashboard',
+          'Home',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
@@ -44,7 +44,7 @@ class HomeScreen extends ConsumerWidget {
             context,
             icon: Icons.inventory,
             label: 'Inventory',
-            onTap: () => context.push('/medication-screen'),
+            onTap: () => context.go('/inventory'),
           ),
           _buildDashboardTile(
             context,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:calendar_view/calendar_view.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/schedule.dart';
@@ -9,6 +9,7 @@ import '../providers/schedule_provider.dart';
 import '../providers/dose_log_provider.dart';
 import '../providers/medication_provider.dart';
 import '../../data/dose_options.dart';
+import '../../services/notification_service.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -17,15 +18,23 @@ class ScheduleScreen extends ConsumerStatefulWidget {
   ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTickerProviderStateMixin {
+  DateTime _selectedDay = DateTime.now();
+  late TabController _tabController;
+  late EventController _eventController;
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime.now();
+    _tabController = TabController(length: 3, vsync: this);
+    _eventController = EventController();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _eventController.dispose();
+    super.dispose();
   }
 
   @override
@@ -39,97 +48,362 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.canPop() ? context.pop() : context.go('/'),
         ),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          tabs: const [
+            Tab(text: 'Today', icon: Icon(Icons.today)),
+            Tab(text: 'Calendar', icon: Icon(Icons.calendar_month)),
+            Tab(text: 'All Schedules', icon: Icon(Icons.schedule)),
+          ],
+        ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          _buildCalendar(),
-          const Divider(height: 1),
-          Expanded(
-            child: schedulesAsync.when(
-              data: (schedules) {
-                final schedulesForDay = _getSchedulesForDay(schedules, _selectedDay!);
-                
-                if (schedulesForDay.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.event_available,
-                          size: 64,
-                          color: Theme.of(context).disabledColor,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No schedules for this day',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: schedulesForDay.length,
-                  itemBuilder: (context, index) {
-                    final schedule = schedulesForDay[index];
-                    return _buildScheduleCard(schedule);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Text('Error: $error'),
-              ),
-            ),
-          ),
+          _buildTodayTab(schedulesAsync),
+          _buildCalendarTab(schedulesAsync),
+          _buildAllSchedulesTab(schedulesAsync),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddScheduleDialog,
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: "test_notification",
+            mini: true,
+            onPressed: _testNotification,
+            child: const Icon(Icons.notifications),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton(
+            heroTag: "add_schedule",
+            onPressed: _showAddScheduleDialog,
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCalendar() {
-    return TableCalendar<Schedule>(
-      firstDay: DateTime.utc(2020, 1, 1),
-      lastDay: DateTime.utc(2030, 12, 31),
-      focusedDay: _focusedDay,
-      calendarFormat: _calendarFormat,
-      selectedDayPredicate: (day) {
-        return isSameDay(_selectedDay, day);
+  Widget _buildTodayTab(AsyncValue<List<Schedule>> schedulesAsync) {
+    return schedulesAsync.when(
+      data: (schedules) {
+        final todaySchedules = _getSchedulesForDay(schedules, DateTime.now());
+        
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Today\'s Doses',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (todaySchedules.isEmpty)
+                _buildEmptyState('No doses scheduled for today')
+              else
+                ...todaySchedules.map((schedule) => _buildTodayDoseCard(schedule)),
+            ],
+          ),
+        );
       },
-      onDaySelected: (selectedDay, focusedDay) {
-        if (!isSameDay(_selectedDay, selectedDay)) {
-          setState(() {
-            _selectedDay = selectedDay;
-            _focusedDay = focusedDay;
-          });
-        }
-      },
-      onFormatChanged: (format) {
-        if (_calendarFormat != format) {
-          setState(() {
-            _calendarFormat = format;
-          });
-        }
-      },
-      onPageChanged: (focusedDay) {
-        _focusedDay = focusedDay;
-      },
-      calendarStyle: CalendarStyle(
-        outsideDaysVisible: false,
-        selectedDecoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          shape: BoxShape.circle,
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  Widget _buildTodayDoseCard(Schedule schedule) {
+    final timeParts = schedule.timeOfDay.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
+    final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  medicationAsync.when(
+                    data: (medication) => Text(
+                      medication?.name ?? 'Unknown Medication',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    loading: () => const Text('Loading...'),
+                    error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${schedule.doseAmount} ${schedule.doseUnit}',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  medicationAsync.when(
+                    data: (medication) => medication != null 
+                        ? Text(
+                            medication.displayStrength,
+                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          )
+                        : const SizedBox.shrink(),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: () => _markDoseAsTaken(schedule),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Take'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () => _snoozeDose(schedule),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.orange,
+                    side: const BorderSide(color: Colors.orange),
+                  ),
+                  child: const Text('Snooze'),
+                ),
+              ],
+            ),
+          ],
         ),
-        todayDecoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-          shape: BoxShape.circle,
+      ),
+    );
+  }
+
+  Widget _buildCalendarWithEvents(AsyncValue<List<Schedule>> schedulesAsync) {
+    return schedulesAsync.when(
+      data: (schedules) {
+        // Convert schedules to calendar events
+        final events = <CalendarEventData>[];
+        for (final schedule in schedules) {
+          // Generate events for the next 90 days
+          final now = DateTime.now();
+          final endDate = now.add(const Duration(days: 90));
+          
+          for (var date = now; date.isBefore(endDate); date = date.add(const Duration(days: 1))) {
+            if (schedule.isActiveOnDate(date)) {
+              final timeParts = schedule.timeOfDay.split(':');
+              final hour = int.parse(timeParts[0]);
+              final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
+              
+              final eventDateTime = DateTime(date.year, date.month, date.day, hour, minute);
+              
+              events.add(CalendarEventData(
+                title: 'Dose: Schedule ${schedule.id}',
+                date: eventDateTime,
+                startTime: eventDateTime,
+                endTime: eventDateTime.add(const Duration(minutes: 30)),
+                color: Theme.of(context).primaryColor,
+              ));
+            }
+          }
+        }
+        
+        _eventController.addAll(events);
+        
+        return MonthView(
+          controller: _eventController,
+          onDateLongPress: (date) => setState(() => _selectedDay = date),
+          onEventTap: (event, date) {
+            // Handle event tap
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Dose scheduled at ${DateFormat('HH:mm').format(date)}')),
+            );
+          },
+          cellAspectRatio: 0.6,
+          headerBuilder: (date) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              DateFormat('MMMM yyyy').format(date),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Center(child: Text('Error loading calendar')),
+    );
+  }
+
+  Widget _buildAllSchedulesTab(AsyncValue<List<Schedule>> schedulesAsync) {
+    return schedulesAsync.when(
+      data: (schedules) {
+        if (schedules.isEmpty) {
+          return _buildEmptyState('No schedules created yet');
+        }
+        
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: schedules.length,
+          itemBuilder: (context, index) {
+            final schedule = schedules[index];
+            return _buildFullScheduleCard(schedule);
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  Widget _buildFullScheduleCard(Schedule schedule) {
+    final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: medicationAsync.when(
+                    data: (medication) => Text(
+                      medication?.name ?? 'Unknown Medication',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    loading: () => const Text('Loading...'),
+                    error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
+                  ),
+                ),
+                Chip(
+                  label: Text(
+                    ScheduleType.fromString(schedule.scheduleType).displayName,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 8),
+                Text('Time: ${schedule.timeOfDay}'),
+                const Spacer(),
+                Icon(Icons.medication, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 8),
+                Text('${schedule.doseAmount} ${schedule.doseUnit}'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 8),
+                Text('From: ${DateFormat('MMM dd, yyyy').format(schedule.startDate)}'),
+                if (schedule.endDate != null) ...[
+                  const SizedBox(width: 16),
+                  Text('To: ${DateFormat('MMM dd, yyyy').format(schedule.endDate!)}'),
+                ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _showEditScheduleDialog(schedule),
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: const Text('Edit'),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => _deleteSchedule(schedule.id!),
+                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                  label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.schedule,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _showAddScheduleDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Schedule'),
+          ),
+        ],
       ),
     );
   }
@@ -195,8 +469,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               onPressed: () => _showEditScheduleDialog(schedule),
             ),
             IconButton(
-              icon: const Icon(Icons.check_circle_outline),
+              icon: const Icon(Icons.check_circle_outline, color: Colors.green),
               onPressed: () => _markDoseAsTaken(schedule),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteSchedule(schedule.id!),
             ),
           ],
         ),
@@ -204,22 +482,90 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     );
   }
 
+  Widget _buildTodayUpcomingTab(AsyncValue<List<Schedule>> schedulesAsync) {
+    return schedulesAsync.when(
+      data: (schedules) {
+        final todaySchedules = _getSchedulesForDay(schedules, DateTime.now());
+        final upcomingSchedules = _getUpcomingSchedules(schedules);
+        
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Today',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (todaySchedules.isEmpty)
+                const Text('No schedules for today')
+              else
+                ...todaySchedules.map((schedule) => _buildScheduleCard(schedule)),
+              
+              const SizedBox(height: 24),
+              Text(
+                'Upcoming',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (upcomingSchedules.isEmpty)
+                const Text('No upcoming schedules')
+              else
+                ...upcomingSchedules.map((schedule) => _buildScheduleCard(schedule)),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  Widget _buildCalendarTab(AsyncValue<List<Schedule>> schedulesAsync) {
+    return _buildCalendarWithEvents(schedulesAsync);
+  }
+
   List<Schedule> _getSchedulesForDay(List<Schedule> schedules, DateTime day) {
     return schedules.where((schedule) {
-      // Check if the schedule is active on this day
-      if (!schedule.isActive) return false;
-      
-      // Check if the day is within the schedule's date range
-      if (schedule.startDate.isAfter(day)) return false;
-      if (schedule.endDate != null && schedule.endDate!.isBefore(day)) return false;
-      
-      // Check if it matches the repeat pattern
-      // TODO: Implement proper repeat pattern matching
-      return true;
+      // Use the schedule's built-in method to check if it's active on this date
+      return schedule.isActiveOnDate(day);
     }).toList();
   }
 
-void _showAddScheduleDialog() {
+  List<Schedule> _getUpcomingSchedules(List<Schedule> schedules) {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final nextWeek = now.add(const Duration(days: 7));
+    
+    return schedules.where((schedule) {
+      if (!schedule.isActive) return false;
+      
+      // Get schedules from tomorrow up to next week
+      for (var day = tomorrow; day.isBefore(nextWeek); day = day.add(const Duration(days: 1))) {
+        if (_getSchedulesForDay([schedule], day).isNotEmpty) {
+          return true;
+        }
+      }
+      return false;
+    }).toList();
+  }
+
+void _testNotification() async {
+    final notificationService = NotificationService();
+    await notificationService.showInstantNotification(
+      title: 'Test Notification',
+      body: 'This is a test notification.',
+    );
+  }
+
+  void _showAddScheduleDialog() {
     final medicationsAsync = ref.watch(medicationListProvider);
     int? selectedMedicationId;
     TimeOfDay? selectedTime;
@@ -537,6 +883,43 @@ void _showAddScheduleDialog() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Edit schedule functionality coming soon!')),
     );
+  }
+
+  void _deleteSchedule(int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Schedule'),
+        content: const Text('Are you sure you want to delete this schedule?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(scheduleListProvider.notifier).deleteSchedule(id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Schedule deleted!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _snoozeDose(Schedule schedule) {
+    // Implementation for snoozing a dose
+    DateTime.now(); // Placeholder
   }
 
   void _markDoseAsTaken(Schedule schedule) async {

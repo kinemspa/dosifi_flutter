@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/schedule.dart';
 import '../../data/repositories/schedule_repository.dart';
+import '../../services/notification_service.dart';
+import 'medication_provider.dart';
 
 // Repository provider
 final scheduleRepositoryProvider = Provider<ScheduleRepository>((ref) {
@@ -10,9 +13,27 @@ final scheduleRepositoryProvider = Provider<ScheduleRepository>((ref) {
 // State notifier for managing schedules
 class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
   final ScheduleRepository _repository;
+  final Ref _ref;
+  final NotificationService _notificationService = NotificationService();
 
-  ScheduleListNotifier(this._repository) : super(const AsyncValue.loading()) {
+  ScheduleListNotifier(this._repository, this._ref) : super(const AsyncValue.loading()) {
+    _initializeNotifications();
     loadSchedules();
+  }
+
+  Future<void> _initializeNotifications() async {
+    // Skip notification initialization in test environment
+    if (kDebugMode && (kIsWeb)) {
+      debugPrint('Skipping notification initialization in test environment');
+      return;
+    }
+    
+    try {
+      await _notificationService.initialize();
+      await _notificationService.requestPermissions();
+    } catch (e) {
+      debugPrint('Failed to initialize notifications: $e');
+    }
   }
 
   Future<void> loadSchedules() async {
@@ -29,6 +50,9 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     try {
       final id = await _repository.insertSchedule(schedule);
       final newSchedule = schedule.copyWith(id: id);
+      
+      // Schedule notifications for this schedule
+      await _scheduleNotifications(newSchedule);
       
       state.whenData((schedules) {
         state = AsyncValue.data([...schedules, newSchedule]);
@@ -70,6 +94,11 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     try {
       await _repository.updateScheduleStatus(id, isActive);
       
+      if (!isActive) {
+        // Cancel notifications for inactive schedule
+        await _notificationService.cancelNotificationsForSchedule(id);
+      }
+      
       state.whenData((schedules) {
         final updatedList = schedules.map((s) {
           if (s.id == id) {
@@ -83,13 +112,33 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> _scheduleNotifications(Schedule schedule) async {
+    try {
+      if (!schedule.isActive) return;
+      
+      // Get medication details
+      final medicationAsync = await _ref.read(medicationByIdProvider(schedule.medicationId).future);
+      if (medicationAsync == null) return;
+      
+      // Schedule notifications for the next 30 days
+      await _notificationService.scheduleNotificationsForSchedule(
+        schedule: schedule,
+        medication: medicationAsync,
+        daysAhead: 30,
+      );
+    } catch (e) {
+      // Log error but don't fail the schedule creation
+      print('Error scheduling notifications: $e');
+    }
+  }
 }
 
 // Provider for the schedule list state notifier
 final scheduleListProvider = 
     StateNotifierProvider<ScheduleListNotifier, AsyncValue<List<Schedule>>>((ref) {
   final repository = ref.watch(scheduleRepositoryProvider);
-  return ScheduleListNotifier(repository);
+  return ScheduleListNotifier(repository, ref);
 });
 
 // Provider for getting schedules by medication

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/medication.dart';
 
@@ -20,15 +21,17 @@ class MedicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shadowColor: Colors.black.withOpacity(0.1),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header row with medication name and actions
               Row(
                 children: [
                   Expanded(
@@ -37,23 +40,26 @@ class MedicationCard extends StatelessWidget {
                       children: [
                         Text(
                           medication.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         if (medication.brandManufacturer != null) ...[
                           const SizedBox(height: 2),
                           Text(
                             medication.brandManufacturer!,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey,
                             ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  _buildMedicationTypeChip(),
+                  _buildMedicationTypeLabel(),
                   PopupMenuButton<String>(
                     onSelected: _handleMenuSelection,
                     itemBuilder: (BuildContext context) => [
@@ -78,7 +84,7 @@ class MedicationCard extends StatelessWidget {
                 ],
               ),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               
               // Medication details in a grid
               Row(
@@ -100,7 +106,7 @@ class MedicationCard extends StatelessWidget {
                 ],
               ),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               
               // Additional information row
               Row(
@@ -142,6 +148,40 @@ class MedicationCard extends StatelessWidget {
     );
   }
 
+  Widget _buildMedicationTypeLabel() {
+    Color textColor;
+    
+    switch (medication.type) {
+      case MedicationType.tablet:
+      case MedicationType.capsule:
+        textColor = Colors.blue.shade700;
+        break;
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+      case MedicationType.lyophilizedVial:
+        textColor = Colors.red.shade700;
+        break;
+      case MedicationType.cream:
+      case MedicationType.ointment:
+        textColor = Colors.green.shade700;
+        break;
+      default:
+        textColor = Colors.grey.shade700;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Text(
+        medication.type.displayName,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   Widget _buildMedicationTypeChip() {
     Color chipColor;
     Color textColor;
@@ -155,7 +195,6 @@ class MedicationCard extends StatelessWidget {
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-      case MedicationType.injection:
         chipColor = Colors.red.shade100;
         textColor = Colors.red.shade800;
         break;
