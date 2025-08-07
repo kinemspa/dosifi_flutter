@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../data/models/supply.dart';
 import '../providers/supply_provider.dart';
 import '../../config/app_router.dart';
@@ -9,9 +8,9 @@ class AddSupplyScreen extends ConsumerStatefulWidget {
   final String? supplyId;
   
   const AddSupplyScreen({
-    Key? key,
+    super.key,
     this.supplyId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<AddSupplyScreen> createState() => _AddSupplyScreenState();

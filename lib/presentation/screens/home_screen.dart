@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../config/app_router.dart';
 import '../../core/widgets/animated_gradient_card.dart';
 import '../../core/widgets/floating_particles.dart';
 import '../../core/theme/app_theme.dart';

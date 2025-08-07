@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'config/app_router.dart';
 import 'services/notification_service.dart';
-import 'core/utils/error_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

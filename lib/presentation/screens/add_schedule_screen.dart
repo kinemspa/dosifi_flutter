@@ -11,9 +11,9 @@ class AddScheduleScreen extends ConsumerStatefulWidget {
   final String? scheduleId;
   
   const AddScheduleScreen({
-    Key? key,
+    super.key,
     this.scheduleId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<AddScheduleScreen> createState() => _AddScheduleScreenState();
@@ -32,7 +32,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   String _selectedDoseForm = 'tablet';
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
-  List<int> _selectedDaysOfWeek = [];
+  final List<int> _selectedDaysOfWeek = [];
   int? _cycleDaysOn;
   int? _cycleDaysOff;
   bool _isLoading = false;

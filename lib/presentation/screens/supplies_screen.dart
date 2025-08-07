@@ -5,7 +5,7 @@ import '../../data/models/supply.dart';
 import '../providers/supply_provider.dart';
 
 class SuppliesScreen extends ConsumerStatefulWidget {
-  const SuppliesScreen({Key? key}) : super(key: key);
+  const SuppliesScreen({super.key});
 
   @override
   ConsumerState<SuppliesScreen> createState() => _SuppliesScreenState();

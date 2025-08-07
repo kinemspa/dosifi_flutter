@@ -389,8 +389,13 @@ class Medication {
         return 5.0; // 5 mL
       case MedicationType.lyophilizedVial:
         return 1.0; // 1 vial
+      case MedicationType.singleUsePen:
+        return 2.0; // 2 single-use pens
+      case MedicationType.multiUsePen:
+        return 1.0; // 1 multi-use pen
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return 15.0; // 15 grams
       case MedicationType.patch:
         return 3.0; // 3 patches
@@ -398,6 +403,8 @@ class Medication {
         return 20.0; // 20 doses remaining
       case MedicationType.suppository:
         return 3.0; // 3 suppositories
+      case MedicationType.spray:
+        return 10.0; // 10 sprays remaining
       case MedicationType.other:
         return 5.0; // 5 units
     }
@@ -412,6 +419,9 @@ class Medication {
       case MedicationType.suppository:
       case MedicationType.patch:
       case MedicationType.inhaler:
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+      case MedicationType.spray:
         return 1.0; // Whole units only
       case MedicationType.liquid:
         return 0.1; // 0.1 mL precision
@@ -421,6 +431,7 @@ class Medication {
         return 0.01; // 0.01 mL precision
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return 0.5; // 0.5g precision for applications
       case MedicationType.drops:
         return 1.0; // Individual drop precision
@@ -478,10 +489,15 @@ class Medication {
         return ['mL', 'Units', 'mg', 'mcg', 'IU'];
       case MedicationType.lyophilizedVial:
         return ['mL', 'Units', 'mg', 'mcg', 'IU'];
+      case MedicationType.singleUsePen:
+        return ['pen', 'units', 'mg', 'mcg', 'IU'];
+      case MedicationType.multiUsePen:
+        return ['doses', 'units', 'mg', 'mcg', 'IU'];
       case MedicationType.drops:
         return ['drops', 'mL', 'mg', 'mcg'];
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return ['g', 'applications', 'mg', 'mcg'];
       case MedicationType.inhaler:
         return ['puffs', 'doses', 'mcg', 'mg'];
@@ -489,6 +505,8 @@ class Medication {
         return ['patches', 'mcg/hr', 'mg/hr'];
       case MedicationType.suppository:
         return ['suppository', 'suppositories', 'mg', 'mcg'];
+      case MedicationType.spray:
+        return ['sprays', 'doses', 'mg', 'mcg'];
       case MedicationType.other:
         return ['units', 'mg', 'mcg', 'g'];
     }
@@ -627,12 +645,6 @@ class Medication {
       stockQuantity: stockQuantity + changeAmount,
       updatedAt: DateTime.now(),
     );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is Medication && other.id == id;
   }
 
   @override

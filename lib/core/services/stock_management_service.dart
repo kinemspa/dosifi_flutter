@@ -57,7 +57,7 @@ class StockManagementService {
       await medication.logStockChange(
         changeAmount: -unitsConsumed, // Negative for consumption
         reason: reasonAdministered,
-        notes: notes ?? 'Dose administration: ${doseAmount} ${medication.strengthUnit.displayName}',
+        notes: notes ?? 'Dose administration: $doseAmount ${medication.strengthUnit.displayName}',
       );
 
       debugPrint('$_logTag: Recorded dose administration for ${medication.name}: -$unitsConsumed units');

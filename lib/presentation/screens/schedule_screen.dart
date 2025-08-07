@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:go_router/go_router.dart';
 import '../../config/app_router.dart';
 import '../../data/models/schedule.dart';
 import '../../data/models/dose_log.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/dose_log_provider.dart';
 import '../providers/medication_provider.dart';
-import '../../data/dose_options.dart';
 import '../../services/notification_service.dart';
 import 'calendar_screen.dart';
 
@@ -20,7 +18,7 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 }
 
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTickerProviderStateMixin {
-  DateTime _selectedDay = DateTime.now();
+  final DateTime _selectedDay = DateTime.now();
   late TabController _tabController;
 
   @override

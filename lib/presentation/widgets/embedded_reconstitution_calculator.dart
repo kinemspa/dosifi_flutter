@@ -6,11 +6,11 @@ class EmbeddedReconstitutionCalculator extends StatefulWidget {
   final String? initialStrengthUnit;
   
   const EmbeddedReconstitutionCalculator({
-    Key? key,
+    super.key,
     this.onCalculationResult,
     this.initialStrength,
     this.initialStrengthUnit,
-  }) : super(key: key);
+  });
 
   @override
   State<EmbeddedReconstitutionCalculator> createState() => _EmbeddedReconstitutionCalculatorState();
@@ -21,7 +21,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
   final _desiredDoseController = TextEditingController();
   
   String _strengthUnit = 'mg';
-  String _doseUnit = 'Units';
+  final String _doseUnit = 'Units';
   String _syringeSize = '1mL';
   String? _targetVialSize;
   
@@ -321,7 +321,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                 ),
               ),
             );
-          }).toList(),
+          }),
         ],
       ],
     );

@@ -34,13 +34,13 @@ class MedicationCard extends StatelessWidget {
   final MedicationCardLayout? forceLayout;
 
   const MedicationCard({
-    Key? key,
+    super.key,
     required this.medication,
     this.onTap,
     this.onEdit,
     this.onDelete,
     this.forceLayout,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

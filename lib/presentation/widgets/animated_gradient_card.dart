@@ -6,11 +6,11 @@ class AnimatedGradientCard extends StatelessWidget {
   final Color endColor;
 
   const AnimatedGradientCard({
-    Key? key,
+    super.key,
     required this.child,
     required this.startColor,
     required this.endColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
