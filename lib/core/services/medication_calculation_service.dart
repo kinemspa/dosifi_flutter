@@ -36,9 +36,15 @@ class MedicationCalculationService {
       case MedicationType.patch:
         return _calculatePatchDeduction(medication, doseAmount, doseUnit);
       
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return _calculatePenDeduction(medication, doseAmount, doseUnit);
+      
       case MedicationType.suppository:
         return _calculateSuppositoryDeduction(medication, doseAmount, doseUnit);
       
+      case MedicationType.spray:
+      case MedicationType.gel:
       case MedicationType.other:
         return _calculateGenericDeduction(medication, doseAmount, doseUnit);
     }
@@ -69,6 +75,11 @@ class MedicationCalculationService {
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
         // Usage is in mL, stock is in mL
+        return currentStock / dailyUsage;
+      
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        // Stock is in pens/cartridges, usage is in pens/doses
         return currentStock / dailyUsage;
       
       case MedicationType.cream:
@@ -147,6 +158,13 @@ class MedicationCalculationService {
         // For patches: strength_per_patch × patch_count
         return medication.strengthPerUnit * medication.stockQuantity;
       
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        // strength_per_pen × pen_count
+        return medication.strengthPerUnit * medication.stockQuantity;
+      
+      case MedicationType.spray:
+      case MedicationType.gel:
       case MedicationType.other:
         return medication.strengthPerUnit * medication.stockQuantity;
     }
@@ -364,6 +382,33 @@ class MedicationCalculationService {
         // Calculate patches needed: dose_rate / patch_delivery_rate
         final rateInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
         return doseAmount / rateInSameUnit;
+      
+      default:
+        return doseAmount;
+    }
+  }
+
+  static double _calculatePenDeduction(Medication medication, double doseAmount, String doseUnit) {
+    switch (doseUnit) {
+      case 'pens':
+      case 'pen':
+        return doseAmount; // Direct deduction in pens
+      
+      case 'doses':
+        // For multi-use pens, calculate fraction of pen used
+        if (medication.type == MedicationType.multiUsePen) {
+          // Assume pen has multiple doses, deduct fraction
+          return doseAmount; // This should be handled differently based on pen capacity
+        }
+        return doseAmount; // Single-use pens
+      
+      case 'Units':
+      case 'IU':
+      case 'mg':
+      case 'mcg':
+        // Calculate pens needed: dose_amount / strength_per_pen
+        final strengthInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        return doseAmount / strengthInSameUnit;
       
       default:
         return doseAmount;

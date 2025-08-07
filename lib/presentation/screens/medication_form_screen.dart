@@ -120,9 +120,6 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(isEditMode ? 'Edit Medication' : 'Add Medication'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.navigateBackSmart(),

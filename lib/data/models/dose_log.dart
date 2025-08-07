@@ -99,6 +99,63 @@ class DoseLog {
     );
   }
 
+  /// Create a dose log for missed dose
+  factory DoseLog.missed({
+    required int medicationId,
+    int? scheduleId,
+    required DateTime scheduledTime,
+    String? notes,
+  }) {
+    final now = DateTime.now();
+    return DoseLog(
+      medicationId: medicationId,
+      scheduleId: scheduleId,
+      scheduledTime: scheduledTime,
+      status: DoseStatus.missed,
+      notes: notes,
+      createdAt: now,
+    );
+  }
+
+  /// Create a dose log for taken dose (with stock integration)
+  factory DoseLog.taken({
+    required int medicationId,
+    int? scheduleId,
+    required DateTime scheduledTime,
+    required double doseAmount,
+    String? notes,
+  }) {
+    final now = DateTime.now();
+    return DoseLog(
+      medicationId: medicationId,
+      scheduleId: scheduleId,
+      scheduledTime: scheduledTime,
+      takenTime: now,
+      status: DoseStatus.taken,
+      doseAmount: doseAmount,
+      notes: notes,
+      createdAt: now,
+    );
+  }
+
+  /// Create a dose log for skipped dose
+  factory DoseLog.skipped({
+    required int medicationId,
+    int? scheduleId,
+    required DateTime scheduledTime,
+    String? notes,
+  }) {
+    final now = DateTime.now();
+    return DoseLog(
+      medicationId: medicationId,
+      scheduleId: scheduleId,
+      scheduledTime: scheduledTime,
+      status: DoseStatus.skipped,
+      notes: notes,
+      createdAt: now,
+    );
+  }
+
   // Helper getters
   bool get isTaken => status == DoseStatus.taken;
   bool get isMissed => status == DoseStatus.missed;

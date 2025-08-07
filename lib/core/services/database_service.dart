@@ -191,6 +191,21 @@ class DatabaseService {
       )
     ''');
 
+    // Create medication_stock_logs table for comprehensive stock tracking
+    await db.execute('''
+      CREATE TABLE medication_stock_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medication_id INTEGER NOT NULL,
+        timestamp TEXT NOT NULL,
+        change_amount REAL NOT NULL,
+        new_total REAL NOT NULL,
+        reason TEXT NOT NULL,
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_medications_name ON medications(name)');
     await db.execute('CREATE INDEX idx_schedules_medication ON schedules(medication_id)');

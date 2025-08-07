@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../core/services/database_service.dart';
 
 // Medication Types
 enum MedicationType {
@@ -8,12 +9,16 @@ enum MedicationType {
   preFilledSyringe,
   readyMadeVial,
   lyophilizedVial,
+  singleUsePen,
+  multiUsePen,
   cream,
   ointment,
   drops,
   inhaler,
   patch,
   suppository,
+  spray,
+  gel,
   other;
 
   String get displayName {
@@ -42,6 +47,14 @@ enum MedicationType {
         return 'Patch';
       case MedicationType.suppository:
         return 'Suppository';
+      case MedicationType.singleUsePen:
+        return 'Single-Use Pen';
+      case MedicationType.multiUsePen:
+        return 'Multi-Use Pen';
+      case MedicationType.spray:
+        return 'Spray';
+      case MedicationType.gel:
+        return 'Gel';
       case MedicationType.other:
         return 'Other';
     }
@@ -517,6 +530,250 @@ class Medication {
     return other is Medication && other.id == id;
   }
 
+  /// Comprehensive dose validation with type-specific constraints
+  ValidationResult validateDoseAmount(double unitsPerDose) {
+    switch (type) {
+      case MedicationType.tablet:
+      case MedicationType.capsule:
+        // Allow full, half, or quarter units (n, n.5, n.25)
+        final remainder = unitsPerDose % 0.25;
+        if (remainder < 0.001) { // Allow for floating point precision
+          return ValidationResult.valid();
+        }
+        return ValidationResult.invalid('${type.displayName} must be in increments of 0.25 (quarter units)');
+        
+      case MedicationType.preFilledSyringe:
+      case MedicationType.singleUsePen:
+      case MedicationType.patch:
+      case MedicationType.suppository:
+      case MedicationType.inhaler:
+      case MedicationType.drops:
+      case MedicationType.spray:
+        // Must be whole numbers (integers)
+        if (unitsPerDose == unitsPerDose.roundToDouble()) {
+          return ValidationResult.valid();
+        }
+        return ValidationResult.invalid('${type.displayName} must use whole units only');
+        
+      case MedicationType.readyMadeVial:
+      case MedicationType.lyophilizedVial:
+      case MedicationType.liquid:
+      case MedicationType.cream:
+      case MedicationType.gel:
+      case MedicationType.ointment:
+        // Allow arbitrary decimals
+        return ValidationResult.valid();
+        
+      case MedicationType.multiUsePen:
+        // Must be integers (doses per cartridge)
+        if (unitsPerDose == unitsPerDose.roundToDouble()) {
+          return ValidationResult.valid();
+        }
+        return ValidationResult.invalid('Multi-use pen doses must be whole numbers');
+        
+      case MedicationType.other:
+        // Default validation - allow arbitrary amounts
+        return ValidationResult.valid();
+    }
+  }
+
+  /// Convert strength per dose to units per dose
+  double convertStrengthToUnits(String strengthPerDose) {
+    final doseValue = _parseStrengthValue(strengthPerDose);
+    
+    if (doseValue == null || strengthPerUnit == 0) {
+      return 0.0;
+    }
+    
+    return doseValue / strengthPerUnit;
+  }
+
+  /// Convert units per dose to strength per dose
+  String convertUnitsToStrength(double unitsPerDose) {
+    if (strengthPerUnit == 0) {
+      return '0${strengthUnit.displayName}';
+    }
+    
+    final totalStrength = unitsPerDose * strengthPerUnit;
+    
+    return '${totalStrength.toStringAsFixed(totalStrength.truncateToDouble() == totalStrength ? 0 : 2)}${strengthUnit.displayName}';
+  }
+
+  /// Parse numeric value from strength string (e.g., "500mg" -> 500.0)
+  static double? _parseStrengthValue(String strength) {
+    final regex = RegExp(r'^([0-9]*\.?[0-9]+)');
+    final match = regex.firstMatch(strength);
+    if (match != null) {
+      return double.tryParse(match.group(1)!);
+    }
+    return null;
+  }
+
+  /// Calculate days remaining given usage
+  int calculateDaysRemaining(double unitsPerDose, double dosesPerDay) {
+    if (unitsPerDose <= 0 || dosesPerDay <= 0) return 0;
+    return (stockQuantity / (unitsPerDose * dosesPerDay)).floor();
+  }
+
+  /// Check if this medication is low on stock for given usage
+  bool isLowStockForUsage(double unitsPerDose, double dosesPerDay) {
+    final threshold = (lowStockThreshold ?? _getDefaultLowStockThreshold()) * unitsPerDose * dosesPerDay;
+    return stockQuantity < threshold;
+  }
+
+  /// Update stock quantity and return new medication instance
+  Medication updateStockQuantity(double changeAmount) {
+    return copyWith(
+      stockQuantity: stockQuantity + changeAmount,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Medication && other.id == id;
+  }
+
   @override
   int get hashCode => id.hashCode;
+
+  // Stock logging methods
+  Future<void> logStockChange({
+    required double changeAmount,
+    required String reason,
+    String? notes,
+  }) async {
+    if (id == null) {
+      throw Exception('Cannot log stock change for unsaved medication');
+    }
+    
+    final db = await DatabaseService.database;
+    final now = DateTime.now().toIso8601String();
+    
+    await db.insert('medication_stock_logs', {
+      'medication_id': id,
+      'timestamp': now,
+      'change_amount': changeAmount,
+      'new_total': stockQuantity + changeAmount,
+      'reason': reason,
+      'notes': notes,
+      'created_at': now,
+    });
+    
+    // Update the stock quantity in the database
+    await db.update(
+      'medications',
+      {
+        'stock_quantity': stockQuantity + changeAmount,
+        'updated_at': now,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+  
+  Future<List<StockLogEntry>> getStockHistory([int? limit]) async {
+    if (id == null) return [];
+    
+    final db = await DatabaseService.database;
+    
+    final query = '''
+      SELECT * FROM medication_stock_logs 
+      WHERE medication_id = ?
+      ORDER BY timestamp DESC
+      ${limit != null ? 'LIMIT $limit' : ''}
+    ''';
+    
+    final results = await db.rawQuery(query, [id]);
+    return results.map((map) => StockLogEntry.fromMap(map)).toList();
+  }
+  
+  Future<double> getStockChangesSince(DateTime since) async {
+    if (id == null) return 0.0;
+    
+    final db = await DatabaseService.database;
+    
+    final results = await db.rawQuery('''
+      SELECT SUM(change_amount) as total_change
+      FROM medication_stock_logs
+      WHERE medication_id = ? AND timestamp >= ?
+    ''', [id, since.toIso8601String()]);
+    
+    return (results.first['total_change'] as double?) ?? 0.0;
+  }
+}
+
+/// Validation result for dose constraints
+class ValidationResult {
+  final bool isValid;
+  final String? message;
+
+  const ValidationResult._(this.isValid, this.message);
+
+  factory ValidationResult.valid() => const ValidationResult._(true, null);
+  factory ValidationResult.invalid(String message) => ValidationResult._(false, message);
+
+  @override
+  String toString() => isValid ? 'Valid' : 'Invalid: $message';
+}
+
+/// Stock log entry for tracking medication stock changes
+class StockLogEntry {
+  final int id;
+  final int medicationId;
+  final DateTime timestamp;
+  final double changeAmount;
+  final double newTotal;
+  final String reason;
+  final String? notes;
+  final DateTime createdAt;
+
+  const StockLogEntry({
+    required this.id,
+    required this.medicationId,
+    required this.timestamp,
+    required this.changeAmount,
+    required this.newTotal,
+    required this.reason,
+    this.notes,
+    required this.createdAt,
+  });
+
+  factory StockLogEntry.fromMap(Map<String, dynamic> map) {
+    return StockLogEntry(
+      id: map['id'] as int,
+      medicationId: map['medication_id'] as int,
+      timestamp: DateTime.parse(map['timestamp'] as String),
+      changeAmount: (map['change_amount'] as num).toDouble(),
+      newTotal: (map['new_total'] as num).toDouble(),
+      reason: map['reason'] as String,
+      notes: map['notes'] as String?,
+      createdAt: DateTime.parse(map['created_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'medication_id': medicationId,
+      'timestamp': timestamp.toIso8601String(),
+      'change_amount': changeAmount,
+      'new_total': newTotal,
+      'reason': reason,
+      'notes': notes,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
+  bool get isAddition => changeAmount > 0;
+  bool get isSubtraction => changeAmount < 0;
+  
+  String get displayAmount {
+    final amount = changeAmount.abs();
+    final sign = isAddition ? '+' : '-';
+    return '$sign${amount.toStringAsFixed(amount.truncateToDouble() == amount ? 0 : 2)}';
+  }
+
+  String get displayTotal => newTotal.toStringAsFixed(newTotal.truncateToDouble() == newTotal ? 0 : 2);
 }

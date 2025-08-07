@@ -1,9 +1,17 @@
+import '../data/models/medication.dart';
+
 /// Service for advanced medication dosage calculations
 class MedicationCalculationService {
-  /// Validate dose amount for given medication and unit
-  static String? validateDoseAmount(dynamic medication, double doseAmount, String doseUnit) {
+  /// Comprehensive dose validation using medication type constraints
+  static String? validateDoseAmount(Medication medication, double doseAmount, String doseUnit) {
     if (doseAmount <= 0) {
       return 'Dose amount must be greater than 0';
+    }
+    
+    // Use the medication's comprehensive dose validation
+    final validation = medication.validateDoseAmount(doseAmount);
+    if (!validation.isValid) {
+      return validation.message;
     }
     
     // Check if we have enough stock

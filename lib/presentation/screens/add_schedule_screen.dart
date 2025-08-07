@@ -70,9 +70,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(isEditMode ? 'Edit Schedule' : 'Add Schedule'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.navigateBackSmart(),
@@ -204,6 +201,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                       prefixIcon: Icon(Icons.medication),
                       helperText: 'Choose the medication for this schedule',
                     ),
+                    isExpanded: true,
                     items: medications.map((medication) {
                       return DropdownMenuItem(
                         value: medication.id,
@@ -280,6 +278,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 prefixIcon: Icon(Icons.repeat),
                 helperText: 'How often should this medication be taken?',
               ),
+              isExpanded: true,
               items: ScheduleType.values.map((type) {
                 return DropdownMenuItem(
                   value: type,
@@ -379,10 +378,14 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                       labelText: 'Unit',
                       border: OutlineInputBorder(),
                     ),
+                    isExpanded: true,
                     items: _doseUnits.map((unit) {
                       return DropdownMenuItem(
                         value: unit,
-                        child: Text(unit),
+                        child: Text(
+                          unit,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -405,6 +408,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 prefixIcon: Icon(Icons.medication),
                 helperText: 'How is the medication taken?',
               ),
+              isExpanded: true,
               items: _doseForms.map((form) {
                 return DropdownMenuItem(
                   value: form,
