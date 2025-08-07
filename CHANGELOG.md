@@ -2,6 +2,27 @@
 
 All notable changes to the Dosifi Flutter app will be documented in this file.
 
+## [1.4.0] - 2025-08-05
+
+### Added
+- **Navigation Accessibility Report**: Comprehensive analysis of all screens and features accessibility
+- **Reconstitution Calculator Access**: Added button to Dashboard Quick Actions for easy access to this powerful feature
+- **Analytics Screen Framework**: Basic analytics screen structure with placeholder for future charts and reports
+
+### Fixed
+- **Missing Feature Access**: Reconstitution Calculator is now accessible from main navigation flow via Dashboard
+- **Navigation Completeness**: All implemented features are now accessible through the UI
+- **Dashboard Layout**: Updated Quick Actions to accommodate 4 buttons with proper spacing
+
+### Documentation
+- **NAVIGATION_ACCESSIBILITY_REPORT.md**: Complete analysis showing 85% of features fully accessible, 15% resolved
+- Identified and resolved the primary navigation gap in the application
+
+### Technical Improvements
+- All tests passing with proper timer and navigation handling
+- Improved test environment compatibility
+- Enhanced dashboard user experience with complete feature access
+
 ## [1.3.0] - 2025-08-05
 
 ### Added

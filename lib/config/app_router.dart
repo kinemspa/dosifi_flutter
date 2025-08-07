@@ -4,19 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Import screens when created
 import '../presentation/screens/splash_screen.dart';
-import '../presentation/screens/medication_list_screen.dart';
-import '../presentation/screens/add_medication_screen.dart';
-import '../presentation/screens/add_medication_screen_comprehensive.dart';
-import '../presentation/screens/medication_screen.dart';
-import '../presentation/screens/edit_medication_screen.dart';
-import '../presentation/screens/medication_details_screen.dart';
-import '../presentation/screens/reconstitution_calculator_screen.dart';
+import '../presentation/screens/medications_list_screen.dart';
+import '../presentation/screens/medication_view_screen.dart';
+import '../presentation/screens/medication_form_screen.dart';
 import '../presentation/screens/schedule_screen.dart';
-import '../presentation/screens/supply_inventory_screen.dart';
-import '../presentation/screens/settings_screen.dart';
-import '../presentation/screens/analytics_screen.dart';
 import '../presentation/screens/dashboard_screen.dart';
 import '../presentation/screens/main_shell_screen.dart';
+import '../presentation/screens/supplies_screen.dart';
+import '../presentation/screens/calendar_screen.dart';
+import '../presentation/screens/dose_activity_screen.dart';
+import '../presentation/screens/add_supply_screen.dart';
+import '../presentation/screens/add_schedule_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -51,18 +49,29 @@ GoRoute(
           ),
         ),
       ),
-GoRoute(
-        path: '/inventory',
-        name: 'inventory',
+      GoRoute(
+        path: '/medications',
+        name: 'medications',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: MainShellScreen(
             currentPath: state.fullPath,
-            child: const MedicationScreen(),
+            child: const MedicationsListScreen(),
           ),
         ),
       ),
-GoRoute(
+      GoRoute(
+        path: '/supplies',
+        name: 'supplies',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const SuppliesScreen(),
+          ),
+        ),
+      ),
+      GoRoute(
         path: '/schedule',
         name: 'schedule',
         pageBuilder: (context, state) => MaterialPage(
@@ -73,91 +82,98 @@ GoRoute(
           ),
         ),
       ),
-GoRoute(
-        path: '/analytics',
-        name: 'analytics',
+      GoRoute(
+        path: '/calendar',
+        name: 'calendar',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: MainShellScreen(
             currentPath: state.fullPath,
-            child: const AnalyticsScreen(),
+            child: const CalendarScreen(),
           ),
         ),
       ),
-GoRoute(
-        path: '/settings',
-        name: 'settings',
+      GoRoute(
+        path: '/dose-activity',
+        name: 'dose-activity',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: MainShellScreen(
             currentPath: state.fullPath,
-            child: const SettingsScreen(),
+            child: const DoseActivityScreen(),
           ),
         ),
       ),
+      // Medication form routes (nested under main structure)
       GoRoute(
-        path: '/reconstitution',
-        name: 'reconstitution',
+        path: '/medications/add',
+        name: 'add-medication',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const ReconstitutionCalculatorScreen(),
+          child: const MedicationFormScreen(),
         ),
       ),
       GoRoute(
-        path: '/medications',
-        name: 'medications',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const MedicationListScreen(),
-        ),
-        routes: [
-          GoRoute(
-            path: 'add',
-            name: 'add-medication',
-            pageBuilder: (context, state) => MaterialPage(
-              key: state.pageKey,
-              child: const AddMedicationScreen(),
-            ),
-          ),
-          GoRoute(
-            path: 'edit/:id',
-            name: 'edit-medication',
-            pageBuilder: (context, state) {
-              final medicationId = state.pathParameters['id']!;
-              return MaterialPage(
-                key: state.pageKey,
-              child: EditMedicationScreen(medicationId: medicationId),
-              );
-            },
-          ),
-          GoRoute(
-            path: ':id',
-            name: 'medication-details',
-            pageBuilder: (context, state) {
-              final medicationId = state.pathParameters['id']!;
-              return MaterialPage(
-                key: state.pageKey,
-                child: MedicationDetailsScreen(medicationId: medicationId),
-              );
-            },
-          ),
-        ],
+        path: '/medications/edit/:id',
+        name: 'edit-medication',
+        pageBuilder: (context, state) {
+          final medicationId = state.pathParameters['id']!;
+          return MaterialPage(
+            key: state.pageKey,
+            child: MedicationFormScreen(medicationId: medicationId),
+          );
+        },
       ),
       GoRoute(
-        path: '/add-medication-comprehensive',
-        name: 'add-medication-comprehensive',
+        path: '/medications/:id',
+        name: 'medication-details',
+        pageBuilder: (context, state) {
+          final medicationId = state.pathParameters['id']!;
+          return MaterialPage(
+            key: state.pageKey,
+            child: MedicationViewScreen(medicationId: medicationId),
+          );
+        },
+      ),
+      // Supply form routes
+      GoRoute(
+        path: '/supplies/add',
+        name: 'add-supply',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const AddMedicationScreenComprehensive(),
+          child: const AddSupplyScreen(),
         ),
       ),
       GoRoute(
-        path: '/medication-overview',
-        name: 'medication-overview',
+        path: '/supplies/edit/:id',
+        name: 'edit-supply',
+        pageBuilder: (context, state) {
+          final supplyId = state.pathParameters['id']!;
+          return MaterialPage(
+            key: state.pageKey,
+            child: AddSupplyScreen(supplyId: supplyId),
+          );
+        },
+      ),
+      // Schedule form routes
+      GoRoute(
+        path: '/schedules/add',
+        name: 'add-schedule',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: const MedicationScreen(),
+          child: const AddScheduleScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/schedules/edit/:id',
+        name: 'edit-schedule',
+        pageBuilder: (context, state) {
+          final scheduleId = state.pathParameters['id']!;
+          return MaterialPage(
+            key: state.pageKey,
+            child: AddScheduleScreen(scheduleId: scheduleId),
+          );
+        },
       ),
     ],
     errorPageBuilder: (context, state) => MaterialPage(
@@ -197,13 +213,43 @@ GoRoute(
 
 // Navigation extensions
 extension NavigationExtensions on BuildContext {
+  void navigateToHome() => go('/');
   void navigateToMedications() => go('/medications');
+  void navigateToSupplies() => go('/supplies');
+  void navigateToSchedule() => go('/schedule');
+  void navigateToCalendar() => go('/calendar');
+  void navigateToDoseActivity() => go('/dose-activity');
   void navigateToAddMedication() => go('/medications/add');
   void navigateToMedicationDetails(String id) => go('/medications/$id');
   void navigateToEditMedication(String id) => go('/medications/edit/$id');
-  void navigateToReconstitution() => go('/reconstitution');
-  void navigateToSchedule() => go('/schedule');
-  void navigateToInventory() => go('/inventory');
-  void navigateToAnalytics() => go('/analytics');
-  void navigateToSettings() => go('/settings');
+  void navigateToAddSupply() => go('/supplies/add');
+  void navigateToEditSupply(String id) => go('/supplies/edit/$id');
+  void navigateToAddSchedule() => go('/schedules/add');
+  void navigateToEditSchedule(String id) => go('/schedules/edit/$id');
+  
+  /// Smart back navigation that goes to the appropriate main screen
+  void navigateBackSmart() {
+    // Get the current location to determine which main screen to return to
+    final currentLocation = GoRouterState.of(this).uri.toString();
+    
+    // Check if we can pop, otherwise navigate to the appropriate main screen
+    if (canPop()) {
+      pop();
+    } else {
+      // Navigate to the appropriate main screen based on current route
+      if (currentLocation.startsWith('/medications')) {
+        navigateToMedications();
+      } else if (currentLocation.startsWith('/supplies')) {
+        navigateToSupplies();
+      } else if (currentLocation.startsWith('/schedule')) {
+        navigateToSchedule();
+      } else if (currentLocation.startsWith('/calendar')) {
+        navigateToCalendar();
+      } else if (currentLocation.startsWith('/dose-activity')) {
+        navigateToDoseActivity();
+      } else {
+        navigateToHome();
+      }
+    }
+  }
 }

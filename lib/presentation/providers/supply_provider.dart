@@ -35,6 +35,7 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
       });
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
+      rethrow; // Re-throw the error so the UI can handle it
     }
   }
 
@@ -66,7 +67,7 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
     }
   }
 
-  Future<void> updateQuantity(int id, int newQuantity) async {
+  Future<void> updateQuantity(int id, double newQuantity) async {
     try {
       await _repository.updateQuantity(id, newQuantity);
       
@@ -84,14 +85,14 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
     }
   }
 
-  Future<void> adjustQuantity(int id, int adjustment) async {
+  Future<void> adjustQuantity(int id, double adjustment) async {
     try {
       await _repository.adjustQuantity(id, adjustment);
       
       state.whenData((supplies) {
         final updatedList = supplies.map((s) {
           if (s.id == id) {
-            final newQuantity = (s.quantity + adjustment).clamp(0, double.infinity).toInt();
+            final newQuantity = (s.quantity + adjustment).clamp(0.0, double.infinity);
             return s.copyWith(quantity: newQuantity);
           }
           return s;
@@ -117,10 +118,10 @@ final supplyByIdProvider = FutureProvider.family<Supply?, int>((ref, id) async {
   return await repository.getSupplyById(id);
 });
 
-// Provider for getting supplies by category
-final suppliesByCategoryProvider = FutureProvider.family<List<Supply>, SupplyCategory>((ref, category) async {
+// Provider for getting supplies by type
+final suppliesByTypeProvider = FutureProvider.family<List<Supply>, SupplyType>((ref, type) async {
   final repository = ref.watch(supplyRepositoryProvider);
-  return await repository.getSuppliesByCategory(category);
+  return await repository.getSuppliesByType(type);
 });
 
 // Provider for low stock supplies

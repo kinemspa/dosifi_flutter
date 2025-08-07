@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Confidential Documentation (Internal Use Only)
+# These files contain proprietary medication tracking algorithms and business logic
+DOSIFI_ARCHITECTURE_MATRIX.md
+MEDICATION_TYPES_BREAKDOWN.md
+MEDICATION_TRACKING_MATRIX.md
+Dosifi_Medication_Tracking_Matrix.csv
+Dosifi_Tracking_Calculations.csv
+*_CONFIDENTIAL.md
+*_INTERNAL.md

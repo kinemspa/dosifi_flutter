@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:calendar_view/calendar_view.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import '../../config/app_router.dart';
 import '../../data/models/schedule.dart';
 import '../../data/models/dose_log.dart';
 import '../providers/schedule_provider.dart';
@@ -10,6 +10,7 @@ import '../providers/dose_log_provider.dart';
 import '../providers/medication_provider.dart';
 import '../../data/dose_options.dart';
 import '../../services/notification_service.dart';
+import 'calendar_screen.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -21,19 +22,16 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTickerProviderStateMixin {
   DateTime _selectedDay = DateTime.now();
   late TabController _tabController;
-  late EventController _eventController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _eventController = EventController();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _eventController.dispose();
     super.dispose();
   }
 
@@ -42,30 +40,32 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     final schedulesAsync = ref.watch(scheduleListProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medication Schedule'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: 'Today', icon: Icon(Icons.today)),
-            Tab(text: 'Calendar', icon: Icon(Icons.calendar_month)),
-            Tab(text: 'All Schedules', icon: Icon(Icons.schedule)),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _buildTodayTab(schedulesAsync),
-          _buildCalendarTab(schedulesAsync),
-          _buildAllSchedulesTab(schedulesAsync),
+          Material(
+            color: Theme.of(context).primaryColor,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              tabs: const [
+                Tab(text: 'Today', icon: Icon(Icons.today)),
+                Tab(text: 'Calendar', icon: Icon(Icons.calendar_month)),
+                Tab(text: 'All Schedules', icon: Icon(Icons.schedule)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTodayTab(schedulesAsync),
+                _buildCalendarTab(schedulesAsync),
+                _buildAllSchedulesTab(schedulesAsync),
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: Column(
@@ -126,13 +126,69 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
     final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
     
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+    // Check if dose has been taken today
+    final today = DateTime.now();
+    final scheduledDateTime = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      hour,
+      minute,
+    );
+    
+    final doseLogsAsync = ref.watch(doseLogListProvider);
+    final isDoseTaken = doseLogsAsync.when(
+      data: (doseLogs) {
+        return doseLogs.any((log) => 
+          log.medicationId == schedule.medicationId &&
+          log.scheduledTime.year == scheduledDateTime.year &&
+          log.scheduledTime.month == scheduledDateTime.month &&
+          log.scheduledTime.day == scheduledDateTime.day &&
+          log.scheduledTime.hour == scheduledDateTime.hour &&
+          log.scheduledTime.minute == scheduledDateTime.minute &&
+          log.status == DoseStatus.taken
+        );
+      },
+      loading: () => false,
+      error: (_, __) => false,
+    );
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.surface,
+            Theme.of(context).colorScheme.surface.withOpacity(0.9),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.secondary.withOpacity(0.15),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Theme.of(context).colorScheme.secondary.withOpacity(0.05),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
           children: [
             Container(
               width: 60,
@@ -193,88 +249,58 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ElevatedButton(
-                  onPressed: () => _markDoseAsTaken(schedule),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                if (isDoseTaken)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      border: Border.all(color: Colors.green),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.check_circle, color: Colors.green, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'Taken',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else ...[
+                  ElevatedButton(
+                    onPressed: () => _markDoseAsTaken(schedule),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Take'),
                   ),
-                  child: const Text('Take'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton(
-                  onPressed: () => _snoozeDose(schedule),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange,
-                    side: const BorderSide(color: Colors.orange),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () => _snoozeDose(schedule),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.orange,
+                      side: const BorderSide(color: Colors.orange),
+                    ),
+                    child: const Text('Snooze'),
                   ),
-                  child: const Text('Snooze'),
-                ),
+                ],
               ],
             ),
           ],
+        ),
         ),
       ),
     );
   }
 
-  Widget _buildCalendarWithEvents(AsyncValue<List<Schedule>> schedulesAsync) {
-    return schedulesAsync.when(
-      data: (schedules) {
-        // Convert schedules to calendar events
-        final events = <CalendarEventData>[];
-        for (final schedule in schedules) {
-          // Generate events for the next 90 days
-          final now = DateTime.now();
-          final endDate = now.add(const Duration(days: 90));
-          
-          for (var date = now; date.isBefore(endDate); date = date.add(const Duration(days: 1))) {
-            if (schedule.isActiveOnDate(date)) {
-              final timeParts = schedule.timeOfDay.split(':');
-              final hour = int.parse(timeParts[0]);
-              final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-              
-              final eventDateTime = DateTime(date.year, date.month, date.day, hour, minute);
-              
-              events.add(CalendarEventData(
-                title: 'Dose: Schedule ${schedule.id}',
-                date: eventDateTime,
-                startTime: eventDateTime,
-                endTime: eventDateTime.add(const Duration(minutes: 30)),
-                color: Theme.of(context).primaryColor,
-              ));
-            }
-          }
-        }
-        
-        _eventController.addAll(events);
-        
-        return MonthView(
-          controller: _eventController,
-          onDateLongPress: (date) => setState(() => _selectedDay = date),
-          onEventTap: (event, date) {
-            // Handle event tap
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Dose scheduled at ${DateFormat('HH:mm').format(date)}')),
-            );
-          },
-          cellAspectRatio: 0.6,
-          headerBuilder: (date) => Container(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              DateFormat('MMMM yyyy').format(date),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Error loading calendar')),
-    );
-  }
 
   Widget _buildAllSchedulesTab(AsyncValue<List<Schedule>> schedulesAsync) {
     return schedulesAsync.when(
@@ -529,7 +555,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
   }
 
   Widget _buildCalendarTab(AsyncValue<List<Schedule>> schedulesAsync) {
-    return _buildCalendarWithEvents(schedulesAsync);
+    return const CalendarScreen();
   }
 
   List<Schedule> _getSchedulesForDay(List<Schedule> schedules, DateTime day) {
@@ -566,323 +592,11 @@ void _testNotification() async {
   }
 
   void _showAddScheduleDialog() {
-    final medicationsAsync = ref.watch(medicationListProvider);
-    int? selectedMedicationId;
-    TimeOfDay? selectedTime;
-    final daysOfWeek = <int>{};
-    DateTime? startDate;
-    DateTime? endDate;
-    var scheduleType = ScheduleType.daily;
-    
-    // Dose fields
-    var doseAmount = 1.0;
-    var doseUnit = 'tablet';
-    var doseForm = 'tablet';
-    var strengthPerUnit = 1.0;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Add Schedule'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Medication Dropdown
-                medicationsAsync.when(
-                  data: (medications) => DropdownButtonFormField<int>(
-                    value: selectedMedicationId,
-                    decoration: const InputDecoration(
-                      labelText: 'Select Medication *',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: medications.map((medication) => DropdownMenuItem<int>(
-                      value: medication.id,
-                      child: Text(
-                        '${medication.name} (${medication.displayStrength})',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedMedicationId = value;
-                        // Reset dose unit when medication changes and populate strength
-                        if (value != null) {
-                          final medication = medications.firstWhere((med) => med.id == value);
-                          final availableOptions = getDoseOptions(medication.type);
-                          if (availableOptions.isNotEmpty) {
-                            doseUnit = availableOptions.first.unit;
-                          }
-                          // Set strength per unit from medication
-                          strengthPerUnit = medication.strengthPerUnit;
-                          doseForm = medication.type.name;
-                        }
-                      });
-                    },
-                    validator: (value) => value == null ? 'Please select a medication' : null,
-                  ),
-                  loading: () => const CircularProgressIndicator(),
-                  error: (error, stack) => Text('Error loading medications: $error'),
-                ),
-                const SizedBox(height: 12),
-
-                // Time Picker
-                InkWell(
-                  onTap: () async {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime ?? TimeOfDay.now(),
-                    );
-                    if (time != null) {
-                      setState(() => selectedTime = time);
-                    }
-                  },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Time of Day *',
-                      border: OutlineInputBorder(),
-                      suffixIcon: Icon(Icons.access_time),
-                    ),
-                    child: Text(
-                      selectedTime != null
-                          ? selectedTime!.format(context)
-                          : 'Select time',
-                      style: selectedTime != null
-                          ? null
-                          : TextStyle(color: Colors.grey[600]),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Start Date
-                ElevatedButton(
-                  onPressed: () async {
-                    final selectedDate = await showDatePicker(
-                      context: context,
-                      initialDate: startDate ?? DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2030),
-                    );
-                    if (selectedDate != null) {
-                      setState(() => startDate = selectedDate);
-                    }
-                  },
-                  child: Text(
-                    startDate == null
-                        ? 'Select Start Date'
-                        : 'Start Date: ${DateFormat('yyyy-MM-dd').format(startDate!)}',
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // End Date (optional)
-                ElevatedButton(
-                  onPressed: () async {
-                    final selectedDate = await showDatePicker(
-                      context: context,
-                      initialDate: endDate ?? DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2030),
-                    );
-                    if (selectedDate != null) {
-                      setState(() => endDate = selectedDate);
-                    }
-                  },
-                  child: Text(
-                    endDate == null
-                        ? 'Select End Date (optional)'
-                        : 'End Date: ${DateFormat('yyyy-MM-dd').format(endDate!)}',
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Schedule Type
-                DropdownButtonFormField<ScheduleType>(
-                  value: scheduleType,
-                  onChanged: (value) => setState(() => scheduleType = value!),
-                  decoration: const InputDecoration(
-                    labelText: 'Schedule Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: ScheduleType.values.map((type) => DropdownMenuItem(
-                    value: type,
-                    child: Text(type.displayName),
-                  )).toList(),
-                ),
-                const SizedBox(height: 12),
-
-                // Days of the Week (only for weekly schedules)
-                if (scheduleType == ScheduleType.weekly)
-                  Wrap(
-                    spacing: 8,
-                    children: List.generate(7, (index) => index + 1).map((day) => FilterChip(
-                      label: Text(DateFormat.E().format(DateTime(2021, 1, day))),
-                      selected: daysOfWeek.contains(day),
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            daysOfWeek.add(day);
-                          } else {
-                            daysOfWeek.remove(day);
-                          }
-                        });
-                      },
-                    )).toList(),
-                  ),
-                const SizedBox(height: 16),
-                
-                // Dose Information Section
-                Text(
-                  'Dose Information',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                
-                // Dose Amount
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Dose Amount *',
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g., 1',
-                  ),
-                  keyboardType: TextInputType.number,
-                  initialValue: doseAmount.toString(),
-                  onChanged: (value) {
-                    final parsed = double.tryParse(value);
-                    if (parsed != null) {
-                      setState(() => doseAmount = parsed);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                
-                // Dose Unit
-                DropdownButtonFormField<String>(
-                  value: selectedMedicationId != null ? doseUnit : null,
-                  decoration: const InputDecoration(
-                    labelText: 'Dose Unit *',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: selectedMedicationId != null
-                      ? medicationsAsync.when(
-                          data: (medications) {
-                            final medication = medications.firstWhere((med) => med.id == selectedMedicationId);
-                            final availableOptions = getDoseOptions(medication.type);
-                            return availableOptions.map((option) =>
-                              DropdownMenuItem(value: option.unit, child: Text(option.displayName))
-                            ).toList();
-                          },
-                          loading: () => <DropdownMenuItem<String>>[],
-                          error: (_, __) => <DropdownMenuItem<String>>[],
-                        )
-                      : <DropdownMenuItem<String>>[],
-                    onChanged: (value) {
-                      setState(() {
-                        final previousUnit = doseUnit;
-                        doseUnit = value!;
-                        
-                        // Convert dose amount based on unit change
-                        if (strengthPerUnit > 0) {
-                          if (previousUnit == 'tablet' || previousUnit == 'capsule') {
-                            // Converting from tablet/capsule to mg
-                            if (doseUnit == 'mg') {
-                              doseAmount = doseAmount * strengthPerUnit;
-                            }
-                          } else if (previousUnit == 'mg') {
-                            // Converting from mg to tablet/capsule
-                            if (doseUnit == 'tablet' || doseUnit == 'capsule') {
-                              doseAmount = doseAmount / strengthPerUnit;
-                            }
-                          }
-                        }
-                      });
-                    },
-                ),
-                const SizedBox(height: 12),
-                
-                // Dose Form
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Dose Form *',
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g., tablet, capsule, liquid',
-                  ),
-                  initialValue: doseForm,
-                  onChanged: (value) => setState(() => doseForm = value),
-                ),
-                const SizedBox(height: 12),
-                
-                // Strength Per Unit
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Strength Per Unit (mg) *',
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g., 2.0 (for 2mg per tablet)',
-                  ),
-                  keyboardType: TextInputType.number,
-                  initialValue: strengthPerUnit.toString(),
-                  onChanged: (value) {
-                    final parsed = double.tryParse(value);
-                    if (parsed != null) {
-                      setState(() => strengthPerUnit = parsed);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (selectedMedicationId != null && selectedTime != null && startDate != null) {
-                  // Format time as HH:mm string
-                  final timeString = '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}';
-                  
-                  final schedule = Schedule.create(
-                    medicationId: selectedMedicationId!,
-                    scheduleType: scheduleType.name,
-                    timeOfDay: timeString,
-                    daysOfWeek: daysOfWeek.isNotEmpty ? daysOfWeek.toList() : null,
-                    startDate: startDate!,
-                    endDate: endDate,
-                    doseAmount: doseAmount,
-                    doseUnit: doseUnit,
-                    doseForm: doseForm,
-                    strengthPerUnit: strengthPerUnit,
-                  );
-                  await ref.read(scheduleListProvider.notifier).addSchedule(schedule);
-                  if (context.mounted) Navigator.of(context).pop();
-                } else {
-                  // Show validation error
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please fill in all required fields'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-      ),
-    );
+    context.navigateToAddSchedule();
   }
 
   void _showEditScheduleDialog(Schedule schedule) {
-    // TODO: Implement edit schedule functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit schedule functionality coming soon!')),
-    );
+    context.navigateToEditSchedule(schedule.id.toString());
   }
 
   void _deleteSchedule(int id) async {
@@ -890,7 +604,7 @@ void _testNotification() async {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Schedule'),
-        content: const Text('Are you sure you want to delete this schedule?'),
+        content: const Text('Are you sure you want to delete this schedule? This will also remove all future planned doses.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -905,15 +619,61 @@ void _testNotification() async {
     );
 
     if (confirmed == true) {
-      await ref.read(scheduleListProvider.notifier).deleteSchedule(id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Schedule deleted!'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      try {
+        // First, clean up future dose logs for this schedule
+        await _cleanupFutureDoses(id);
+        
+        // Then delete the schedule
+        await ref.read(scheduleListProvider.notifier).deleteSchedule(id);
+        
+        // Cancel any notifications for this schedule
+        final notificationService = NotificationService();
+        await notificationService.cancelNotificationsForSchedule(id);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Schedule and future doses deleted!'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting schedule: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
+    }
+  }
+
+  Future<void> _cleanupFutureDoses(int scheduleId) async {
+    try {
+      final doseLogsAsync = ref.read(doseLogListProvider);
+      final doseLogs = await doseLogsAsync.when(
+        data: (logs) async => logs,
+        loading: () async => <DoseLog>[],
+        error: (_, __) async => <DoseLog>[],
+      );
+      
+      final now = DateTime.now();
+      final futureDoses = doseLogs.where((log) => 
+        log.scheduleId == scheduleId && 
+        log.scheduledTime.isAfter(now) && 
+        log.status == DoseStatus.pending
+      ).toList();
+      
+      for (final dose in futureDoses) {
+        if (dose.id != null) {
+          await ref.read(doseLogListProvider.notifier).deleteDoseLog(dose.id!);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error cleaning up future doses: $e');
     }
   }
 
@@ -933,20 +693,48 @@ void _testNotification() async {
       int.parse(schedule.timeOfDay.split(':')[1]),
     );
 
+    // First create a pending dose log
     final doseLog = DoseLog.create(
       medicationId: schedule.medicationId,
       scheduleId: schedule.id,
       scheduledTime: scheduledDateTime,
-      takenTime: now,
-      status: DoseStatus.taken,
+      status: DoseStatus.pending,
+      doseAmount: schedule.doseAmount, // Include the dose amount
     );
 
     try {
+      // Add the dose log first
       await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
+      
+      // Get the created dose log ID to mark it as taken (which will deduct stock)
+      final doseLogsAsync = ref.read(doseLogListProvider);
+      final doseLogs = await doseLogsAsync.when(
+        data: (logs) async => logs,
+        loading: () async => <DoseLog>[],
+        error: (_, __) async => <DoseLog>[],
+      );
+      
+      final createdDoseLog = doseLogs.cast<DoseLog>().firstWhere(
+        (log) => log.medicationId == schedule.medicationId &&
+                log.scheduledTime == scheduledDateTime &&
+                log.status == DoseStatus.pending,
+        orElse: () => throw Exception('Created dose log not found'),
+      );
+      
+      // Mark as taken with stock deduction
+      await ref.read(doseLogListProvider.notifier).markDoseAsTaken(
+        createdDoseLog.id!,
+        takenTime: now,
+        doseAmount: schedule.doseAmount,
+      );
+      
+      // Refresh medication list to show updated stock
+      ref.invalidate(medicationListProvider);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Dose marked as taken!'),
+            content: Text('Dose taken! Stock has been updated.'),
             backgroundColor: Colors.green,
           ),
         );

@@ -14,13 +14,51 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
   MedicationListNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadMedications();
   }
-
-  Future<void> loadMedications() async {
-    state = const AsyncValue.loading();
+  
+  // Test method to add a sample medication if none exist
+  Future<void> _ensureTestMedicationExists() async {
+    print('💊 [PROVIDER DEBUG] Checking if test medications exist');
     try {
       final medications = await _repository.getActiveMedications();
+      if (medications.isEmpty) {
+        print('💊 [PROVIDER DEBUG] No medications found, inserting test medication');
+        final testMedication = Medication(
+          name: 'Test Aspirin',
+          type: MedicationType.tablet,
+          strengthPerUnit: 500.0,
+          strengthUnit: StrengthUnit.mg,
+          stockQuantity: 30.0,
+          brandManufacturer: 'Test Brand',
+          instructions: 'Take as needed for pain relief',
+          notes: 'Test medication for debugging',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await _repository.insertMedication(testMedication);
+        print('💊 [PROVIDER DEBUG] Test medication inserted successfully');
+      }
+    } catch (e) {
+      print('💊 [PROVIDER DEBUG] Error ensuring test medication: $e');
+    }
+  }
+
+  Future<void> loadMedications() async {
+    print('💊 [PROVIDER DEBUG] loadMedications() called');
+    state = const AsyncValue.loading();
+    try {
+      // Ensure we have test data first
+      await _ensureTestMedicationExists();
+      
+      print('💊 [PROVIDER DEBUG] Calling repository.getActiveMedications()');
+      final medications = await _repository.getActiveMedications();
+      print('💊 [PROVIDER DEBUG] Repository returned ${medications.length} medications');
+      if (medications.isNotEmpty) {
+        print('💊 [PROVIDER DEBUG] First medication: ${medications.first.name}');
+      }
       state = AsyncValue.data(medications);
+      print('💊 [PROVIDER DEBUG] State updated with medications data');
     } catch (e, stack) {
+      print('💊 [PROVIDER DEBUG] Error loading medications: $e');
       state = AsyncValue.error(e, stack);
     }
   }
@@ -61,6 +99,29 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
         final updatedList = medications.where((m) => m.id != id).toList();
         state = AsyncValue.data(updatedList);
       });
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  // Stock management methods
+  Future<void> updateMedicationStock(int medicationId, double newStockQuantity) async {
+    try {
+      await _repository.updateMedicationStock(medicationId, newStockQuantity);
+      
+      // Reload medications to reflect stock changes
+      await loadMedications();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> adjustMedicationStock(int medicationId, double adjustment) async {
+    try {
+      await _repository.adjustMedicationStock(medicationId, adjustment);
+      
+      // Reload medications to reflect stock changes
+      await loadMedications();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

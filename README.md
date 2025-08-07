@@ -107,6 +107,19 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 - **Storage**: Flutter Secure Storage
 - **UI**: Material Design 3 with custom theming
 
+## Technical Documentation
+
+### Internal Documentation (Confidential)
+The following documentation files contain proprietary algorithms, business logic, and detailed medication tracking specifications. These files are excluded from public repositories for confidentiality:
+
+- **`DOSIFI_ARCHITECTURE_MATRIX.md`** - Complete system architecture and component integration
+- **`MEDICATION_TYPES_BREAKDOWN.md`** - Comprehensive medication type specifications and calculations
+- **`MEDICATION_TRACKING_MATRIX.md`** - Detailed tracking matrix for all 13 medication types
+- **`Dosifi_Medication_Tracking_Matrix.csv`** - Excel-compatible tracking specifications
+- **`Dosifi_Tracking_Calculations.csv`** - Mathematical formulas and calculation methods
+
+**Note**: These files are available to authorized developers and contain sensitive intellectual property related to medication management algorithms.
+
 ## Project Structure
 
 ```

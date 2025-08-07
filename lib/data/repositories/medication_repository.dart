@@ -23,14 +23,24 @@ class MedicationRepository {
   }
 
   Future<List<Medication>> getActiveMedications() async {
+    print('💾 [REPO DEBUG] getActiveMedications() called');
     final db = await _db;
+    print('💾 [REPO DEBUG] Database connection established');
+    
     final List<Map<String, dynamic>> maps = await db.query(
       'medications',
       where: 'is_active = ?',
       whereArgs: [1],
       orderBy: 'name ASC',
     );
-    return List.generate(maps.length, (i) => Medication.fromMap(maps[i]));
+    print('💾 [REPO DEBUG] Query returned ${maps.length} raw records');
+    if (maps.isNotEmpty) {
+      print('💾 [REPO DEBUG] First record: ${maps.first}');
+    }
+    
+    final medications = List.generate(maps.length, (i) => Medication.fromMap(maps[i]));
+    print('💾 [REPO DEBUG] Converted to ${medications.length} Medication objects');
+    return medications;
   }
 
   Future<Medication?> getMedicationById(int id) async {
@@ -129,6 +139,76 @@ class MedicationRepository {
       'medication': medication,
       'schedules': schedules,
     };
+  }
+
+  // Stock management methods
+  Future<int> updateMedicationStock(int medicationId, double newStockQuantity) async {
+    final db = await _db;
+    return await db.update(
+      'medications',
+      {
+        'stock_quantity': newStockQuantity.clamp(0.0, double.infinity),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [medicationId],
+    );
+  }
+
+  Future<int> adjustMedicationStock(int medicationId, double adjustment) async {
+    final db = await _db;
+    
+    return await db.transaction((txn) async {
+      // Get current stock
+      final medicationMaps = await txn.query(
+        'medications',
+        columns: ['stock_quantity'],
+        where: 'id = ?',
+        whereArgs: [medicationId],
+      );
+      
+      if (medicationMaps.isEmpty) {
+        throw Exception('Medication not found');
+      }
+      
+      final currentStock = (medicationMaps.first['stock_quantity'] as num?)?.toDouble() ?? 0.0;
+      final newStock = (currentStock + adjustment).clamp(0.0, double.infinity);
+      
+      // Update stock
+      return await txn.update(
+        'medications',
+        {
+          'stock_quantity': newStock,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [medicationId],
+      );
+    });
+  }
+
+  Future<double?> getMedicationStock(int medicationId) async {
+    final db = await _db;
+    final result = await db.query(
+      'medications',
+      columns: ['stock_quantity'],
+      where: 'id = ?',
+      whereArgs: [medicationId],
+    );
+    
+    if (result.isEmpty) return null;
+    return (result.first['stock_quantity'] as num?)?.toDouble();
+  }
+
+  Future<List<Medication>> getLowStockMedications({double threshold = 5.0}) async {
+    final db = await _db;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'medications',
+      where: 'stock_quantity <= ? AND is_active = ? AND alert_on_low_stock = ?',
+      whereArgs: [threshold, 1, 1],
+      orderBy: 'stock_quantity ASC',
+    );
+    return List.generate(maps.length, (i) => Medication.fromMap(maps[i]));
   }
 
   // Batch operations

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,8 @@ import '../providers/medication_provider.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/dose_log_provider.dart';
 import '../../data/models/schedule.dart';
+import '../providers/dose_scheduling_provider.dart';
+import '../../services/notification_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -16,6 +19,31 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize dose scheduling when dashboard loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeDoseScheduling();
+    });
+  }
+
+  Future<void> _initializeDoseScheduling() async {
+    try {
+      // Initialize notifications first
+      final notificationService = NotificationService();
+      await notificationService.requestAndInitialize();
+      
+      // Initialize today's doses and upcoming doses
+      final doseScheduling = ref.read(doseSchedulingProvider.notifier);
+      await doseScheduling.initializeTodaysDoses();
+      await doseScheduling.generateUpcomingDoses();
+      await doseScheduling.processOverdueDoses();
+    } catch (e) {
+      debugPrint('🚨 Error initializing dose scheduling: $e');
+    }
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good Morning!';
@@ -58,20 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        automaticallyImplyLeading: false, // Don't show back button on root screen
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              _showNotificationsBottomSheet(context);
-            },
-          ),
-        ],
-      ),
-      body: Container(
+      child: Container(
         decoration: const BoxDecoration(
           gradient: AppTheme.backgroundGradient,
         ),
@@ -95,9 +110,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
       ),
-      ),
     );
   }
+
 
   Widget _buildRecentActivities(BuildContext context) {
     return Card(
@@ -230,12 +245,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                 return Column(
                   children: todaysSchedules.map((schedule) {
-                    return _buildMedicationItemWithId(
+                    return _buildMedicationItemWithSchedule(
                       context,
-                      schedule.medicationId,
-                      schedule.timeOfDay,
-                      '${schedule.doseAmount} ${schedule.doseUnit}',
-                      false, // Assume not taken initially
+                      schedule,
                     );
                   }).toList(),
                 );
@@ -245,6 +257,116 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMedicationItemWithSchedule(BuildContext context, Schedule schedule) {
+    final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
+    
+    // Check if dose has been taken today
+    final today = DateTime.now();
+    final timeParts = schedule.timeOfDay.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
+    final scheduledDateTime = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      hour,
+      minute,
+    );
+    
+    final doseLogsAsync = ref.watch(doseLogListProvider);
+    final isDoseTaken = doseLogsAsync.when(
+      data: (doseLogs) {
+        return doseLogs.any((log) => 
+          log.medicationId == schedule.medicationId &&
+          log.scheduledTime.year == scheduledDateTime.year &&
+          log.scheduledTime.month == scheduledDateTime.month &&
+          log.scheduledTime.day == scheduledDateTime.day &&
+          log.scheduledTime.hour == scheduledDateTime.hour &&
+          log.scheduledTime.minute == scheduledDateTime.minute &&
+          log.status.name == 'taken'
+        );
+      },
+      loading: () => false,
+      error: (_, __) => false,
+    );
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Icon(
+            isDoseTaken ? Icons.check_circle : Icons.schedule,
+            color: isDoseTaken ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                medicationAsync.when(
+                  data: (medication) => Text(
+                    medication?.name ?? 'Unknown Medication',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  loading: () => const Text('Loading...'),
+                  error: (_, __) => const Text('Error loading medication'),
+                ),
+                Row(
+                  children: [
+                    Text(schedule.timeOfDay, style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(width: 8),
+                    Text('• ${schedule.doseAmount} ${schedule.doseUnit}', 
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (isDoseTaken)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                border: Border.all(color: Colors.green),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.check, color: Colors.green, size: 12),
+                  SizedBox(width: 4),
+                  Text(
+                    'Taken',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[  
+            TextButton(
+              onPressed: () {
+                // Navigate to schedule screen to take dose
+                context.go('/schedule');
+              },
+              child: const Text('Take'),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: () {
+                // TODO: Snooze dose
+              },
+              child: const Text('Snooze'),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -388,16 +510,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildActionButton(context, Icons.add, 'Add Medication', () {
-                  context.go('/inventory');
+                _buildActionButton(context, Icons.medication, 'Medications', () {
+                  context.go('/medications');
                 }),
-                _buildActionButton(context, Icons.schedule, 'View Schedule', () {
+                _buildActionButton(context, Icons.inventory_2, 'Supplies', () {
+                  context.go('/supplies');
+                }),
+                _buildActionButton(context, Icons.schedule, 'Schedule', () {
                   context.go('/schedule');
                 }),
-                _buildActionButton(context, Icons.analytics, 'Analytics', () {
-                  context.go('/analytics');
+                _buildActionButton(context, Icons.calendar_month, 'Calendar', () {
+                  context.go('/calendar');
                 }),
               ],
             ),

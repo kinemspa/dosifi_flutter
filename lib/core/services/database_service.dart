@@ -7,7 +7,7 @@ import 'dart:io';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 7;
+  static const int _databaseVersion = 8;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -481,6 +481,80 @@ class DatabaseService {
       } catch (e) {
         // If migration fails, log error but continue
         debugPrint('Schedule table migration error: $e');
+      }
+    }
+    
+    if (oldVersion < 8) {
+      // Migration from version 7 to 8: Update supplies table schema
+      try {
+        // Check if supplies table exists and has the correct structure
+        final result = await db.rawQuery('PRAGMA table_info(supplies)');
+        final hasTypeColumn = result.any((col) => col['name'] == 'type');
+        final quantityColumn = result.firstWhere((col) => col['name'] == 'quantity', orElse: () => {});
+        final reorderColumn = result.firstWhere((col) => col['name'] == 'reorder_level', orElse: () => {});
+        
+        // Check if we need to update the table
+        bool needsUpdate = !hasTypeColumn || 
+                          quantityColumn['type'] == 'INTEGER' || 
+                          reorderColumn['type'] == 'INTEGER';
+        
+        if (needsUpdate) {
+          // Backup existing supplies data
+          await db.execute('ALTER TABLE supplies RENAME TO supplies_backup_v8');
+          
+          // Create new supplies table with correct schema
+          await db.execute('''
+            CREATE TABLE supplies (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              type TEXT NOT NULL,
+              brand TEXT,
+              size TEXT,
+              quantity REAL NOT NULL DEFAULT 0.0,
+              reorder_level REAL,
+              unit TEXT DEFAULT 'pieces',
+              lot_number TEXT,
+              expiration_date TEXT,
+              location TEXT,
+              notes TEXT,
+              is_active INTEGER DEFAULT 1,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          ''');
+          
+          // Migrate existing data if any exists
+          final existingData = await db.rawQuery('SELECT COUNT(*) as count FROM supplies_backup_v8');
+          if ((existingData.first['count'] as int) > 0) {
+            // Map old 'category' to 'type' and convert quantities to REAL
+            await db.execute('''
+              INSERT INTO supplies (
+                id, name, type, brand, size, quantity, reorder_level,
+                unit, lot_number, expiration_date, location, notes,
+                is_active, created_at, updated_at
+              )
+              SELECT 
+                id, name, 
+                CASE 
+                  WHEN LOWER(category) = 'fluid' THEN 'fluid'
+                  WHEN LOWER(category) = 'diluent' THEN 'diluent'
+                  ELSE 'item'
+                END,
+                brand, size, 
+                CAST(quantity as REAL), 
+                CAST(reorder_level as REAL),
+                unit, lot_number, expiration_date, location, notes,
+                is_active, created_at, updated_at
+              FROM supplies_backup_v8
+            ''');
+          }
+          
+          // Drop the backup table
+          await db.execute('DROP TABLE supplies_backup_v8');
+        }
+      } catch (e) {
+        // If migration fails, log error but continue
+        debugPrint('Supplies table migration error: $e');
       }
     }
   }

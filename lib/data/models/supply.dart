@@ -1,47 +1,48 @@
 import 'package:flutter/foundation.dart';
 
-/// Supply Categories for medical supplies used across medications
-enum SupplyCategory {
-  syringe,
-  needle,
-  swab,
-  bandage,
-  gauze,
-  tape,
-  gloves,
-  wipe,
-  container,
-  other;
+/// Supply Types for tracking usage - either countable items, measurable fluids, or reconstitution solutions
+enum SupplyType {
+  item,
+  fluid,
+  diluent;
 
   String get displayName {
     switch (this) {
-      case SupplyCategory.syringe:
-        return 'Syringe';
-      case SupplyCategory.needle:
-        return 'Needle';
-      case SupplyCategory.swab:
-        return 'Swab';
-      case SupplyCategory.bandage:
-        return 'Bandage';
-      case SupplyCategory.gauze:
-        return 'Gauze';
-      case SupplyCategory.tape:
-        return 'Medical Tape';
-      case SupplyCategory.gloves:
-        return 'Gloves';
-      case SupplyCategory.wipe:
-        return 'Alcohol Wipe';
-      case SupplyCategory.container:
-        return 'Container';
-      case SupplyCategory.other:
-        return 'Other';
+      case SupplyType.item:
+        return 'Item (Countable)';
+      case SupplyType.fluid:
+        return 'Fluid (Volume)';
+      case SupplyType.diluent:
+        return 'Diluent (Reconstitution)';
     }
   }
 
-  static SupplyCategory fromString(String category) {
-    return SupplyCategory.values.firstWhere(
-      (e) => e.displayName.toLowerCase() == category.toLowerCase(),
-      orElse: () => SupplyCategory.other,
+  String get shortName {
+    switch (this) {
+      case SupplyType.item:
+        return 'Item';
+      case SupplyType.fluid:
+        return 'Fluid';
+      case SupplyType.diluent:
+        return 'Diluent';
+    }
+  }
+
+  String get defaultUnit {
+    switch (this) {
+      case SupplyType.item:
+        return 'pieces';
+      case SupplyType.fluid:
+        return 'ml';
+      case SupplyType.diluent:
+        return 'ml';
+    }
+  }
+
+  static SupplyType fromString(String type) {
+    return SupplyType.values.firstWhere(
+      (e) => e.displayName.toLowerCase() == type.toLowerCase(),
+      orElse: () => SupplyType.item,
     );
   }
 }
@@ -50,12 +51,12 @@ enum SupplyCategory {
 class Supply {
   final int? id;
   final String name;
-  final SupplyCategory category;
+  final SupplyType type;
   final String? brand;
   final String? size; // e.g., "1ml", "25G", "2x2 inches"
-  final int quantity;
-  final int? reorderLevel;
-  final String? unit; // e.g., "pieces", "boxes", "packs"
+  final double quantity; // Changed to double for fluids
+  final double? reorderLevel; // Changed to double for fluids
+  final String? unit; // e.g., "pieces", "ml", "liters"
   final String? lotNumber;
   final DateTime? expirationDate;
   final String? location;
@@ -67,12 +68,12 @@ class Supply {
   const Supply({
     this.id,
     required this.name,
-    required this.category,
+    required this.type,
     this.brand,
     this.size,
     required this.quantity,
     this.reorderLevel,
-    this.unit = 'pieces',
+    this.unit,
     this.lotNumber,
     this.expirationDate,
     this.location,
@@ -84,11 +85,11 @@ class Supply {
 
   factory Supply.create({
     required String name,
-    required SupplyCategory category,
+    required SupplyType type,
     String? brand,
     String? size,
-    required int quantity,
-    int? reorderLevel,
+    required double quantity,
+    double? reorderLevel,
     String? unit,
     String? lotNumber,
     DateTime? expirationDate,
@@ -98,12 +99,12 @@ class Supply {
     final now = DateTime.now();
     return Supply(
       name: name,
-      category: category,
+      type: type,
       brand: brand,
       size: size,
       quantity: quantity,
       reorderLevel: reorderLevel,
-      unit: unit ?? 'pieces',
+      unit: unit ?? type.defaultUnit,
       lotNumber: lotNumber,
       expirationDate: expirationDate,
       location: location,
@@ -117,7 +118,7 @@ class Supply {
     return {
       'id': id,
       'name': name,
-      'category': category.displayName,
+      'type': type.shortName, // Store as 'Item' or 'Fluid'
       'brand': brand,
       'size': size,
       'quantity': quantity,
@@ -134,15 +135,30 @@ class Supply {
   }
 
   factory Supply.fromMap(Map<String, dynamic> map) {
+    // Handle both old 'category' field and new 'type' field for backward compatibility
+    final typeString = map['type'] as String? ?? map['category'] as String? ?? 'Item';
+    SupplyType supplyType;
+    switch (typeString.toLowerCase()) {
+      case 'fluid':
+        supplyType = SupplyType.fluid;
+        break;
+      case 'diluent':
+        supplyType = SupplyType.diluent;
+        break;
+      default:
+        supplyType = SupplyType.item;
+        break;
+    }
+    
     return Supply(
       id: map['id'] as int?,
       name: map['name'] as String,
-      category: SupplyCategory.fromString(map['category'] as String),
+      type: supplyType,
       brand: map['brand'] as String?,
       size: map['size'] as String?,
-      quantity: map['quantity'] as int,
-      reorderLevel: map['reorder_level'] as int?,
-      unit: map['unit'] as String? ?? 'pieces',
+      quantity: (map['quantity'] as num).toDouble(),
+      reorderLevel: map['reorder_level'] != null ? (map['reorder_level'] as num).toDouble() : null,
+      unit: map['unit'] as String?,
       lotNumber: map['lot_number'] as String?,
       expirationDate: map['expiration_date'] != null 
           ? DateTime.parse(map['expiration_date'] as String)
@@ -158,11 +174,11 @@ class Supply {
   Supply copyWith({
     int? id,
     String? name,
-    SupplyCategory? category,
+    SupplyType? type,
     String? brand,
     String? size,
-    int? quantity,
-    int? reorderLevel,
+    double? quantity,
+    double? reorderLevel,
     String? unit,
     String? lotNumber,
     DateTime? expirationDate,
@@ -175,7 +191,7 @@ class Supply {
     return Supply(
       id: id ?? this.id,
       name: name ?? this.name,
-      category: category ?? this.category,
+      type: type ?? this.type,
       brand: brand ?? this.brand,
       size: size ?? this.size,
       quantity: quantity ?? this.quantity,
@@ -193,6 +209,8 @@ class Supply {
 
   // Helper getters
   String get displayName => size != null ? '$name ($size)' : name;
+  
+  String get effectiveUnit => unit ?? type.defaultUnit;
   
   bool get isLowStock => reorderLevel != null && quantity <= reorderLevel!;
   

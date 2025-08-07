@@ -29,12 +29,12 @@ class SupplyRepository {
     return null;
   }
 
-  Future<List<Supply>> getSuppliesByCategory(SupplyCategory category) async {
+  Future<List<Supply>> getSuppliesByType(SupplyType type) async {
     final db = await DatabaseService.database;
     final maps = await db.query(
       'supplies',
-      where: 'category = ? AND is_active = ?',
-      whereArgs: [category.displayName, 1],
+      where: 'type = ? AND is_active = ?',
+      whereArgs: [type.shortName, 1],
       orderBy: 'name ASC',
     );
     
@@ -60,7 +60,7 @@ class SupplyRepository {
     );
   }
 
-  Future<int> updateQuantity(int id, int newQuantity) async {
+  Future<int> updateQuantity(int id, double newQuantity) async {
     final db = await DatabaseService.database;
     final now = DateTime.now().toIso8601String();
     
@@ -75,7 +75,7 @@ class SupplyRepository {
     );
   }
 
-  Future<int> adjustQuantity(int id, int adjustment) async {
+  Future<int> adjustQuantity(int id, double adjustment) async {
     final db = await DatabaseService.database;
     final now = DateTime.now().toIso8601String();
     
@@ -90,8 +90,8 @@ class SupplyRepository {
     
     if (maps.isEmpty) return 0;
     
-    final currentQuantity = maps.first['quantity'] as int;
-    final newQuantity = (currentQuantity + adjustment).clamp(0, double.infinity).toInt();
+    final currentQuantity = (maps.first['quantity'] as num).toDouble();
+    final newQuantity = (currentQuantity + adjustment).clamp(0.0, double.infinity);
     
     return await db.update(
       'supplies',

@@ -1,5 +1,6 @@
 // Comprehensive test suite for Dosifi app
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,14 +23,20 @@ void main() {
       // Should start with splash screen
       expect(find.byType(SplashScreen), findsOneWidget);
       expect(find.text('Dosifi'), findsOneWidget);
+      
+      // Let all pending timers complete
+      await tester.pump(const Duration(milliseconds: 10));
     });
 
     testWidgets('Splash screen navigates to dashboard', (WidgetTester tester) async {
       await tester.pumpWidget(const ProviderScope(child: DosifiApp()));
       
+      // Verify we start with splash screen
+      expect(find.byType(SplashScreen), findsOneWidget);
+      
       // Fast forward through splash screen delay
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.pump(); // Process the navigation
       
       // Should now be on dashboard
       expect(find.byType(DashboardScreen), findsOneWidget);
@@ -83,12 +90,17 @@ void main() {
   group('Widget Tests', () {
     testWidgets('SplashScreen displays correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: SplashScreen()),
+        const ProviderScope(
+          child: MaterialApp(home: SplashScreen()),
+        ),
       );
       
       expect(find.text('Dosifi'), findsOneWidget);
       expect(find.text('Your Personal Medication Manager'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      
+      // Let any timers complete
+      await tester.pump(const Duration(milliseconds: 10));
     });
   });
 }

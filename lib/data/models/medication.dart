@@ -110,10 +110,12 @@ class Medication {
   // Alerts and Notifications
   final bool alertOnLowStock;
   final String? notificationSet;
+  final double? lowStockThreshold; // Type-specific threshold
   
   // Storage Information
   final String? storageInstructions;
   final bool requiresRefrigeration;
+  final String? storageTemperature; // Specific temperature requirements
   
   // Reconstitution Info (for lyophilized vials)
   final double? reconstitutionVolume; // mL of diluent added
@@ -144,8 +146,10 @@ class Medication {
     this.expirationDate,
     this.alertOnLowStock = false,
     this.notificationSet,
+    this.lowStockThreshold,
     this.storageInstructions,
     this.requiresRefrigeration = false,
+    this.storageTemperature,
     this.reconstitutionVolume,
     this.finalConcentration,
     this.reconstitutionNotes,
@@ -350,6 +354,161 @@ class Medication {
   int? get daysUntilExpiration {
     if (expirationDate == null) return null;
     return expirationDate!.difference(DateTime.now()).inDays;
+  }
+
+  // Advanced type-specific calculations
+  bool get isLowStock {
+    final threshold = lowStockThreshold ?? _getDefaultLowStockThreshold();
+    return stockQuantity <= threshold;
+  }
+
+  double _getDefaultLowStockThreshold() {
+    switch (type) {
+      case MedicationType.tablet:
+      case MedicationType.capsule:
+        return 7.0; // 7 tablets/capsules (week supply)
+      case MedicationType.liquid:
+      case MedicationType.drops:
+        return 30.0; // 30 mL
+      case MedicationType.preFilledSyringe:
+        return 3.0; // 3 syringes
+      case MedicationType.readyMadeVial:
+        return 5.0; // 5 mL
+      case MedicationType.lyophilizedVial:
+        return 1.0; // 1 vial
+      case MedicationType.cream:
+      case MedicationType.ointment:
+        return 15.0; // 15 grams
+      case MedicationType.patch:
+        return 3.0; // 3 patches
+      case MedicationType.inhaler:
+        return 20.0; // 20 doses remaining
+      case MedicationType.suppository:
+        return 3.0; // 3 suppositories
+      case MedicationType.other:
+        return 5.0; // 5 units
+    }
+  }
+
+  // Type-specific dose precision
+  double get dosePrecision {
+    switch (type) {
+      case MedicationType.tablet:
+        return 0.25; // Quarter tablet precision
+      case MedicationType.capsule:
+      case MedicationType.suppository:
+      case MedicationType.patch:
+      case MedicationType.inhaler:
+        return 1.0; // Whole units only
+      case MedicationType.liquid:
+        return 0.1; // 0.1 mL precision
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+      case MedicationType.lyophilizedVial:
+        return 0.01; // 0.01 mL precision
+      case MedicationType.cream:
+      case MedicationType.ointment:
+        return 0.5; // 0.5g precision for applications
+      case MedicationType.drops:
+        return 1.0; // Individual drop precision
+      case MedicationType.other:
+        return 1.0; // Default to whole units
+    }
+  }
+
+  // Calculate volume needed for a given dose amount
+  double calculateVolumeForDose(double doseAmount) {
+    switch (type) {
+      case MedicationType.liquid:
+      case MedicationType.drops:
+        // For liquids: volume = dose_amount / concentration
+        if (strengthUnit == StrengthUnit.percent) {
+          // Handle percentage concentrations
+          final concentrationMgPerMl = strengthPerUnit * 10; // 1% = 10mg/mL
+          return doseAmount / concentrationMgPerMl;
+        }
+        return doseAmount / strengthPerUnit;
+      
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+        // For injectables: volume = dose_units / concentration
+        return doseAmount / strengthPerUnit;
+      
+      case MedicationType.lyophilizedVial:
+        // For reconstituted vials: volume = dose_units / final_concentration
+        if (finalConcentration != null && finalConcentration! > 0) {
+          return doseAmount / finalConcentration!;
+        }
+        return 0.0;
+      
+      case MedicationType.tablet:
+      case MedicationType.capsule:
+        // For solid dosage forms: return number of units needed
+        return doseAmount / strengthPerUnit;
+      
+      default:
+        return doseAmount;
+    }
+  }
+
+  // Get allowed dose units for this medication type
+  List<String> get allowedDoseUnits {
+    switch (type) {
+      case MedicationType.tablet:
+        return ['tablet', 'tablets', 'mg', 'mcg', 'g'];
+      case MedicationType.capsule:
+        return ['capsule', 'capsules', 'mg', 'mcg', 'g'];
+      case MedicationType.liquid:
+        return ['mL', 'L', 'tsp', 'tbsp', 'mg', 'mcg', 'g'];
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+        return ['mL', 'Units', 'mg', 'mcg', 'IU'];
+      case MedicationType.lyophilizedVial:
+        return ['mL', 'Units', 'mg', 'mcg', 'IU'];
+      case MedicationType.drops:
+        return ['drops', 'mL', 'mg', 'mcg'];
+      case MedicationType.cream:
+      case MedicationType.ointment:
+        return ['g', 'applications', 'mg', 'mcg'];
+      case MedicationType.inhaler:
+        return ['puffs', 'doses', 'mcg', 'mg'];
+      case MedicationType.patch:
+        return ['patches', 'mcg/hr', 'mg/hr'];
+      case MedicationType.suppository:
+        return ['suppository', 'suppositories', 'mg', 'mcg'];
+      case MedicationType.other:
+        return ['units', 'mg', 'mcg', 'g'];
+    }
+  }
+
+  // Convert between common units for this medication type
+  double convertDoseUnit(double amount, String fromUnit, String toUnit) {
+    // Volume conversions
+    if (fromUnit == 'tsp' && toUnit == 'mL') return amount * 5.0;
+    if (fromUnit == 'mL' && toUnit == 'tsp') return amount / 5.0;
+    if (fromUnit == 'tbsp' && toUnit == 'mL') return amount * 15.0;
+    if (fromUnit == 'mL' && toUnit == 'tbsp') return amount / 15.0;
+    if (fromUnit == 'L' && toUnit == 'mL') return amount * 1000.0;
+    if (fromUnit == 'mL' && toUnit == 'L') return amount / 1000.0;
+    
+    // Weight conversions
+    if (fromUnit == 'g' && toUnit == 'mg') return amount * 1000.0;
+    if (fromUnit == 'mg' && toUnit == 'g') return amount / 1000.0;
+    if (fromUnit == 'mg' && toUnit == 'mcg') return amount * 1000.0;
+    if (fromUnit == 'mcg' && toUnit == 'mg') return amount / 1000.0;
+    
+    // Drop conversions (approximate)
+    if (type == MedicationType.drops) {
+      if (fromUnit == 'drops' && toUnit == 'mL') {
+        return amount / 20.0; // Standard: ~20 drops = 1 mL
+      }
+      if (fromUnit == 'mL' && toUnit == 'drops') {
+        return amount * 20.0;
+      }
+    }
+    
+    // No conversion needed or unsupported
+    return amount;
   }
 
   @override

@@ -1,6 +1,8 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../core/services/database_service.dart';
 import '../models/dose_log.dart';
+import '../models/medication.dart';
+import '../../core/services/database_service.dart';
+import '../../services/medication_calculation_service.dart';
 
 class DoseLogRepository {
   Future<Database> get _db async => await DatabaseService.database;
@@ -118,19 +120,83 @@ class DoseLogRepository {
     );
   }
 
-  Future<int> markDoseAsTaken(int id, {DateTime? takenTime, double? doseAmount, String? notes}) async {
+  /// Mark a dose as taken with advanced type-specific calculation
+  Future<int> markDoseAsTaken(int id, {DateTime? takenTime, double? doseAmount, String? doseUnit, String? notes}) async {
     final db = await _db;
-    return await db.update(
-      'dose_logs',
-      {
-        'status': DoseStatus.taken.name,
-        'taken_time': (takenTime ?? DateTime.now()).toIso8601String(),
-        if (doseAmount != null) 'dose_amount': doseAmount,
-        if (notes != null) 'notes': notes,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    
+    // First, get the dose log to retrieve medication info
+    final doseLog = await getDoseLogById(id);
+    if (doseLog == null) {
+      throw Exception('Dose log not found');
+    }
+    
+    // Start a transaction to ensure both operations succeed or fail together
+    return await db.transaction((txn) async {
+      // Get the medication details for advanced calculations
+      final medicationMaps = await txn.query(
+        'medications',
+        where: 'id = ?',
+        whereArgs: [doseLog.medicationId],
+      );
+      
+      if (medicationMaps.isEmpty) {
+        throw Exception('Medication not found');
+      }
+      
+      final medication = Medication.fromMap(medicationMaps.first);
+      
+      // Determine dose amount and unit
+      final finalDoseAmount = doseAmount ?? doseLog.doseAmount ?? 1.0;
+      final finalDoseUnit = doseUnit ?? 'units'; // Default unit if not specified
+      
+      // Validate dose amount using advanced validation
+      final validationError = MedicationCalculationService.validateDoseAmount(
+        medication, 
+        finalDoseAmount, 
+        finalDoseUnit
+      );
+      
+      if (validationError != null) {
+        throw Exception('Dose validation failed: $validationError');
+      }
+      
+      // Calculate exact deduction using advanced calculation service
+      final stockDeduction = MedicationCalculationService.calculateDoseDeduction(
+        medication, 
+        finalDoseAmount, 
+        finalDoseUnit
+      );
+      
+      // Update the dose log status
+      final result = await txn.update(
+        'dose_logs',
+        {
+          'status': DoseStatus.taken.name,
+          'taken_time': (takenTime ?? DateTime.now()).toIso8601String(),
+          'dose_amount': finalDoseAmount,
+          if (notes != null) 'notes': notes,
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      
+      // Calculate new stock quantity with safety bounds
+      final currentStock = medication.stockQuantity;
+      final newStockQuantity = (currentStock - stockDeduction).clamp(0.0, double.infinity);
+      
+      // Update medication stock with precise deduction
+      await txn.update(
+        'medications',
+        {
+          'stock_quantity': newStockQuantity,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [doseLog.medicationId],
+      );
+      
+      return result;
+    });
   }
 
   Future<int> markDoseAsSkipped(int id, {String? notes}) async {

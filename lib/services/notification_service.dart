@@ -276,4 +276,57 @@ class NotificationService {
       payload: payload,
     );
   }
+
+  /// Request notification permissions on app start
+  Future<bool> requestAndInitialize() async {
+    if (!_initialized) {
+      await initialize();
+    }
+    
+    // Request permissions
+    final permissionGranted = await requestPermissions();
+    if (kDebugMode) {
+      print('NotificationService: Permission granted: $permissionGranted');
+    }
+    
+    return permissionGranted;
+  }
+
+  /// Static method for showing notifications - convenience wrapper
+  /// 
+  /// This method provides a static interface for showing notifications,
+  /// which is useful for calling from UI components.
+  static Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    final service = NotificationService();
+    if (!service._initialized) await service.initialize();
+
+    const notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'test_notifications',
+        'Test Notifications',
+        channelDescription: 'Test notifications for app functionality',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    await service._notifications.show(
+      id,
+      title,
+      body,
+      notificationDetails,
+      payload: payload,
+    );
+  }
 }

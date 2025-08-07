@@ -6,9 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'config/app_router.dart';
 import 'services/notification_service.dart';
+import 'core/utils/error_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Test debug print at startup
+  debugPrint('🔴🔴🔴 [MAIN DEBUG] APP STARTING - Debug prints are working!');
+  debugPrint('==================================================');
   
   // Initialize services
   await _initializeApp();
@@ -28,12 +33,14 @@ Future<void> _initializeApp() async {
   
   // Initialize notification service (skip in test environment)
   if (!_isTestEnvironment()) {
-    try {
+try {
       final notificationService = NotificationService();
       await notificationService.initialize();
       await notificationService.requestPermissions();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Improved error handling: Log complete stack trace for debugging
       debugPrint('Notification service initialization error: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   } else {
     debugPrint('Skipping notification service initialization in test environment');
@@ -62,6 +69,9 @@ Future<void> _initializeApp() async {
 }
 
 /// Helper function to detect if we're running in a test environment
+/// 
+/// Returns true if the app is currently running in a Flutter test or web environment.
+/// Used to skip certain initializations during testing.
 bool _isTestEnvironment() {
   return Platform.environment.containsKey('FLUTTER_TEST') || kIsWeb && kDebugMode;
 }
