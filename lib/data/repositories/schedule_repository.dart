@@ -1,14 +1,23 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../core/services/database_service.dart';
-import '../models/schedule.dart';
+import 'package:dosifi_flutter/core/services/database_service.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
 
 class ScheduleRepository {
   Future<Database> get _db async => await DatabaseService.database;
 
   // Create
   Future<int> insertSchedule(Schedule schedule) async {
-    final db = await _db;
-    return await db.insert('schedules', schedule.toMap());
+    try {
+      print('🗄️ [SCHEDULE REPO] Inserting schedule: ${schedule.toMap()}');
+      final db = await _db;
+      final result = await db.insert('schedules', schedule.toMap());
+      print('🗄️ [SCHEDULE REPO] Schedule inserted with ID: $result');
+      return result;
+    } catch (e, stack) {
+      print('❌ [SCHEDULE REPO] Error inserting schedule: $e');
+      print('❌ [SCHEDULE REPO] Stack trace: $stack');
+      rethrow;
+    }
   }
 
   // Read

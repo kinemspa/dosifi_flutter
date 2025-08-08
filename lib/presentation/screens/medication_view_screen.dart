@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/models/medication.dart';
-import '../providers/medication_provider.dart';
-import '../../core/services/medication_calculation_service.dart';
-import '../../config/app_router.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/core/services/medication_calculation_service.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 
 class MedicationViewScreen extends ConsumerWidget {
   final String medicationId;
@@ -919,6 +919,13 @@ class MedicationViewScreen extends ConsumerWidget {
         return Colors.amber;
       case MedicationType.suppository:
         return Colors.pink;
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return Colors.deepPurple;
+      case MedicationType.spray:
+        return Colors.lime;
+      case MedicationType.gel:
+        return Colors.lightGreen;
       case MedicationType.other:
         return Colors.grey;
     }
@@ -938,6 +945,7 @@ class MedicationViewScreen extends ConsumerWidget {
         return Icons.vaccines;
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return Icons.healing;
       case MedicationType.inhaler:
         return Icons.air;
@@ -945,6 +953,11 @@ class MedicationViewScreen extends ConsumerWidget {
         return Icons.medical_services;
       case MedicationType.suppository:
         return Icons.medication_liquid;
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return Icons.colorize;
+      case MedicationType.spray:
+        return Icons.water_damage;
       case MedicationType.other:
         return Icons.medical_information;
     }
@@ -974,6 +987,7 @@ class MedicationViewScreen extends ConsumerWidget {
         return 1.0; // 1 vial
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return 15.0; // 15 grams
       case MedicationType.patch:
         return 3.0; // 3 patches
@@ -981,6 +995,12 @@ class MedicationViewScreen extends ConsumerWidget {
         return 20.0; // 20 doses remaining
       case MedicationType.suppository:
         return 3.0; // 3 suppositories
+      case MedicationType.singleUsePen:
+        return 2.0; // 2 single-use pens
+      case MedicationType.multiUsePen:
+        return 1.0; // 1 multi-use pen
+      case MedicationType.spray:
+        return 10.0; // 10 sprays remaining
       case MedicationType.other:
         return 5.0; // 5 units
     }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import 'package:dosifi_flutter/core/theme/app_theme.dart';
 
 class AnimatedGradientCard extends StatefulWidget {
   final Widget child;

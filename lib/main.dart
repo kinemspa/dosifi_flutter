@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/theme/app_theme.dart';
-import 'config/app_router.dart';
-import 'services/notification_service.dart';
+import 'package:dosifi_flutter/core/theme/app_theme.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
+import 'package:dosifi_flutter/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

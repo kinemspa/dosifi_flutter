@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import '../../data/models/schedule.dart';
-import '../../data/models/dose_log.dart';
-import '../../data/repositories/schedule_repository.dart';
-import '../../data/repositories/dose_log_repository.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/data/repositories/schedule_repository.dart';
+import 'package:dosifi_flutter/data/repositories/dose_log_repository.dart';
 
 /// Service responsible for automated dose log generation from schedules
 /// and management of dose scheduling operations

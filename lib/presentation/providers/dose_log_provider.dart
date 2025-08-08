@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/dose_log.dart';
-import '../../data/repositories/dose_log_repository.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/data/repositories/dose_log_repository.dart';
 
 // Repository provider
 final doseLogRepositoryProvider = Provider<DoseLogRepository>((ref) {

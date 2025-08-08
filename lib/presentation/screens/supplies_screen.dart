@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/models/supply.dart';
-import '../providers/supply_provider.dart';
+import 'package:dosifi_flutter/data/models/supply.dart';
+import 'package:dosifi_flutter/presentation/providers/supply_provider.dart';
 
 class SuppliesScreen extends ConsumerStatefulWidget {
   const SuppliesScreen({super.key});

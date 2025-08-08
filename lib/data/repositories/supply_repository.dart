@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
-import '../../core/services/database_service.dart';
-import '../models/supply.dart';
+import 'package:dosifi_flutter/core/services/database_service.dart';
+import 'package:dosifi_flutter/data/models/supply.dart';
 
 class SupplyRepository {
   Future<List<Supply>> getAllSupplies() async {

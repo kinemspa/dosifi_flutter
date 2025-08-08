@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/medication.dart';
-import '../../data/repositories/medication_repository.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/data/repositories/medication_repository.dart';
 
 // Repository provider
 final medicationRepositoryProvider = Provider<MedicationRepository>((ref) {

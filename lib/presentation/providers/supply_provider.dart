@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/supply.dart';
-import '../../data/repositories/supply_repository.dart';
+import 'package:dosifi_flutter/data/models/supply.dart';
+import 'package:dosifi_flutter/data/repositories/supply_repository.dart';
 
 // Repository provider
 final supplyRepositoryProvider = Provider<SupplyRepository>((ref) {

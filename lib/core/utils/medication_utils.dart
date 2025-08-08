@@ -1,4 +1,4 @@
-import '../../data/models/medication.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
 
 /// Utility functions for medication type-specific logic
 class MedicationUtils {
@@ -31,6 +31,12 @@ class MedicationUtils {
       case MedicationType.suppository:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g];
       
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return [StrengthUnit.mcg, StrengthUnit.mg, StrengthUnit.g, StrengthUnit.iu, StrengthUnit.units];
+      
+      case MedicationType.spray:
+      case MedicationType.gel:
       case MedicationType.other:
         return StrengthUnit.values;
     }
@@ -61,6 +67,13 @@ class MedicationUtils {
         return 'Strength per Patch';
       case MedicationType.suppository:
         return 'Strength per Suppository';
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return 'Strength per Pen';
+      case MedicationType.spray:
+        return 'Strength per Spray';
+      case MedicationType.gel:
+        return 'Strength per Gram';
       case MedicationType.other:
         return 'Strength per Unit';
     }
@@ -91,6 +104,13 @@ class MedicationUtils {
         return 'Number of Patches';
       case MedicationType.suppository:
         return 'Number of Suppositories';
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return 'Number of Pens';
+      case MedicationType.spray:
+        return 'Total Volume (mL)';
+      case MedicationType.gel:
+        return 'Volume/Weight (g or mL)';
       case MedicationType.other:
         return 'Number of Units';
     }
@@ -155,6 +175,13 @@ class MedicationUtils {
         return ['Transdermal Patch', 'Matrix Patch', 'Reservoir Patch'];
       case MedicationType.suppository:
         return ['Rectal', 'Vaginal'];
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return ['Single-Use Pen', 'Multi-Use Pen', 'Auto-injector Pen'];
+      case MedicationType.spray:
+        return ['Nasal Spray', 'Oral Spray', 'Topical Spray'];
+      case MedicationType.gel:
+        return ['Topical Gel', 'Oral Gel', 'Aqueous Gel'];
       case MedicationType.other:
         return ['Custom Form'];
     }
@@ -208,13 +235,17 @@ class MedicationUtils {
       
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return StrengthUnit.percent;
       
       case MedicationType.patch:
       case MedicationType.inhaler:
+      case MedicationType.spray:
         return StrengthUnit.mcg;
       
       case MedicationType.suppository:
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
         return StrengthUnit.mg;
       
       case MedicationType.other:

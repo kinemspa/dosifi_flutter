@@ -515,7 +515,7 @@ class DatabaseService {
         final reorderColumn = result.firstWhere((col) => col['name'] == 'reorder_level', orElse: () => {});
         
         // Check if we need to update the table
-        bool needsUpdate = !hasTypeColumn || 
+        final bool needsUpdate = !hasTypeColumn || 
                           quantityColumn['type'] == 'INTEGER' || 
                           reorderColumn['type'] == 'INTEGER';
         

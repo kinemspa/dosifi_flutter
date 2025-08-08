@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'database_service.dart';
-import '../../data/models/medication.dart';
+import 'package:dosifi_flutter/core/services/database_service.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
 
 /// Comprehensive stock management service for medications and supplies
 class StockManagementService {
@@ -364,7 +364,7 @@ class StockStatus {
 class StockLogEntryWithName extends StockLogEntry {
   final String medicationName;
 
-  const StockLogEntryWithName({
+  StockLogEntryWithName({
     required StockLogEntry entry,
     required this.medicationName,
   }) : super(

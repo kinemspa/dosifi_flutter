@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/models/medication.dart';
-import '../providers/medication_layout_provider.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_layout_provider.dart';
 
 extension MedicationExtensions on Medication {
   bool get isExpired {
@@ -482,7 +482,7 @@ class MedicationCard extends StatelessWidget {
   }
 
   Widget _buildAlertsRow() {
-    List<Widget> alerts = [];
+    final List<Widget> alerts = [];
     
     if (medication.isExpired) {
       alerts.add(_buildAlert(
@@ -549,7 +549,7 @@ class MedicationCard extends StatelessWidget {
   }
 
   Widget _buildStorageIndicators() {
-    List<Widget> indicators = [];
+    final List<Widget> indicators = [];
     
     if (medication.requiresRefrigeration) {
       indicators.add(_buildStorageIndicator(
@@ -681,7 +681,7 @@ class MedicationCard extends StatelessWidget {
   }
   
   List<Widget> _buildCompactAlerts() {
-    List<Widget> alerts = [];
+    final List<Widget> alerts = [];
     
     if (medication.isExpired) {
       alerts.add(_buildCompactAlert(Colors.red, Icons.error));
@@ -697,7 +697,7 @@ class MedicationCard extends StatelessWidget {
   }
   
   List<Widget> _buildCompactStorageIndicators() {
-    List<Widget> indicators = [];
+    final List<Widget> indicators = [];
     
     if (medication.requiresRefrigeration) {
       indicators.add(_buildCompactAlert(Colors.blue, Icons.ac_unit));

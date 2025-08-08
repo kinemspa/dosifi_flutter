@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../config/app_router.dart';
-import '../../data/models/schedule.dart';
-import '../../data/models/dose_log.dart';
-import '../providers/schedule_provider.dart';
-import '../providers/dose_log_provider.dart';
-import '../providers/medication_provider.dart';
-import '../../services/notification_service.dart';
-import 'calendar_screen.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/presentation/screens/calendar_screen.dart';
+import 'package:dosifi_flutter/presentation/widgets/dose_action_buttons.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -70,14 +71,14 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         mainAxisSize: MainAxisSize.min,
         children: [
           FloatingActionButton(
-            heroTag: "test_notification",
+            heroTag: 'test_notification',
             mini: true,
             onPressed: _testNotification,
             child: const Icon(Icons.notifications),
           ),
           const SizedBox(height: 8),
           FloatingActionButton(
-            heroTag: "add_schedule",
+            heroTag: 'add_schedule',
             onPressed: _showAddScheduleDialog,
             child: const Icon(Icons.add),
           ),
@@ -135,20 +136,23 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     );
     
     final doseLogsAsync = ref.watch(doseLogListProvider);
-    final isDoseTaken = doseLogsAsync.when(
+    final existingDoseLog = doseLogsAsync.when(
       data: (doseLogs) {
-        return doseLogs.any((log) => 
-          log.medicationId == schedule.medicationId &&
-          log.scheduledTime.year == scheduledDateTime.year &&
-          log.scheduledTime.month == scheduledDateTime.month &&
-          log.scheduledTime.day == scheduledDateTime.day &&
-          log.scheduledTime.hour == scheduledDateTime.hour &&
-          log.scheduledTime.minute == scheduledDateTime.minute &&
-          log.status == DoseStatus.taken
-        );
+        try {
+          return doseLogs.firstWhere((log) => 
+            log.medicationId == schedule.medicationId &&
+            log.scheduledTime.year == scheduledDateTime.year &&
+            log.scheduledTime.month == scheduledDateTime.month &&
+            log.scheduledTime.day == scheduledDateTime.day &&
+            log.scheduledTime.hour == scheduledDateTime.hour &&
+            log.scheduledTime.minute == scheduledDateTime.minute
+          );
+        } catch (e) {
+          return null;
+        }
       },
-      loading: () => false,
-      error: (_, __) => false,
+      loading: () => null,
+      error: (_, __) => null,
     );
     
     return Container(
@@ -228,6 +232,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                   ),
                   const SizedBox(height: 4),
                   Text(
+                    '${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                  Text(
                     '${schedule.doseAmount} ${schedule.doseUnit}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
@@ -244,53 +252,15 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                 ],
               ),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isDoseTaken)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      border: Border.all(color: Colors.green),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.check_circle, color: Colors.green, size: 16),
-                        SizedBox(width: 4),
-                        Text(
-                          'Taken',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else ...[
-                  ElevatedButton(
-                    onPressed: () => _markDoseAsTaken(schedule),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Take'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    onPressed: () => _snoozeDose(schedule),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.orange,
-                      side: const BorderSide(color: Colors.orange),
-                    ),
-                    child: const Text('Snooze'),
-                  ),
-                ],
-              ],
+            DoseActionButtons(
+              schedule: schedule,
+              scheduledDateTime: scheduledDateTime,
+              existingDoseLog: existingDoseLog,
+              isCompact: true,
+              onActionCompleted: () {
+                // Refresh the state after action is completed
+                ref.invalidate(doseLogListProvider);
+              },
             ),
           ],
         ),

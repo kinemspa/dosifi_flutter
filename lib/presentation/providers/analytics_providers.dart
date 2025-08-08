@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/dose_log_repository.dart';
-import '../../data/models/dose_log.dart';
-import '../../data/models/medication.dart';
+import 'package:dosifi_flutter/data/repositories/dose_log_repository.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
 
 // Provider for dose log repository
 final doseLogRepositoryProvider = Provider<DoseLogRepository>((ref) {
@@ -115,7 +115,7 @@ final weeklyAdherenceTrendProvider = FutureProvider<List<WeeklyAdherence>>((ref)
     final doseLogs = await repository.getDoseLogsInRange(weekStart, weekEnd);
     
     int taken = 0;
-    int total = doseLogs.length;
+    final int total = doseLogs.length;
     
     for (final log in doseLogs) {
       if (log.status == DoseStatus.taken) {

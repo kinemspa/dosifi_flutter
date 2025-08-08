@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import '../../data/models/schedule.dart';
-import '../../data/models/dose_log.dart';
-import '../providers/schedule_provider.dart';
-import '../providers/dose_log_provider.dart';
-import '../providers/medication_provider.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/presentation/widgets/dose_action_buttons.dart';
 
 enum CalendarView { month, week, day }
 
@@ -264,62 +265,88 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final medicationAsync = ref.watch(medicationByIdProvider(event.schedule.medicationId));
     final isCompleted = event.doseLog?.status == DoseStatus.taken;
     final isMissed = event.doseLog?.status == DoseStatus.missed;
-    final isOverdue = !isCompleted && event.scheduledTime.isBefore(DateTime.now());
+    final isCancelled = event.doseLog?.status == DoseStatus.skipped;
+    final isOverdue = !isCompleted && !isMissed && !isCancelled && event.scheduledTime.isBefore(DateTime.now());
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isCompleted 
-              ? Colors.green 
-              : isMissed 
-                  ? Colors.red 
-                  : isOverdue 
-                      ? Colors.orange 
-                      : Theme.of(context).primaryColor,
-          child: Icon(
-            isCompleted 
-                ? Icons.check 
-                : isMissed 
-                    ? Icons.close 
-                    : isOverdue 
-                        ? Icons.warning 
-                        : Icons.medication,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-        title: medicationAsync.when(
-          data: (medication) => Text(
-            medication?.name ?? 'Unknown Medication',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              decoration: isCompleted ? TextDecoration.lineThrough : null,
-            ),
-          ),
-          loading: () => const Text('Loading...'),
-          error: (_, __) => Text('Medication ID: ${event.schedule.medicationId}'),
-        ),
-        subtitle: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${DateFormat('HH:mm').format(event.scheduledTime)} - ${event.schedule.doseAmount} ${event.schedule.doseUnit}',
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: isCompleted 
+                      ? Colors.green 
+                      : isMissed 
+                          ? Colors.red 
+                          : isCancelled
+                              ? Colors.grey
+                              : isOverdue 
+                                  ? Colors.orange 
+                                  : Theme.of(context).primaryColor,
+                  child: Icon(
+                    isCompleted 
+                        ? Icons.check 
+                        : isMissed 
+                            ? Icons.close 
+                            : isCancelled
+                                ? Icons.cancel
+                                : isOverdue 
+                                    ? Icons.warning 
+                                    : Icons.medication,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      medicationAsync.when(
+                        data: (medication) => Text(
+                          medication?.name ?? 'Unknown Medication',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            decoration: isCompleted ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        loading: () => const Text('Loading...'),
+                        error: (_, __) => Text('Medication ID: ${event.schedule.medicationId}'),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${DateFormat('HH:mm').format(event.scheduledTime)} - ${event.schedule.doseAmount} ${event.schedule.doseUnit}',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      if (event.doseLog?.takenTime != null)
+                        Text(
+                          'Taken at ${DateFormat('HH:mm').format(event.doseLog!.takenTime!)}',
+                          style: const TextStyle(color: Colors.green, fontSize: 12),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            if (event.doseLog?.takenTime != null)
-              Text(
-                'Taken at ${DateFormat('HH:mm').format(event.doseLog!.takenTime!)}',
-                style: const TextStyle(color: Colors.green, fontSize: 12),
+            const SizedBox(height: 12),
+            // Show dose action buttons for today's or future doses that aren't completed
+            if (!isCompleted && !isMissed && (isSameDay(event.scheduledTime, DateTime.now()) || event.scheduledTime.isAfter(DateTime.now())))
+              DoseActionButtons(
+                schedule: event.schedule,
+                scheduledDateTime: event.scheduledTime,
+                existingDoseLog: event.doseLog,
+                isCompact: false,
+                onActionCompleted: () {
+                  // Refresh the state after action is completed
+                  ref.invalidate(doseLogListProvider);
+                },
               ),
           ],
         ),
-        trailing: isCompleted 
-            ? const Icon(Icons.check_circle, color: Colors.green)
-            : isMissed 
-                ? const Icon(Icons.error, color: Colors.red)
-                : isOverdue 
-                    ? const Icon(Icons.access_time, color: Colors.orange)
-                    : null,
       ),
     );
   }

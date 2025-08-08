@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/app_theme.dart';
-import '../providers/medication_provider.dart';
-import '../providers/schedule_provider.dart';
-import '../providers/dose_log_provider.dart';
-import '../../data/models/schedule.dart';
-import '../providers/dose_scheduling_provider.dart';
-import '../../services/notification_service.dart';
+import 'package:dosifi_flutter/core/theme/app_theme.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/presentation/providers/dose_scheduling_provider.dart';
+import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/presentation/widgets/dose_action_buttons.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -276,20 +277,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
     
     final doseLogsAsync = ref.watch(doseLogListProvider);
-    final isDoseTaken = doseLogsAsync.when(
+    final existingDoseLog = doseLogsAsync.when(
       data: (doseLogs) {
-        return doseLogs.any((log) => 
-          log.medicationId == schedule.medicationId &&
-          log.scheduledTime.year == scheduledDateTime.year &&
-          log.scheduledTime.month == scheduledDateTime.month &&
-          log.scheduledTime.day == scheduledDateTime.day &&
-          log.scheduledTime.hour == scheduledDateTime.hour &&
-          log.scheduledTime.minute == scheduledDateTime.minute &&
-          log.status.name == 'taken'
-        );
+        try {
+          return doseLogs.firstWhere((log) => 
+            log.medicationId == schedule.medicationId &&
+            log.scheduledTime.year == scheduledDateTime.year &&
+            log.scheduledTime.month == scheduledDateTime.month &&
+            log.scheduledTime.day == scheduledDateTime.day &&
+            log.scheduledTime.hour == scheduledDateTime.hour &&
+            log.scheduledTime.minute == scheduledDateTime.minute
+          );
+        } catch (e) {
+          return null;
+        }
       },
-      loading: () => false,
-      error: (_, __) => false,
+      loading: () => null,
+      error: (_, __) => null,
     );
     
     return Padding(
@@ -297,8 +301,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Row(
         children: [
           Icon(
-            isDoseTaken ? Icons.check_circle : Icons.schedule,
-            color: isDoseTaken ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
+            existingDoseLog?.status.name == 'taken' ? Icons.check_circle : Icons.schedule,
+            color: existingDoseLog?.status.name == 'taken' ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -317,53 +321,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     Text(schedule.timeOfDay, style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(width: 8),
-                    Text('• ${schedule.doseAmount} ${schedule.doseUnit}', 
+                    Text('• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}', 
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Text('${schedule.doseAmount} ${schedule.doseUnit}', 
                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
                   ],
                 ),
               ],
             ),
           ),
-          if (isDoseTaken)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                border: Border.all(color: Colors.green),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.check, color: Colors.green, size: 12),
-                  SizedBox(width: 4),
-                  Text(
-                    'Taken',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else ...[  
-            TextButton(
-              onPressed: () {
-                // Navigate to schedule screen to take dose
-                context.go('/schedule');
-              },
-              child: const Text('Take'),
-            ),
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: () {
-                // TODO: Snooze dose
-              },
-              child: const Text('Snooze'),
-            ),
-          ],
+          DoseActionButtons(
+            schedule: schedule,
+            scheduledDateTime: scheduledDateTime,
+            existingDoseLog: existingDoseLog,
+            isCompact: true,
+            onActionCompleted: () {
+              // Refresh the state after action is completed
+              ref.invalidate(doseLogListProvider);
+            },
+          ),
         ],
       ),
     );

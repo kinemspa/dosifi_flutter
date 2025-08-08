@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/models/medication.dart';
-import '../providers/medication_provider.dart';
-import '../../config/app_router.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 
 class MedicationFormScreen extends ConsumerStatefulWidget {
   final String? medicationId; // null for add, not null for edit
@@ -824,6 +824,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         return Colors.amber;
       case MedicationType.suppository:
         return Colors.pink;
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return Colors.deepPurple;
+      case MedicationType.spray:
+        return Colors.lime;
+      case MedicationType.gel:
+        return Colors.lightGreen;
       case MedicationType.other:
         return Colors.grey;
     }
@@ -843,6 +850,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         return Icons.vaccines;
       case MedicationType.cream:
       case MedicationType.ointment:
+      case MedicationType.gel:
         return Icons.healing;
       case MedicationType.inhaler:
         return Icons.air;
@@ -850,6 +858,11 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         return Icons.medical_services;
       case MedicationType.suppository:
         return Icons.medication_liquid;
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return Icons.colorize;
+      case MedicationType.spray:
+        return Icons.water_damage;
       case MedicationType.other:
         return Icons.medical_information;
     }

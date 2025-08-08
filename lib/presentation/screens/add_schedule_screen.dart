@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/models/schedule.dart';
-import '../../data/models/medication.dart';
-import '../providers/schedule_provider.dart';
-import '../providers/medication_provider.dart';
-import '../../config/app_router.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 
 class AddScheduleScreen extends ConsumerStatefulWidget {
   final String? scheduleId;
@@ -827,6 +827,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
     });
 
     try {
+      print('📅 [ADD SCHEDULE] Creating schedule object');
       final schedule = Schedule.create(
         medicationId: _selectedMedicationId!,
         scheduleType: _selectedScheduleType.name,
@@ -841,25 +842,38 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
         doseForm: _selectedDoseForm,
         strengthPerUnit: double.parse(_strengthPerUnitController.text.trim()),
       );
+      
+      print('📅 [ADD SCHEDULE] Schedule object created: ${schedule.toMap()}');
 
       if (isEditMode) {
         // TODO: Implement schedule update
+        print('📅 [ADD SCHEDULE] Edit mode not implemented yet');
       } else {
+        print('📅 [ADD SCHEDULE] Calling addSchedule on provider');
         await ref.read(scheduleListProvider.notifier).addSchedule(schedule);
+        print('📅 [ADD SCHEDULE] Schedule added via provider');
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditMode ? 'Schedule updated successfully' : 'Schedule added successfully'),
+            backgroundColor: Colors.green,
           ),
         );
         context.pop();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ [ADD SCHEDULE] Error saving schedule: $e');
+      print('❌ [ADD SCHEDULE] Stack trace: $stackTrace');
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving schedule: $e')),
+          SnackBar(
+            content: Text('Error saving schedule: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {

@@ -1,8 +1,8 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../models/dose_log.dart';
-import '../models/medication.dart';
-import '../../core/services/database_service.dart';
-import '../../services/medication_calculation_service.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/core/services/database_service.dart';
+import 'package:dosifi_flutter/core/services/medication_calculation_service.dart';
 
 class DoseLogRepository {
   Future<Database> get _db async => await DatabaseService.database;

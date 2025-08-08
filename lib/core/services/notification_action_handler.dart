@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/schedule.dart';
-import '../../data/models/dose_log.dart';
-import '../../presentation/providers/dose_log_provider.dart';
-import '../../presentation/providers/medication_provider.dart';
-import '../../presentation/providers/schedule_provider.dart';
-import '../services/notification_service.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
+import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
+import 'package:dosifi_flutter/core/services/notification_service.dart';
 
 class NotificationActionHandler {
   static const String actionTake = 'take_dose';

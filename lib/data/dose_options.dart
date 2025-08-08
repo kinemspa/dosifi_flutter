@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'models/medication.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
 
 @immutable
 class DoseOption {

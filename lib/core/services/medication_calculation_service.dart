@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../data/models/medication.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
 
 /// Service for advanced medication calculations and type-specific operations
 class MedicationCalculationService {
@@ -107,6 +107,8 @@ class MedicationCalculationService {
         // Stock is in suppositories, usage is in suppositories
         return currentStock / dailyUsage;
       
+      case MedicationType.spray:
+      case MedicationType.gel:
       case MedicationType.other:
         return currentStock / dailyUsage;
     }
@@ -212,6 +214,10 @@ class MedicationCalculationService {
       case MedicationType.ointment:
       case MedicationType.drops:
       case MedicationType.inhaler:
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+      case MedicationType.spray:
+      case MedicationType.gel:
       case MedicationType.other:
         // No specific validation constraints for these types
         break;

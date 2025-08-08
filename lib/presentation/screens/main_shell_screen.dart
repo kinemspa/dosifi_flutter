@@ -45,8 +45,10 @@ class MainShellScreen extends StatelessWidget {
         return 'Schedule';
       case '/calendar':
         return 'Calendar';
-      case '/dose-activity':
-        return 'Dose Activity';
+      case '/test/notifications':
+        return 'Notification Testing';
+      case '/settings':
+        return 'Settings';
       default:
         return 'Dosifi';
     }
@@ -236,12 +238,24 @@ class MainShellScreen extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.analytics,
-                  title: 'Dose Activity',
-                  subtitle: 'Track dose history',
+                  icon: Icons.settings,
+                  title: 'Settings',
+                  subtitle: 'App preferences & diagnostics',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/dose-activity');
+                    context.go('/settings');
+                  },
+                ),
+                const Divider(),
+                _buildDrawerSectionHeader(context, 'Development'),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.bug_report,
+                  title: 'Notification Test',
+                  subtitle: 'Test notification system',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/test/notifications');
                   },
                 ),
               ],

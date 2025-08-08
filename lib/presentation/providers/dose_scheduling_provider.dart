@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/services/dose_scheduling_service.dart';
-import '../../data/repositories/schedule_repository.dart';
-import '../../data/repositories/dose_log_repository.dart';
-import '../../data/models/dose_log.dart';
+import 'package:dosifi_flutter/core/services/dose_scheduling_service.dart';
+import 'package:dosifi_flutter/data/repositories/schedule_repository.dart';
+import 'package:dosifi_flutter/data/repositories/dose_log_repository.dart';
+import 'package:dosifi_flutter/data/models/dose_log.dart';
 
 // Dose Scheduling Service Provider
 final doseSchedulingServiceProvider = Provider<DoseSchedulingService>((ref) {

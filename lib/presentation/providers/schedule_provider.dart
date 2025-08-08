@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/schedule.dart';
-import '../../data/repositories/schedule_repository.dart';
-import '../../services/notification_service.dart';
-import 'medication_provider.dart';
+import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/repositories/schedule_repository.dart';
+import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 
 // Repository provider
 final scheduleRepositoryProvider = Provider<ScheduleRepository>((ref) {
@@ -48,17 +48,31 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
 
   Future<void> addSchedule(Schedule schedule) async {
     try {
+      debugPrint('📅 [SCHEDULE PROVIDER] Starting to add schedule for medication ${schedule.medicationId}');
+      debugPrint('📅 [SCHEDULE PROVIDER] Schedule data: ${schedule.toMap()}');
+      
       final id = await _repository.insertSchedule(schedule);
+      debugPrint('📅 [SCHEDULE PROVIDER] Schedule saved with ID: $id');
+      
       final newSchedule = schedule.copyWith(id: id);
       
       // Schedule notifications for this schedule
+      debugPrint('📅 [SCHEDULE PROVIDER] Starting to schedule notifications');
       await _scheduleNotifications(newSchedule);
+      debugPrint('📅 [SCHEDULE PROVIDER] Notifications scheduled successfully');
       
       state.whenData((schedules) {
-        state = AsyncValue.data([...schedules, newSchedule]);
+        final updatedSchedules = [...schedules, newSchedule];
+        state = AsyncValue.data(updatedSchedules);
+        debugPrint('📅 [SCHEDULE PROVIDER] State updated with ${updatedSchedules.length} schedules');
       });
+      
+      debugPrint('📅 [SCHEDULE PROVIDER] Schedule added successfully');
     } catch (e, stack) {
+      debugPrint('❌ [SCHEDULE PROVIDER] Error adding schedule: $e');
+      debugPrint('❌ [SCHEDULE PROVIDER] Stack trace: $stack');
       state = AsyncValue.error(e, stack);
+      rethrow; // Re-throw to let the UI handle the error
     }
   }
 

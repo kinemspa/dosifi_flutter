@@ -88,7 +88,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
     // For IU and Units, keep as is
     
     // Parse syringe size
-    double syringeVolume = double.parse(_syringeSize.replaceAll('mL', ''));
+    final double syringeVolume = double.parse(_syringeSize.replaceAll('mL', ''));
     
     setState(() {
       _results = _calculateOptions(strengthInUnits, syringeVolume);
@@ -96,22 +96,22 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
   }
   
   Map<String, dynamic> _calculateOptions(double strength, double syringeVolume) {
-    Map<String, dynamic> results = {};
+    final Map<String, dynamic> results = {};
     
     if (_targetVialSize != null) {
       // With target vial volume
-      double vialVolume = double.parse(_targetVialSize!.replaceAll('mL', ''));
+      final double vialVolume = double.parse(_targetVialSize!.replaceAll('mL', ''));
       
       // Concentrated: 1mL reconstitution
-      double concentratedVolume = 1.0;
-      double concentratedConcentration = strength / concentratedVolume;
+      final double concentratedVolume = 1.0;
+      final double concentratedConcentration = strength / concentratedVolume;
       
       // Average: 60% of vial volume
-      double avgVolume = vialVolume * 0.6;
-      double avgConcentration = strength / avgVolume;
+      final double avgVolume = vialVolume * 0.6;
+      final double avgConcentration = strength / avgVolume;
       
       // Diluted: full vial volume
-      double dilutedConcentration = strength / vialVolume;
+      final double dilutedConcentration = strength / vialVolume;
       
       results['concentrated'] = {
         'volume': concentratedVolume,

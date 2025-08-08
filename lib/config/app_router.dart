@@ -3,18 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Import screens when created
-import '../presentation/screens/splash_screen.dart';
-import '../presentation/screens/medications_list_screen.dart';
-import '../presentation/screens/medication_view_screen.dart';
-import '../presentation/screens/medication_form_screen.dart';
-import '../presentation/screens/schedule_screen.dart';
-import '../presentation/screens/dashboard_screen.dart';
-import '../presentation/screens/main_shell_screen.dart';
-import '../presentation/screens/supplies_screen.dart';
-import '../presentation/screens/calendar_screen.dart';
-import '../presentation/screens/dose_activity_screen.dart';
-import '../presentation/screens/add_supply_screen.dart';
-import '../presentation/screens/add_schedule_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/splash_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/medications_list_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/medication_view_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/medication_form_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/schedule_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/dashboard_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/main_shell_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/supplies_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/calendar_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/add_supply_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/add_schedule_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/notification_test_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/settings_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -38,7 +39,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           },
         ),
       ),
-GoRoute(
+      GoRoute(
         path: '/',
         name: 'home',
         pageBuilder: (context, state) => MaterialPage(
@@ -94,13 +95,25 @@ GoRoute(
         ),
       ),
       GoRoute(
-        path: '/dose-activity',
-        name: 'dose-activity',
+        path: '/settings',
+        name: 'settings',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: MainShellScreen(
             currentPath: state.fullPath,
-            child: const DoseActivityScreen(),
+            child: const SettingsScreen(),
+          ),
+        ),
+      ),
+      // Development/Testing routes
+      GoRoute(
+        path: '/test/notifications',
+        name: 'notification-test',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const NotificationTestScreen(),
           ),
         ),
       ),
@@ -218,7 +231,6 @@ extension NavigationExtensions on BuildContext {
   void navigateToSupplies() => go('/supplies');
   void navigateToSchedule() => go('/schedule');
   void navigateToCalendar() => go('/calendar');
-  void navigateToDoseActivity() => go('/dose-activity');
   void navigateToAddMedication() => go('/medications/add');
   void navigateToMedicationDetails(String id) => go('/medications/$id');
   void navigateToEditMedication(String id) => go('/medications/edit/$id');
@@ -226,6 +238,8 @@ extension NavigationExtensions on BuildContext {
   void navigateToEditSupply(String id) => go('/supplies/edit/$id');
   void navigateToAddSchedule() => go('/schedules/add');
   void navigateToEditSchedule(String id) => go('/schedules/edit/$id');
+  void navigateToNotificationTest() => go('/test/notifications');
+  void navigateToSettings() => go('/settings');
   
   /// Smart back navigation that goes to the appropriate main screen
   void navigateBackSmart() {
@@ -245,8 +259,6 @@ extension NavigationExtensions on BuildContext {
         navigateToSchedule();
       } else if (currentLocation.startsWith('/calendar')) {
         navigateToCalendar();
-      } else if (currentLocation.startsWith('/dose-activity')) {
-        navigateToDoseActivity();
       } else {
         navigateToHome();
       }
