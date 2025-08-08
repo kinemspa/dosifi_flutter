@@ -436,6 +436,12 @@ class NotificationService {
         }
       }
 
+      final payloadJson = {
+        'type': 'schedule',
+        'scheduleId': schedule.id,
+        'timestamp': scheduledDate.millisecondsSinceEpoch,
+      };
+
       await _notifications.zonedSchedule(
         id,
         title,
@@ -444,7 +450,7 @@ class NotificationService {
         notificationDetails,
         androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'schedule_${schedule.id}_${scheduledDate.millisecondsSinceEpoch}',
+        payload: jsonEncode(payloadJson),
         matchDateTimeComponents: DateTimeComponents.dateAndTime,
       );
 
