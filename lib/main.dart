@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dosifi_flutter/core/theme/app_theme.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
 import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/core/services/notification_action_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -6,7 +6,7 @@ import 'package:dosifi_flutter/data/models/dose_log.dart';
 import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
-import 'package:dosifi_flutter/core/services/notification_service.dart';
+import 'package:dosifi_flutter/services/notification_service.dart';
 
 class ParsedNotificationAction {
   final String action; // take|snooze|cancel|schedule|tap

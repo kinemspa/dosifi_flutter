@@ -38,7 +38,8 @@ class DatabaseService {
         // Enforce foreign keys for referential integrity
         await db.execute('PRAGMA foreign_keys = ON');
       },
-      onCreate: _onCreate,n      onUpgrade: _onUpgrade,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
