@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -18,13 +19,13 @@ void main() {
 
       // Look for the drawer/menu button and tap it
       final menuButton = find.byType(IconButton);
-      if (menuButton.found) {
+      if (tester.any(menuButton)) {
         await tester.tap(menuButton.first);
         await tester.pumpAndSettle();
 
         // Look for the notification test menu item
         final notificationTestItem = find.text('Notification Test');
-        if (notificationTestItem.found) {
+        if (tester.any(notificationTestItem)) {
           await tester.tap(notificationTestItem);
           await tester.pumpAndSettle();
 
@@ -34,7 +35,7 @@ void main() {
 
           // Test instant notification button
           final instantButton = find.text('Instant');
-          if (instantButton.found) {
+          if (tester.any(instantButton)) {
             await tester.tap(instantButton);
             await tester.pumpAndSettle();
             
@@ -44,7 +45,7 @@ void main() {
 
           // Test scheduled notification button
           final scheduledButton = find.text('Scheduled');
-          if (scheduledButton.found) {
+          if (tester.any(scheduledButton)) {
             await tester.tap(scheduledButton);
             await tester.pumpAndSettle();
             
@@ -54,7 +55,7 @@ void main() {
 
           // Test refresh button
           final refreshButton = find.byIcon(Icons.refresh);
-          if (refreshButton.found) {
+          if (tester.any(refreshButton)) {
             await tester.tap(refreshButton);
             await tester.pumpAndSettle();
           }
@@ -99,7 +100,3 @@ void main() {
   });
 }
 
-// Helper extension to check if a finder found any widgets
-extension on Finder {
-  bool get found => evaluate().isNotEmpty;
-}
