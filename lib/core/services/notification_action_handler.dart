@@ -8,6 +8,17 @@ import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
 import 'package:dosifi_flutter/core/services/notification_service.dart';
 
+class ParsedNotificationAction {
+  final String action; // take|snooze|cancel|schedule|tap
+  final int scheduleId;
+  final DateTime scheduledDateTime;
+  ParsedNotificationAction({
+    required this.action,
+    required this.scheduleId,
+    required this.scheduledDateTime,
+  });
+}
+
 class NotificationActionHandler {
   static const String actionTake = 'take_dose';
   static const String actionSnooze = 'snooze_dose';
@@ -16,6 +27,31 @@ class NotificationActionHandler {
   final WidgetRef ref;
 
   NotificationActionHandler(this.ref);
+
+  /// Public helper to parse a notification input (JSON or legacy) into a structured object.
+  static ParsedNotificationAction? parseNotificationInput(String? payloadOrActionId) {
+    if (payloadOrActionId == null) return null;
+    try {
+      if (payloadOrActionId.trim().startsWith('{')) {
+        final map = Map<String, dynamic>.from(jsonDecode(payloadOrActionId) as Map);
+        final action = (map['action'] as String?) ?? (map['type'] as String? ?? 'tap');
+        final scheduleId = (map['scheduleId'] as num).toInt();
+        final ts = (map['timestamp'] as num?)?.toInt();
+        final dateTime = ts != null ? DateTime.fromMillisecondsSinceEpoch(ts) : DateTime.now();
+        return ParsedNotificationAction(action: action, scheduleId: scheduleId, scheduledDateTime: dateTime);
+      } else {
+        final parts = payloadOrActionId.split('_');
+        if (parts.length < 3) return null;
+        final action = parts[0];
+        final scheduleId = int.parse(parts[1]);
+        final timestamp = int.parse(parts[2]);
+        final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        return ParsedNotificationAction(action: action, scheduleId: scheduleId, scheduledDateTime: dateTime);
+      }
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Handle notification tap or action. Accepts either a structured JSON payload
   /// or the legacy "action_scheduleId_timestamp" format.
@@ -27,37 +63,14 @@ class NotificationActionHandler {
     }
 
     try {
-      // Attempt to parse JSON first
-      String action;
-      int scheduleId;
-      DateTime scheduledDateTime;
-
-      if (payloadOrActionId.trim().startsWith('{')) {
-        final map = _safeDecodeJson(payloadOrActionId);
-        if (map == null) {
-          if (kDebugMode) print('NotificationActionHandler: Invalid JSON payload');
-          return;
-        }
-        action = (map['action'] as String?) ?? (map['type'] as String? ?? 'tap');
-        scheduleId = (map['scheduleId'] as num).toInt();
-        final ts = (map['timestamp'] as num?)?.toInt();
-        scheduledDateTime = ts != null
-            ? DateTime.fromMillisecondsSinceEpoch(ts)
-            : DateTime.now();
-      } else {
-        // Legacy: 'take_123_1691234567890' or 'schedule_123_169...'n        final parts = payloadOrActionId.split('_');
-        if (parts.length < 3) {
-          if (kDebugMode) {
-            print('NotificationActionHandler: Invalid legacy payload format: $payloadOrActionId');
-          }
-          return;
-        }
-        action = parts[0];
-        scheduleId = int.parse(parts[1]);
-        final timestamp = int.parse(parts[2]);
-        scheduledDateTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      final parsed = parseNotificationInput(payloadOrActionId);
+      if (parsed == null) {
+        if (kDebugMode) print('NotificationActionHandler: Unable to parse notification input');
+        return;
       }
-
+      final action = parsed.action;
+      final scheduleId = parsed.scheduleId;
+      final scheduledDateTime = parsed.scheduledDateTime;
       if (kDebugMode) {
         print('NotificationActionHandler: Parsed -> action=$action, scheduleId=$scheduleId, scheduled=$scheduledDateTime');
       }
@@ -120,13 +133,6 @@ class NotificationActionHandler {
     }
   }
 
-  Map<String, dynamic>? _safeDecodeJson(String s) {
-    try {
-      return Map<String, dynamic>.from(jsonDecode(s) as Map);
-    } catch (_) {
-      return null;
-    }
-  }
 
   /// Handle taking a dose from notification
   Future<void> _handleTakeDose(
