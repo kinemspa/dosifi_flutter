@@ -46,11 +46,10 @@ Dosifi is a comprehensive medication management Flutter application designed to 
    - Personalized insights and recommendations
    - Export capabilities for healthcare providers
 
-### Planned Features
-- **Schedule Management**: Set reminders and track medication schedules with automatic dose calculations
-- **Inventory Tracking**: Monitor medication stock levels
-- **Analytics**: View medication adherence and usage patterns
-- **Settings**: Customize app preferences and notifications
+### Planned/Partial Features
+- **Notifications action handling (Partial)**: Notifications are scheduled; action routing and deep-link navigation to app screens to be finalized
+- **Analytics (Partial)**: Adherence and usage visualization present; needs real data population and more reports
+- **Settings**: Expand preferences, including configurable snooze durations and privacy settings
 
 ### Automatic Dose Calculations
 The app now supports automatic dose calculations to ensure users enter correct dosage based on the medication's strength. Users can select the medication and adjust the dose unit, and the app will accurately convert dose amounts between tablets/capsules and mg as necessary.
@@ -146,7 +145,7 @@ dosifi_flutter/
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/dosifi_flutter.git
+git clone https://github.com/kinemspa/dosifi_flutter.git
 ```
 
 2. Install dependencies
@@ -178,3 +177,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+2025-08-08 Review Addendum (Code-Verified Notes)
+
+- Notifications: Implemented scheduling with actions; need to wire onDidReceiveNotificationResponse to NotificationActionHandler and standardize payloads (recommend JSON). Use device local timezone instead of hard-coded AU.
+- Database: Encrypted via SQLCipher. backupDatabase should copy dosifi_encrypted.db (current code copies dosifi.db). Replace timestamp-based key generation with cryptographically secure random key generation stored in FlutterSecureStorage.
+- Dependencies: Prefer only sqflite_sqlcipher for DB. Decide on Riverpod code generation or remove riverpod_annotation.
+- Documentation: This README now reflects implemented schedule and inventory features; analytics remains partial.
