@@ -3,6 +3,8 @@ import 'package:path/path.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'dart:math';
+import 'dart:convert';
 
 class DatabaseService {
   static Database? _database;
@@ -32,15 +34,19 @@ class DatabaseService {
       path,
       version: _databaseVersion,
       password: password,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      onConfigure: (db) async {
+        // Enforce foreign keys for referential integrity
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onCreate: _onCreate,n      onUpgrade: _onUpgrade,
     );
   }
 
   static String _generateSecurePassword() {
-    // Generate a secure password for database encryption
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return 'Dosifi_${now}_SecureDB';
+    // Generate a cryptographically secure random key for database encryption
+    final rng = Random.secure();
+    final bytes = List<int>.generate(32, (_) => rng.nextInt(256)); // 256-bit key
+    return base64UrlEncode(bytes);
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -594,7 +600,7 @@ class DatabaseService {
       final backupPath = join(databasePath, 'dosifi_backup_$timestamp.db');
       
       // Copy database file to backup location
-      final sourceFile = File(join(databasePath, 'dosifi.db'));
+      final sourceFile = File(join(databasePath, _databaseName));
       if (await sourceFile.exists()) {
         await sourceFile.copy(backupPath);
         debugPrint('Database backup created at: $backupPath');

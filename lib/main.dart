@@ -81,6 +81,19 @@ class DosifiApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
+    // Register notification action handler once UI is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final service = NotificationService();
+      service.onAction = (String? actionId, String? payload) async {
+        // Prefer actionId for action buttons; fallback to payload for simple taps
+        final toProcess = (actionId != null && actionId.isNotEmpty) ? actionId : payload;
+        if (toProcess == null) return;
+        // Delegate logic to NotificationActionHandler which integrates with providers
+        final handler = NotificationActionHandler(ref);
+        await handler.handleNotificationTap(toProcess);
+      };
+    });
     
     return MaterialApp.router(
       title: 'Dosifi',

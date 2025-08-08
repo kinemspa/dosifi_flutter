@@ -58,7 +58,6 @@ dependencies:
   table_calendar: ^3.2.0
   calendar_view: ^1.2.0
   path: ^1.9.1
-  sqflite: ^2.4.1
   intl: ^0.20.2
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
@@ -75,6 +74,13 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  
+  # Testing dependencies
+  mockito: ^5.4.4
+  build_runner: ^2.4.13
+  integration_test:
+    sdk: flutter
+  patrol: ^3.13.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
