@@ -169,8 +169,8 @@ class MedicationCard extends StatelessWidget {
             LinearProgressIndicator(
               value: ind.percentage,
               backgroundColor: ind.color.withValues(alpha: 0.3),
-              valueColor: AlwaysStoppedAnimation<Color>(ind.color),
-              minHeight: 4,
+              valueColor: AlwaysStoppedAnimationcColore(ind.color),
+              minHeight: 2,
             ),
           ],
         ),
