@@ -48,10 +48,8 @@ class MedicationCard extends StatelessWidget {
     final Color typeColor = _getTypeColor();
     final bool showExpiry = medication.expirationDate != null;
 
-    // Compute stock progress if packageSize is available
-    final double? maxQty = medication.packageSize;
-    final double currentQty = medication.stockQuantity;
-    final double? progress = maxQty != null && maxQty > 0 ? (currentQty / maxQty).clamp(0.0, 1.0) : null;
+    // Compute stock indicator to match Medication Details screen logic
+    final _StockIndicator ind = _computeStockIndicator(medication);
     final String unit = medication.stockUnit?.displayName ?? '';
 
     return InkWell(
@@ -145,11 +143,9 @@ class MedicationCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // Quantity current / max
+                      // Quantity current and unit
                       Text(
-                        maxQty != null
-                            ? '${currentQty.toStringAsFixed(0)} / ${maxQty.toStringAsFixed(0)} $unit'
-                            : '${currentQty.toStringAsFixed(0)} $unit',
+                        '${medication.stockQuantity.toStringAsFixed(0)} $unit',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
@@ -168,24 +164,14 @@ class MedicationCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (progress != null) ...[
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LayoutBuilder(
-                  builder: (context, c) => Stack(children: [
-                        Container(height: 6, width: double.infinity, color: Colors.grey.shade200),
-                        Container(
-                          height: 6,
-                          width: c.maxWidth * progress,
-                          color: progress < 0.25
-                              ? Colors.red
-                              : (progress < 0.5 ? Colors.orange : Colors.green),
-                        ),
-                      ]),
-                ),
-              ),
-            ],
+            // Bottom progress bar using same styling as details screen stock indicator
+            const SizedBox(height: 10),
+            LinearProgressIndicator(
+              value: ind.percentage,
+              backgroundColor: ind.color.withValues(alpha: 0.3),
+              valueColor: AlwaysStoppedAnimation<Color>(ind.color),
+              minHeight: 6,
+            ),
           ],
         ),
       ),
@@ -1324,19 +1310,39 @@ class MedicationCard extends StatelessWidget {
   }
 
   Color _getTypeColor() {
+    // Align with MedicationViewScreen._getMedicationTypeColor
     switch (medication.type) {
       case MedicationType.tablet:
+        return Colors.blue;
       case MedicationType.capsule:
-        return Colors.blue.shade600;
+        return Colors.green;
+      case MedicationType.liquid:
+        return Colors.cyan;
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
+        return Colors.purple;
       case MedicationType.lyophilizedVial:
-        return Colors.red.shade600;
+        return Colors.indigo;
       case MedicationType.cream:
       case MedicationType.ointment:
-        return Colors.green.shade600;
-      default:
-        return Colors.grey.shade600;
+        return Colors.orange;
+      case MedicationType.drops:
+        return Colors.lightBlue;
+      case MedicationType.inhaler:
+        return Colors.teal;
+      case MedicationType.patch:
+        return Colors.amber;
+      case MedicationType.suppository:
+        return Colors.pink;
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return Colors.deepPurple;
+      case MedicationType.spray:
+        return Colors.lime;
+      case MedicationType.gel:
+        return Colors.lightGreen;
+      case MedicationType.other:
+        return Colors.grey;
     }
   }
 
@@ -1381,6 +1387,7 @@ class MedicationCard extends StatelessWidget {
   }
 
   Color _getStockColor() {
+    // Keep quick text color logic; progress bar uses detailed indicator
     if (_isLowStock()) return Colors.red.shade600;
     if (medication.stockQuantity < 10) return Colors.orange.shade600;
     return Colors.green.shade600;
@@ -1445,4 +1452,64 @@ class MedicationCard extends StatelessWidget {
         break;
     }
   }
+
+  // Match stock indicator logic from MedicationViewScreen
+  _StockIndicator _computeStockIndicator(Medication med) {
+    final double threshold = med.lowStockThreshold ?? _getDefaultLowStockThreshold(med);
+    final double current = med.stockQuantity;
+    final double pct = (current / (threshold * 2)).clamp(0.0, 1.0);
+
+    Color color;
+    if (current <= threshold * 0.25) {
+      color = Colors.red;
+    } else if (current <= threshold) {
+      color = Colors.orange;
+    } else if (current <= threshold * 1.5) {
+      color = Colors.yellow;
+    } else {
+      color = Colors.green;
+    }
+    return _StockIndicator(percentage: pct, color: color);
+  }
+
+  double _getDefaultLowStockThreshold(Medication med) {
+    switch (med.type) {
+      case MedicationType.tablet:
+      case MedicationType.capsule:
+        return 7.0; // week supply
+      case MedicationType.liquid:
+      case MedicationType.drops:
+        return 30.0; // mL
+      case MedicationType.preFilledSyringe:
+        return 3.0;
+      case MedicationType.readyMadeVial:
+        return 5.0; // mL
+      case MedicationType.lyophilizedVial:
+        return 1.0; // vial
+      case MedicationType.cream:
+      case MedicationType.ointment:
+      case MedicationType.gel:
+        return 15.0; // grams
+      case MedicationType.patch:
+        return 3.0;
+      case MedicationType.inhaler:
+        return 20.0; // doses
+      case MedicationType.suppository:
+        return 3.0;
+      case MedicationType.singleUsePen:
+        return 2.0;
+      case MedicationType.multiUsePen:
+        return 1.0;
+      case MedicationType.spray:
+        return 10.0; // sprays
+      case MedicationType.other:
+        return 5.0;
+    }
+  }
+}
+
+class _StockIndicator {
+  final double percentage;
+  final Color color;
+  _StockIndicator({required this.percentage, required this.color});
 }
