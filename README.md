@@ -81,6 +81,10 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 - Fixed analyzer errors in medication form and view screens (missing import for MedicationType, corrected async return type, added info bottom sheet helpers, and balanced widget tree in StockInformationSection).
 - Re-ran static analysis to confirm zero errors; remaining items are warnings and infos for future cleanup.
 
+### Theming and Info Buttons (Latest)
+- Added a shared InfoSheet bottom sheet helper and integrated info buttons on key screens (Dashboard, Schedule, Supplies, Medications list, Medication details).
+- Began replacing inline TextStyle with textTheme usage for consistent typography.
+
 ### UI Enhancements (Latest)
 - Medication cards on the Medications screen now include a horizontal progress bar along the bottom indicating stock remaining (based on package size)
 - Removed the temporary "Medication Card Layout View" selector from the Medications screen action bar

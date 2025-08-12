@@ -12,6 +12,7 @@ import 'package:dosifi_flutter/presentation/widgets/dose_action_buttons.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/label_chip.dart';
 import 'package:dosifi_flutter/core/services/stock_management_service.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -167,7 +168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(height: 2),
                     Text(
                       '${nextDateTime!.hour.toString().padLeft(2, '0')}:${nextDateTime!.minute.toString().padLeft(2, '0')} • ${next!.doseAmount} ${next!.doseUnit}',
-                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
                     ),
                   ],
                 ),
@@ -293,11 +294,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               const Icon(Icons.waving_hand, color: Colors.white, size: 20),
               const SizedBox(width: 8),
-              Text(
-                _getGreeting(),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  _getGreeting(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+              IconButton(
+                tooltip: 'About Dashboard',
+                icon: const Icon(Icons.info_outline, color: Colors.white, size: 18),
+                onPressed: () {
+                  InfoSheet.show(
+                    context,
+                    title: 'Dashboard',
+                    message: 'Overview of your medication activity: upcoming doses, quick stats, recent activities, and alerts. Use quick actions to jump into common tasks.',
+                  );
+                },
               ),
             ],
           ),

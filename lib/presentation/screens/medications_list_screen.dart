@@ -5,6 +5,7 @@ import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_layout_provider.dart';
 import 'package:dosifi_flutter/presentation/widgets/medication_card.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class MedicationsListScreen extends ConsumerStatefulWidget {
   const MedicationsListScreen({super.key});
@@ -37,7 +38,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                   tooltip: 'About this screen',
                   icon: const Icon(Icons.info_outline),
                   onPressed: () {
-                    _showInfoSheet(
+                    InfoSheet.show(
                       context,
                       title: 'Medications',
                       message: 'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',

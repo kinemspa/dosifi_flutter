@@ -9,6 +9,7 @@ import 'package:dosifi_flutter/core/utils/compact_form_sheet.dart';
 import 'package:dosifi_flutter/presentation/screens/add_supply_screen.dart';
 import 'package:dosifi_flutter/presentation/providers/supply_layout_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class SuppliesScreen extends ConsumerStatefulWidget {
   const SuppliesScreen({super.key});
@@ -34,7 +35,18 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         actions: [
-          PopupMenuButton<SupplyCardLayout>(
+          IconButton(
+            tooltip: 'About Supplies',
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              InfoSheet.show(
+                context,
+                title: 'Supplies',
+                message: 'Manage medical supplies inventory. Filter by type, search by name or brand, and adjust quantities as needed.',
+              );
+            },
+          ),
+PopupMenuButton<SupplyCardLayout>(
             tooltip: 'Card style',
             icon: const Icon(Icons.view_agenda),
             onSelected: (layout) => ref.read(supplyLayoutProvider.notifier).setLayout(layout),

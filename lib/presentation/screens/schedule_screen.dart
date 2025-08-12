@@ -13,6 +13,7 @@ import 'package:dosifi_flutter/core/widgets/label_chip.dart';
 import 'package:dosifi_flutter/core/utils/compact_form_sheet.dart';
 import 'package:dosifi_flutter/presentation/screens/add_schedule_screen.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_layout_provider.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -59,6 +60,17 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                     ],
                   ),
                 ),
+                IconButton(
+                  tooltip: 'About Schedule',
+                  icon: const Icon(Icons.info_outline, color: Colors.white),
+                  onPressed: () {
+                    InfoSheet.show(
+                      context,
+                      title: 'Schedule',
+                      message: 'View today\'s doses or all schedules. Use the menu to change card style. Tap a dose card to take, skip, or snooze.',
+                    );
+                  },
+                ),
                 PopupMenuButton<ScheduleCardLayout>(
                   tooltip: 'Card style',
                   icon: const Icon(Icons.view_agenda, color: Colors.white),
@@ -68,7 +80,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                         (l) => PopupMenuItem(
                           value: l,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(l.displayName),
                               Text(l.description, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
