@@ -25,6 +25,32 @@ class StorageSection extends StatelessWidget {
                 'Storage Information',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.info_outline, size: 18, color: Colors.teal[700]),
+                tooltip: 'Storage help',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    showDragHandle: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (ctx) => const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [Icon(Icons.thermostat), SizedBox(width: 8), Text('Storage help')]),
+                          SizedBox(height: 12),
+                          Text('Provide storage instructions and temperature. Toggle refrigeration if required.'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(height: 12),

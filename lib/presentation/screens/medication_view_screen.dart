@@ -30,7 +30,7 @@ class MedicationViewScreen extends ConsumerWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Medication Details'),
+          title: Text('Medication Details', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).appBarTheme.titleTextStyle?.color)),
           leading: BackButton(
             onPressed: () {
               if (Navigator.of(context).canPop()) {
@@ -170,13 +170,13 @@ class MedicationViewScreen extends ConsumerWidget {
                     children: [
                       Text(
                         medication.name,
-                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
                       ),
                       if (medication.brandManufacturer != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           medication.brandManufacturer!,
-                          style: const TextStyle(color: Colors.white70, fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                         ),
                       ],
                     ],
@@ -187,9 +187,9 @@ class MedicationViewScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                _buildHeaderStat('Strength', medication.displayStrength),
-                _buildHeaderStat('Stock', medication.stockDisplay),
-                _buildHeaderStat('Type', medication.type.displayName),
+                _buildHeaderStat(context, 'Strength', medication.displayStrength),
+                _buildHeaderStat(context, 'Stock', medication.stockDisplay),
+                _buildHeaderStat(context, 'Type', medication.type.displayName),
               ],
             ),
           ],
@@ -198,18 +198,18 @@ class MedicationViewScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeaderStat(String label, String value) {
+  Widget _buildHeaderStat(BuildContext context, String label, String value) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
           ),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -253,7 +253,18 @@ class MedicationViewScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold))),
+              IconButton(
+                tooltip: 'About: ' + title,
+                icon: const Icon(Icons.info_outline, size: 18),
+                onPressed: () {
+                  _showInfoSheet(context, title: title, message: _infoMessageForSection(title));
+                },
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           ...items.map((item) => _buildInfoRow(item.label, item.value)),
         ],
@@ -385,13 +396,13 @@ class MedicationViewScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 12),
-          _buildExpirationIndicator(daysUntilExpiration),
+          _buildExpirationIndicator(context, daysUntilExpiration),
         ],
       ),
     );
   }
 
-  Widget _buildExpirationIndicator(int daysUntilExpiration) {
+  Widget _buildExpirationIndicator(BuildContext context, int daysUntilExpiration) {
     Color indicatorColor;
     String statusText;
     double percentage;
@@ -422,7 +433,7 @@ class MedicationViewScreen extends ConsumerWidget {
           children: [
             Text(
               'Status: $statusText',
-              style: TextStyle(color: indicatorColor, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: indicatorColor, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -501,10 +512,10 @@ class MedicationViewScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Storage Tips',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700, fontSize: 12),
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue.shade700),
                         ),
                         const SizedBox(height: 4),
-                        Text(_getStorageTips(medication), style: TextStyle(color: Colors.blue.shade600, fontSize: 11)),
+                        Text(_getStorageTips(medication), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.blue.shade600)),
                       ],
                     ),
                   ),
@@ -692,6 +703,50 @@ class MedicationViewScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _showInfoSheet(BuildContext context, {required String title, required String message}) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [const Icon(Icons.info_outline), const SizedBox(width: 8), Text(title)]),
+            const SizedBox(height: 12),
+            Text(message),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _infoMessageForSection(String title) {
+    switch (title) {
+      case 'Basic Information':
+        return 'General identification details about the medication.';
+      case 'Stock Information':
+        return 'Shows current stock, units, and thresholds to help manage inventory.';
+      case 'Expiration Information':
+        return 'Indicates when the medication expires and an indicator of freshness.';
+      case 'Storage Information':
+      case 'Storage & Additional Info':
+        return 'Recommendations and requirements for storing this medication safely.';
+      case 'Reconstitution Information':
+        return 'Details for reconstitution of lyophilized vials including volumes and notes.';
+      case 'Calculations':
+        return 'Calculated information like total active ingredient and allowed dose units.';
+      case 'Notes & Instructions':
+        return 'Optional notes, usage instructions, and description provided.';
+      default:
+        return 'Additional information about this section.';
+    }
   }
 
   Widget _buildNotesSection(BuildContext context, Medication medication) {

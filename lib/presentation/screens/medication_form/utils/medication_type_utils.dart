@@ -242,20 +242,45 @@ class MedicationTypeUtils {
     switch (type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
-        return 'e.g., 30, 60, 100';
+        return 'e.g., 30';
       case MedicationType.liquid:
       case MedicationType.drops:
-        return 'e.g., 100.0, 250.0';
+        return 'e.g., 100.0';
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
-        return 'e.g., 1, 5, 10';
+        return 'e.g., 1';
       case MedicationType.cream:
       case MedicationType.ointment:
       case MedicationType.gel:
-        return 'e.g., 30.0, 50.0';
+        return 'e.g., 30.0';
+      default:
+        return '';
+    }
+  }
+
+  // Shorter hints for tight layouts
+  static String getStockHintShort(MedicationType? type) {
+    if (type == null) return '';
+    switch (type) {
+      case MedicationType.tablet:
+      case MedicationType.capsule:
+        return 'e.g., 30';
+      case MedicationType.liquid:
+      case MedicationType.drops:
+        return 'e.g., 100';
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+      case MedicationType.lyophilizedVial:
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return 'e.g., 1';
+      case MedicationType.cream:
+      case MedicationType.ointment:
+      case MedicationType.gel:
+        return 'e.g., 30';
       default:
         return '';
     }

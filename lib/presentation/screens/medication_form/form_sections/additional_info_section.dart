@@ -26,6 +26,32 @@ class AdditionalInfoSection extends StatelessWidget {
                 'Additional Information',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.info_outline, size: 18, color: Colors.indigo[700]),
+                tooltip: 'More fields help',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    showDragHandle: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (ctx) => const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [Icon(Icons.info_outline), SizedBox(width: 8), Text('Additional information help')]),
+                          SizedBox(height: 12),
+                          Text('Description, instructions, notes, and barcode are optional but useful for context.'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(height: 12),

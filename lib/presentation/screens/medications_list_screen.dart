@@ -3,10 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
-import 'package:dosifi_flutter/core/widgets/compact_card.dart';
-import 'package:dosifi_flutter/core/widgets/label_chip.dart';
-import 'package:dosifi_flutter/core/utils/compact_form_sheet.dart';
-import 'package:dosifi_flutter/presentation/screens/medication_form_screen_refactored.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_layout_provider.dart';
 import 'package:dosifi_flutter/presentation/widgets/medication_card.dart';
 
@@ -36,6 +32,20 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
+                // Screen info
+                IconButton(
+                  tooltip: 'About this screen',
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    _showInfoSheet(
+                      context,
+                      title: 'Medications',
+                      message: 'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',
+                    );
+                  },
+                  style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100, padding: const EdgeInsets.all(12)),
+                ),
+                const SizedBox(width: 8),
                 // Filter Button only (search and layout selector removed)
                 IconButton(
                   icon: const Icon(Icons.filter_list),
@@ -144,13 +154,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showCompactFormSheet(
-            context,
-            title: 'Add Medication',
-            child: const MedicationFormScreenRefactored(compactSheetMode: true),
-          );
-        },
+        onPressed: () => context.push('/medications/add'),
         child: const Icon(Icons.add),
       ),
     );
@@ -181,6 +185,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
   // Keeping helper functions below for icon/color mapping as they are still used.
 
   Widget _buildDetailItem(String label, String value, IconData icon) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 14, color: Colors.grey[600]),
@@ -191,11 +196,11 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w500),
               ),
               Text(
                 value,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -217,7 +222,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
             style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 8),
-          Text('Add your first medication to get started', style: TextStyle(color: Colors.grey[500])),
+          Text('Add your first medication to get started', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[500])),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.push('/medications/add'),
@@ -392,5 +397,24 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+  void _showInfoSheet(BuildContext context, {required String title, required String message}) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [const Icon(Icons.info_outline), const SizedBox(width: 8), Text(title, style: Theme.of(context).textTheme.titleMedium)]),
+            const SizedBox(height: 12),
+            Text(message),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -135,7 +135,7 @@ class MedicationFormController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Clear form fields (except in edit mode)
+  // Clear limited fields (kept for backwards compatibility)
   void clearFormFields() {
     if (!isEditMode) {
       nameController.clear();
@@ -145,6 +145,37 @@ class MedicationFormController extends ChangeNotifier {
       volumeController.clear();
       concentrationController.clear();
     }
+  }
+
+  // Fully reset the form to initial add state
+  void resetFormState() {
+    if (isEditMode) return;
+    formKey.currentState?.reset();
+    nameController.clear();
+    brandController.clear();
+    strengthController.clear();
+    stockController.clear();
+    volumeController.clear();
+    concentrationController.clear();
+    lotBatchController.clear();
+    lowStockThresholdController.clear();
+    storageInstructionsController.clear();
+    storageTemperatureController.clear();
+    reconstitutionVolumeController.clear();
+    finalConcentrationController.clear();
+    reconstitutionNotesController.clear();
+    reconstitutionFluidController.clear();
+    descriptionController.clear();
+    instructionsController.clear();
+    notesController.clear();
+    barcodeController.clear();
+    _selectedType = null;
+    _selectedStrengthUnit = null;
+    _selectedStockUnit = null;
+    _expirationDate = null;
+    _requiresRefrigeration = false;
+    _isActive = true;
+    notifyListeners();
   }
 
   // Validate form
@@ -250,6 +281,7 @@ class MedicationFormController extends ChangeNotifier {
   void _wireTextListeners() {
     // Rebuild listeners for summary banner and dependent UI
     nameController.addListener(notifyListeners);
+    brandController.addListener(notifyListeners);
     strengthController.addListener(notifyListeners);
     stockController.addListener(notifyListeners);
     storageTemperatureController.addListener(notifyListeners);

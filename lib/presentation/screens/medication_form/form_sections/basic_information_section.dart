@@ -25,6 +25,32 @@ class BasicInformationSection extends StatelessWidget {
                 'Basic Information',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.info_outline, size: 18, color: Colors.green[700]),
+                tooltip: 'About basic information',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    showDragHandle: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (ctx) => Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Row(children: [Icon(Icons.info_outline), SizedBox(width: 8), Text('Basic info help')]),
+                          SizedBox(height: 12),
+                          Text('Enter the medication name and optional brand/manufacturer.'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(height: 12),

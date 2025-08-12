@@ -32,13 +32,44 @@ class StockInformationSection extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.info_outline, size: 18, color: Colors.purple[700]),
+                tooltip: 'Stock field help',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    showDragHandle: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (ctx) => const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [Icon(Icons.inventory), SizedBox(width: 8), Text('Stock help')]),
+                          SizedBox(height: 12),
+                          Text('Enter how many units you currently have. Choose the correct unit if applicable.'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
               Expanded(
                 flex: 2,
                 child: TextFormField(
                   controller: controller.stockController,
                   decoration: InputDecoration(
                     labelText: '${MedicationTypeUtils.getStockLabel(controller.selectedType)} *',
-                    hintText: MedicationTypeUtils.getStockHint(controller.selectedType),
+                    hintText: MedicationTypeUtils.getStockHintShort(controller.selectedType),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     filled: true,
                     fillColor: Colors.grey[50],

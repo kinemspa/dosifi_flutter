@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dosifi_flutter/presentation/screens/splash_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/medications_list_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_view_screen.dart';
-import 'package:dosifi_flutter/presentation/screens/medication_form_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/medication_form_screen_refactored.dart';
 import 'package:dosifi_flutter/presentation/screens/schedule_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/dashboard_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/main_shell_screen.dart';
@@ -109,7 +109,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/medications/add',
         name: 'add-medication',
-        pageBuilder: (context, state) => MaterialPage(key: state.pageKey, child: const MedicationFormScreen()),
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const MedicationFormScreenRefactored(compactSheetMode: false),
+        ),
       ),
       GoRoute(
         path: '/medications/edit/:id',
@@ -118,7 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final medicationId = state.pathParameters['id']!;
           return MaterialPage(
             key: state.pageKey,
-            child: MedicationFormScreen(medicationId: medicationId),
+            child: MedicationFormScreenRefactored(medicationId: medicationId, compactSheetMode: false),
           );
         },
       ),
