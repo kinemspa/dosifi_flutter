@@ -81,6 +81,7 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 - Medication cards on the Medications screen now include a horizontal progress bar along the bottom indicating stock remaining (based on package size)
 - Removed the temporary "Medication Card Layout View" selector from the Medications screen action bar
 - Search button and expandable search field are hidden/disabled on the Medications screen
+- Medication list card progress bar thickness adjusted to be thinner for a cleaner look
 
 ### Navigation \u0026 UX Enhancements
 - **Restructured Router Configuration**: Fixed child routes as top-level routes for proper back button functionality

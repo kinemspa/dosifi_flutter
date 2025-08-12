@@ -170,7 +170,7 @@ class MedicationCard extends StatelessWidget {
               value: ind.percentage,
               backgroundColor: ind.color.withValues(alpha: 0.3),
               valueColor: AlwaysStoppedAnimation<Color>(ind.color),
-              minHeight: 6,
+              minHeight: 4,
             ),
           ],
         ),
