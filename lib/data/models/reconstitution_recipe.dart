@@ -120,7 +120,7 @@ class ReconstitutionRecipe {
   }
 
   // Helper methods for reconstitution calculations
-  
+
   // Calculate volume needed for a specific dose
   double calculateVolumeForDose(double desiredDose, String desiredDoseUnit) {
     // Convert units if necessary (simplified version)
@@ -129,7 +129,7 @@ class ReconstitutionRecipe {
       // Add unit conversion logic here
       // For now, assuming same units
     }
-    
+
     return convertedDose / finalConcentration;
   }
 
@@ -140,7 +140,7 @@ class ReconstitutionRecipe {
     if (volumeUnit != solventUnit) {
       // Add unit conversion logic here
     }
-    
+
     return convertedVolume * finalConcentration;
   }
 

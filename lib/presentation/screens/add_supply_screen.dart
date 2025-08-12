@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dosifi_flutter/data/models/supply.dart';
 import 'package:dosifi_flutter/presentation/providers/supply_provider.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
+import 'package:dosifi_flutter/core/widgets/section_header.dart';
+import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/helper_block.dart';
 
 class AddSupplyScreen extends ConsumerStatefulWidget {
   final String? supplyId;
-  
-  const AddSupplyScreen({
-    super.key,
-    this.supplyId,
-  });
+  final bool compactSheetMode;
+
+  const AddSupplyScreen({super.key, this.supplyId, this.compactSheetMode = false});
 
   @override
   ConsumerState<AddSupplyScreen> createState() => _AddSupplyScreenState();
@@ -27,7 +28,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   final _lotNumberController = TextEditingController();
   final _locationController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   SupplyType _selectedType = SupplyType.item;
   DateTime? _expirationDate;
   bool _isLoading = false;
@@ -55,51 +56,48 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.supplyId != null;
-    
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Supply' : 'Add Medical Supply'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.navigateBackSmart(),
-        ),
-        actions: [
-          if (isEditing)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _showDeleteDialog,
-            ),
-        ],
-      ),
-      body: _isLoading
+
+    final formBody = _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               children: [
                 // Step indicator
                 _buildStepIndicator(),
-                const SizedBox(height: 32),
-                
+                const SizedBox(height: 16),
+
                 // Basic Information Section
                 _buildBasicInformationSection(),
-                const SizedBox(height: 32),
-                
-                // Quantity & Stock Section
+                const SizedBox(height: 16),
+
+                // Quantity 6 Stock Section
                 _buildQuantityStockSection(),
-                const SizedBox(height: 32),
-                
+                const SizedBox(height: 16),
+
                 // Additional Information Section
                 _buildAdditionalInfoSection(),
-                const SizedBox(height: 40),
-                
+                const SizedBox(height: 24),
+
                 // Save button
                 _buildSaveButton(),
               ],
             ),
-          ),
+          );
+
+    if (widget.compactSheetMode) {
+      return formBody;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(isEditing ? 'Edit Supply' : 'Add Medical Supply'),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.navigateBackSmart()),
+        actions: [if (isEditing) IconButton(icon: const Icon(Icons.delete), onPressed: _showDeleteDialog)],
+      ),
+      body: formBody,
     );
   }
 
@@ -115,36 +113,17 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.blue,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.inventory_2,
-              color: Colors.white,
-              size: 20,
-            ),
+            decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+            child: const Icon(Icons.inventory_2, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Medical Supply Information',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                Text('Medical Supply Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 SizedBox(height: 4),
-                Text(
-                  'Fill in the details for your medical supply',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
+                Text('Fill in the details for your medical supply', style: TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
           ),
@@ -154,14 +133,14 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   }
 
   Widget _buildBasicInformationSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Basic Information'),
-            
+            const SectionHeader(title: 'Basic Information'),
+
             // Name field
             TextFormField(
               controller: _nameController,
@@ -179,7 +158,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             // Type dropdown
             DropdownButtonFormField<SupplyType>(
               value: _selectedType,
@@ -194,11 +173,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                   value: type,
                   child: Row(
                     children: [
-                      Icon(
-                        _getTypeIcon(type),
-                        size: 20,
-                        color: _getTypeColor(type),
-                      ),
+                      Icon(_getTypeIcon(type), size: 20, color: _getTypeColor(type)),
                       const SizedBox(width: 8),
                       Text(type.displayName),
                     ],
@@ -216,7 +191,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             // Brand field
             TextFormField(
               controller: _brandController,
@@ -228,7 +203,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Size field
             TextFormField(
               controller: _sizeController,
@@ -246,14 +221,14 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   }
 
   Widget _buildQuantityStockSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Quantity & Stock Management'),
-            
+            const SectionHeader(title: 'Quantity & Stock Management'),
+
             Row(
               children: [
                 Expanded(
@@ -292,7 +267,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Reorder level
             TextFormField(
               controller: _reorderLevelController,
@@ -301,7 +276,6 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                 hintText: 'Alert when stock falls below this number',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.notifications),
-                helperText: 'Optional: Set minimum stock level for alerts',
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
@@ -314,6 +288,8 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 8),
+            const HelperBlock.info('Optional: Set minimum stock level for alerts', icon: Icons.help_outline),
           ],
         ),
       ),
@@ -321,14 +297,14 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   }
 
   Widget _buildAdditionalInfoSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Additional Information'),
-            
+            const SectionHeader(title: 'Additional Information'),
+
             // Lot number
             TextFormField(
               controller: _lotNumberController,
@@ -339,7 +315,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Expiration date
             InkWell(
               onTap: _selectExpirationDate,
@@ -362,8 +338,10 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            const HelperBlock.info('Set an expiry if the supply spoils or becomes unusable', icon: Icons.help_outline),
             const SizedBox(height: 16),
-            
+
             // Location
             TextFormField(
               controller: _locationController,
@@ -375,7 +353,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Notes
             TextFormField(
               controller: _notesController,
@@ -395,7 +373,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
 
   Widget _buildSaveButton() {
     final isEditing = widget.supplyId != null;
-    
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -417,10 +395,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
             : Icon(isEditing ? Icons.update : Icons.add),
         label: Text(
           isEditing ? 'Update Supply' : 'Add Supply',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -429,12 +404,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      child: Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
     );
   }
 
@@ -445,10 +415,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
         title: const Text('Delete Supply'),
         content: const Text('Are you sure you want to delete this supply? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -524,7 +491,7 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
         location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
         notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       );
-      
+
       await ref.read(supplyListProvider.notifier).addSupply(supply);
 
       if (mounted) {
@@ -535,16 +502,15 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
             duration: Duration(seconds: 2),
           ),
         );
-        
+
         // Wait a moment before navigating to ensure the snackbar is shown
         await Future.delayed(const Duration(milliseconds: 500));
-        
+
         if (mounted && Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
       }
     } catch (e) {
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

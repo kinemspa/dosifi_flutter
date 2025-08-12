@@ -3,46 +3,45 @@ import 'package:dosifi_flutter/data/models/medication.dart';
 
 /// Service for advanced medication calculations and type-specific operations
 class MedicationCalculationService {
-  
   /// Calculate exact dose deduction amount based on medication type and dose parameters
   static double calculateDoseDeduction(Medication medication, double doseAmount, String doseUnit) {
     debugPrint('🧮 Calculating dose deduction for ${medication.name}: $doseAmount $doseUnit');
-    
+
     switch (medication.type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
         return _calculateSolidDosageDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.liquid:
         return _calculateLiquidDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
         return _calculateInjectableDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.lyophilizedVial:
         return _calculateLyophilizedDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.cream:
       case MedicationType.ointment:
         return _calculateTopicalDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.drops:
         return _calculateDropsDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.inhaler:
         return _calculateInhalerDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.patch:
         return _calculatePatchDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
         return _calculatePenDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.suppository:
         return _calculateSuppositoryDeduction(medication, doseAmount, doseUnit);
-      
+
       case MedicationType.spray:
       case MedicationType.gel:
       case MedicationType.other:
@@ -53,15 +52,15 @@ class MedicationCalculationService {
   /// Calculate days of supply remaining for a medication given current usage
   static double calculateDaysOfSupply(Medication medication, double dailyUsage, String usageUnit) {
     if (dailyUsage <= 0) return double.infinity;
-    
+
     final currentStock = medication.stockQuantity;
-    
+
     switch (medication.type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
         // Daily usage is in tablets/capsules, stock is in tablets/capsules
         return currentStock / dailyUsage;
-      
+
       case MedicationType.liquid:
       case MedicationType.drops:
         // Convert usage to mL if needed
@@ -70,18 +69,18 @@ class MedicationCalculationService {
         if (usageUnit == 'tbsp') usageInMl = dailyUsage * 15.0;
         if (usageUnit == 'drops') usageInMl = dailyUsage / 20.0; // ~20 drops per mL
         return currentStock / usageInMl;
-      
+
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
         // Usage is in mL, stock is in mL
         return currentStock / dailyUsage;
-      
+
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
         // Stock is in pens/cartridges, usage is in pens/doses
         return currentStock / dailyUsage;
-      
+
       case MedicationType.cream:
       case MedicationType.ointment:
         // Usage might be in applications or grams
@@ -92,21 +91,21 @@ class MedicationCalculationService {
           usageInGrams = dailyUsage * gramsPerApplication;
         }
         return currentStock / usageInGrams;
-      
+
       case MedicationType.inhaler:
         // Stock is in doses, usage is in puffs/doses
         return currentStock / dailyUsage;
-      
+
       case MedicationType.patch:
         // Each patch lasts a certain number of days
         final patchDuration = _getPatchDurationDays(medication);
         final patchesNeeded = 1.0 / patchDuration; // Patches needed per day
         return currentStock / patchesNeeded;
-      
+
       case MedicationType.suppository:
         // Stock is in suppositories, usage is in suppositories
         return currentStock / dailyUsage;
-      
+
       case MedicationType.spray:
       case MedicationType.gel:
       case MedicationType.other:
@@ -122,17 +121,17 @@ class MedicationCalculationService {
       case MedicationType.suppository:
         // strength_per_unit × unit_count
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.liquid:
       case MedicationType.drops:
         // concentration × volume
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
         // concentration × total_volume
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.lyophilizedVial:
         // For lyophilized: depends on whether it's reconstituted
         if (medication.finalConcentration != null) {
@@ -142,7 +141,7 @@ class MedicationCalculationService {
           // Pre-reconstitution: strength_per_vial × vial_count
           return medication.strengthPerUnit * medication.stockQuantity;
         }
-      
+
       case MedicationType.cream:
       case MedicationType.ointment:
         // concentration × weight
@@ -151,20 +150,20 @@ class MedicationCalculationService {
           return (medication.strengthPerUnit / 100.0) * medication.stockQuantity * 1000.0;
         }
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.inhaler:
         // strength_per_dose × doses_remaining
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.patch:
         // For patches: strength_per_patch × patch_count
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
         // strength_per_pen × pen_count
         return medication.strengthPerUnit * medication.stockQuantity;
-      
+
       case MedicationType.spray:
       case MedicationType.gel:
       case MedicationType.other:
@@ -194,19 +193,19 @@ class MedicationCalculationService {
           return '${medication.type.displayName}s cannot be split - use whole units only';
         }
         break;
-      
+
       case MedicationType.tablet:
         if (doseAmount < 0.25) {
           return 'Tablets cannot be split smaller than 1/4 tablet';
         }
         break;
-      
+
       case MedicationType.lyophilizedVial:
         if (medication.reconstitutionVolume == null || medication.finalConcentration == null) {
           return 'Lyophilized vial must be reconstituted before use';
         }
         break;
-      
+
       case MedicationType.liquid:
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
@@ -241,14 +240,18 @@ class MedicationCalculationService {
       case 'capsule':
       case 'capsules':
         return doseAmount; // Direct deduction in units
-      
+
       case 'mg':
       case 'mcg':
       case 'g':
         // Convert strength amount to units needed
-        final strengthInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final strengthInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / strengthInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -258,23 +261,27 @@ class MedicationCalculationService {
     switch (doseUnit) {
       case 'mL':
         return doseAmount;
-      
+
       case 'L':
         return doseAmount * 1000.0; // Convert to mL
-      
+
       case 'tsp':
         return doseAmount * 5.0; // tsp to mL
-      
+
       case 'tbsp':
         return doseAmount * 15.0; // tbsp to mL
-      
+
       case 'mg':
       case 'mcg':
       case 'g':
         // Calculate volume needed: dose_amount / concentration
-        final concentrationInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final concentrationInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / concentrationInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -284,15 +291,19 @@ class MedicationCalculationService {
     switch (doseUnit) {
       case 'mL':
         return doseAmount;
-      
+
       case 'Units':
       case 'IU':
       case 'mg':
       case 'mcg':
         // Calculate volume needed: dose_units / concentration
-        final concentrationInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final concentrationInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / concentrationInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -307,14 +318,14 @@ class MedicationCalculationService {
     switch (doseUnit) {
       case 'mL':
         return doseAmount;
-      
+
       case 'Units':
       case 'IU':
       case 'mg':
       case 'mcg':
         // Use final concentration after reconstitution
         return doseAmount / medication.finalConcentration!;
-      
+
       default:
         return doseAmount;
     }
@@ -324,18 +335,22 @@ class MedicationCalculationService {
     switch (doseUnit) {
       case 'g':
         return doseAmount;
-      
+
       case 'applications':
         // Estimate grams per application based on medication type
         final gramsPerApplication = medication.type == MedicationType.cream ? 0.5 : 1.0;
         return doseAmount * gramsPerApplication;
-      
+
       case 'mg':
       case 'mcg':
         // Calculate weight needed: dose_amount / concentration
-        final concentrationInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final concentrationInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / concentrationInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -345,17 +360,21 @@ class MedicationCalculationService {
     switch (doseUnit) {
       case 'drops':
         return doseAmount / 20.0; // Convert drops to mL (~20 drops per mL)
-      
+
       case 'mL':
         return doseAmount;
-      
+
       case 'mg':
       case 'mcg':
         // Calculate volume needed: dose_amount / concentration
-        final concentrationInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final concentrationInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         final volumeNeeded = doseAmount / concentrationInSameUnit;
         return volumeNeeded;
-      
+
       default:
         return doseAmount;
     }
@@ -366,13 +385,17 @@ class MedicationCalculationService {
       case 'puffs':
       case 'doses':
         return doseAmount; // Direct deduction in doses
-      
+
       case 'mg':
       case 'mcg':
         // Calculate puffs needed: dose_amount / strength_per_puff
-        final strengthInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final strengthInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / strengthInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -382,13 +405,17 @@ class MedicationCalculationService {
     switch (doseUnit) {
       case 'patches':
         return doseAmount; // Direct deduction in patches
-      
+
       case 'mcg/hr':
       case 'mg/hr':
         // Calculate patches needed: dose_rate / patch_delivery_rate
-        final rateInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final rateInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / rateInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -399,7 +426,7 @@ class MedicationCalculationService {
       case 'pens':
       case 'pen':
         return doseAmount; // Direct deduction in pens
-      
+
       case 'doses':
         // For multi-use pens, calculate fraction of pen used
         if (medication.type == MedicationType.multiUsePen) {
@@ -407,15 +434,19 @@ class MedicationCalculationService {
           return doseAmount; // This should be handled differently based on pen capacity
         }
         return doseAmount; // Single-use pens
-      
+
       case 'Units':
       case 'IU':
       case 'mg':
       case 'mcg':
         // Calculate pens needed: dose_amount / strength_per_pen
-        final strengthInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final strengthInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / strengthInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -426,14 +457,18 @@ class MedicationCalculationService {
       case 'suppository':
       case 'suppositories':
         return doseAmount; // Direct deduction in suppositories
-      
+
       case 'mg':
       case 'mcg':
       case 'g':
         // Calculate suppositories needed: dose_amount / strength_per_suppository
-        final strengthInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+        final strengthInSameUnit = _convertToSameUnit(
+          medication.strengthPerUnit,
+          medication.strengthUnit.displayName,
+          doseUnit,
+        );
         return doseAmount / strengthInSameUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -444,20 +479,24 @@ class MedicationCalculationService {
     if (doseUnit == 'units') {
       return doseAmount;
     }
-    
+
     // Try to convert based on strength
-    final strengthInSameUnit = _convertToSameUnit(medication.strengthPerUnit, medication.strengthUnit.displayName, doseUnit);
+    final strengthInSameUnit = _convertToSameUnit(
+      medication.strengthPerUnit,
+      medication.strengthUnit.displayName,
+      doseUnit,
+    );
     if (strengthInSameUnit > 0) {
       return doseAmount / strengthInSameUnit;
     }
-    
+
     return doseAmount;
   }
 
   /// Helper method to convert between units
   static double _convertToSameUnit(double value, String fromUnit, String toUnit) {
     if (fromUnit == toUnit) return value;
-    
+
     // Weight conversions
     if (fromUnit == 'mg' && toUnit == 'mcg') return value * 1000.0;
     if (fromUnit == 'mcg' && toUnit == 'mg') return value / 1000.0;
@@ -465,11 +504,11 @@ class MedicationCalculationService {
     if (fromUnit == 'mg' && toUnit == 'g') return value / 1000.0;
     if (fromUnit == 'g' && toUnit == 'mcg') return value * 1000000.0;
     if (fromUnit == 'mcg' && toUnit == 'g') return value / 1000000.0;
-    
+
     // Volume conversions
     if (fromUnit == 'L' && toUnit == 'mL') return value * 1000.0;
     if (fromUnit == 'mL' && toUnit == 'L') return value / 1000.0;
-    
+
     // No conversion available
     return value;
   }
@@ -483,7 +522,7 @@ class MedicationCalculationService {
       if (instructions.contains('3 day') || instructions.contains('72 hour')) return 3.0;
       if (instructions.contains('7 day') || instructions.contains('week')) return 7.0;
     }
-    
+
     // Default assumption: most patches are daily
     return 1.0;
   }

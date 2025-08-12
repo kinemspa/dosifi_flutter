@@ -9,7 +9,7 @@ import 'dart:convert';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 8;
+  static const int _databaseVersion = 12;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -30,7 +30,7 @@ class DatabaseService {
     final databasePath = await getDatabasesPath();
     final path = join(databasePath, _databaseName);
 
-    return await openDatabase(
+    final db = await openDatabase(
       path,
       version: _databaseVersion,
       password: password,
@@ -41,6 +41,15 @@ class DatabaseService {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+
+    // Post-open cleanup: drop any leftover temporary backup tables/triggers from failed migrations
+    try {
+      await _postOpenCleanup(db);
+    } catch (e) {
+      debugPrint('Database post-open cleanup failed: $e');
+    }
+
+    return db;
   }
 
   static String _generateSecurePassword() {
@@ -61,6 +70,9 @@ class DatabaseService {
         strength_per_unit REAL NOT NULL,
         strength_unit TEXT NOT NULL,
         stock_quantity REAL NOT NULL,
+        stock_unit TEXT,
+        vials_in_stock REAL DEFAULT 0.0,
+        package_size REAL,
         reconstitution_volume REAL,
         final_concentration REAL,
         reconstitution_notes TEXT,
@@ -99,7 +111,6 @@ class DatabaseService {
         FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
       )
     ''');
-
 
     // Create dose_logs table
     await db.execute('''
@@ -177,6 +188,24 @@ class DatabaseService {
       )
     ''');
 
+    // Create schedule_overrides table
+    await db.execute('''
+      CREATE TABLE schedule_overrides (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        schedule_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        time_of_day TEXT,
+        dose_amount REAL,
+        dose_unit TEXT,
+        is_cancelled INTEGER DEFAULT 0,
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(schedule_id, date),
+        FOREIGN KEY (schedule_id) REFERENCES schedules (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create supplies table
     await db.execute('''
       CREATE TABLE supplies (
@@ -242,12 +271,12 @@ class DatabaseService {
         )
       ''');
     }
-    
+
     if (oldVersion < 3) {
       // Migration from version 2 to 3: Update medications table
       // First, backup existing data
       await db.execute('ALTER TABLE medications RENAME TO medications_backup');
-      
+
       // Create new medications table with updated schema
       await db.execute('''
         CREATE TABLE medications (
@@ -270,7 +299,7 @@ class DatabaseService {
           updated_at TEXT NOT NULL
         )
       ''');
-      
+
       // Migrate existing data (with defaults for new columns)
       await db.execute('''
         INSERT INTO medications (
@@ -286,11 +315,11 @@ class DatabaseService {
           created_at, updated_at
         FROM medications_backup
       ''');
-      
+
       // Drop the backup table
       await db.execute('DROP TABLE medications_backup');
     }
-    
+
     if (oldVersion < 4) {
       // Migration from version 3 to 4: Add supplies table
       await db.execute('''
@@ -313,16 +342,16 @@ class DatabaseService {
         )
       ''');
     }
-    
+
     if (oldVersion < 5) {
       // Migration from version 4 to 5: Update medications table and remove inventory table
-      
+
       // Drop inventory table as it's now redundant
       await db.execute('DROP TABLE IF EXISTS inventory');
-      
+
       // Backup existing medications data
       await db.execute('ALTER TABLE medications RENAME TO medications_backup');
-      
+
       // Create new medications table with updated schema
       await db.execute('''
         CREATE TABLE medications (
@@ -348,7 +377,7 @@ class DatabaseService {
           updated_at TEXT NOT NULL
         )
       ''');
-      
+
       // Migrate existing data (with defaults for new columns)
       await db.execute('''
         INSERT INTO medications (
@@ -364,11 +393,11 @@ class DatabaseService {
           created_at, updated_at
         FROM medications_backup
       ''');
-      
+
       // Drop the backup table
       await db.execute('DROP TABLE medications_backup');
     }
-    
+
     if (oldVersion < 6) {
       // Migration from version 5 to 6: Fix stock_quantity column name
       try {
@@ -376,7 +405,7 @@ class DatabaseService {
         final result = await db.rawQuery('PRAGMA table_info(medications)');
         final hasNumberOfUnits = result.any((col) => col['name'] == 'number_of_units');
         final hasStockQuantity = result.any((col) => col['name'] == 'stock_quantity');
-        
+
         if (hasNumberOfUnits && !hasStockQuantity) {
           // Rename number_of_units to stock_quantity
           await db.execute('ALTER TABLE medications RENAME COLUMN number_of_units TO stock_quantity');
@@ -384,7 +413,7 @@ class DatabaseService {
       } catch (e) {
         // If the above fails, do a full table recreation
         await db.execute('ALTER TABLE medications RENAME TO medications_backup_v6');
-        
+
         // Create new medications table
         await db.execute('''
           CREATE TABLE medications (
@@ -410,7 +439,7 @@ class DatabaseService {
             updated_at TEXT NOT NULL
           )
         ''');
-        
+
         // Migrate data
         await db.execute('''
           INSERT INTO medications (
@@ -426,25 +455,25 @@ class DatabaseService {
             created_at, updated_at
           FROM medications_backup_v6
         ''');
-        
+
         await db.execute('DROP TABLE medications_backup_v6');
       }
     }
-    
+
     if (oldVersion < 7) {
       // Migration from version 6 to 7: Add dose columns to schedules table
       try {
         // Check if schedules table already has dose columns
         final result = await db.rawQuery('PRAGMA table_info(schedules)');
         final hasDoseAmount = result.any((col) => col['name'] == 'dose_amount');
-        
+
         if (!hasDoseAmount) {
           // Add dose columns to schedules table
           await db.execute('ALTER TABLE schedules ADD COLUMN dose_amount REAL DEFAULT 1.0');
           await db.execute('ALTER TABLE schedules ADD COLUMN dose_unit TEXT DEFAULT "tablet"');
           await db.execute('ALTER TABLE schedules ADD COLUMN dose_form TEXT DEFAULT "tablet"');
           await db.execute('ALTER TABLE schedules ADD COLUMN strength_per_unit REAL DEFAULT 1.0');
-          
+
           // Update existing schedules with default values
           await db.execute('''
             UPDATE schedules 
@@ -454,10 +483,10 @@ class DatabaseService {
                 strength_per_unit = 1.0
             WHERE dose_amount IS NULL
           ''');
-          
+
           // Make dose columns NOT NULL
           await db.execute('ALTER TABLE schedules RENAME TO schedules_backup_v7');
-          
+
           // Create new schedules table with proper schema
           await db.execute('''
             CREATE TABLE schedules (
@@ -480,7 +509,7 @@ class DatabaseService {
               FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE
             )
           ''');
-          
+
           // Migrate data
           await db.execute('''
             INSERT INTO schedules (
@@ -497,7 +526,7 @@ class DatabaseService {
               is_active, created_at, updated_at
             FROM schedules_backup_v7
           ''');
-          
+
           await db.execute('DROP TABLE schedules_backup_v7');
         }
       } catch (e) {
@@ -505,7 +534,7 @@ class DatabaseService {
         debugPrint('Schedule table migration error: $e');
       }
     }
-    
+
     if (oldVersion < 8) {
       // Migration from version 7 to 8: Update supplies table schema
       try {
@@ -514,16 +543,15 @@ class DatabaseService {
         final hasTypeColumn = result.any((col) => col['name'] == 'type');
         final quantityColumn = result.firstWhere((col) => col['name'] == 'quantity', orElse: () => {});
         final reorderColumn = result.firstWhere((col) => col['name'] == 'reorder_level', orElse: () => {});
-        
+
         // Check if we need to update the table
-        final bool needsUpdate = !hasTypeColumn || 
-                          quantityColumn['type'] == 'INTEGER' || 
-                          reorderColumn['type'] == 'INTEGER';
-        
+        final bool needsUpdate =
+            !hasTypeColumn || quantityColumn['type'] == 'INTEGER' || reorderColumn['type'] == 'INTEGER';
+
         if (needsUpdate) {
           // Backup existing supplies data
           await db.execute('ALTER TABLE supplies RENAME TO supplies_backup_v8');
-          
+
           // Create new supplies table with correct schema
           await db.execute('''
             CREATE TABLE supplies (
@@ -544,7 +572,7 @@ class DatabaseService {
               updated_at TEXT NOT NULL
             )
           ''');
-          
+
           // Migrate existing data if any exists
           final existingData = await db.rawQuery('SELECT COUNT(*) as count FROM supplies_backup_v8');
           if ((existingData.first['count'] as int) > 0) {
@@ -570,13 +598,75 @@ class DatabaseService {
               FROM supplies_backup_v8
             ''');
           }
-          
+
           // Drop the backup table
           await db.execute('DROP TABLE supplies_backup_v8');
         }
       } catch (e) {
         // If migration fails, log error but continue
         debugPrint('Supplies table migration error: $e');
+      }
+    }
+
+    if (oldVersion < 9) {
+      // Migration to version 9: add vials_in_stock to medications
+      try {
+        final cols = await db.rawQuery('PRAGMA table_info(medications)');
+        final hasVials = cols.any((c) => c['name'] == 'vials_in_stock');
+        if (!hasVials) {
+          await db.execute('ALTER TABLE medications ADD COLUMN vials_in_stock REAL DEFAULT 0.0');
+        }
+      } catch (e) {
+        debugPrint('Migration v9 failed: $e');
+      }
+    }
+
+    if (oldVersion < 10) {
+      // Migration to version 10: add schedule_overrides table
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS schedule_overrides (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            schedule_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            time_of_day TEXT,
+            dose_amount REAL,
+            dose_unit TEXT,
+            is_cancelled INTEGER DEFAULT 0,
+            notes TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(schedule_id, date),
+            FOREIGN KEY (schedule_id) REFERENCES schedules (id) ON DELETE CASCADE
+          )
+        ''');
+      } catch (e) {
+        debugPrint('Migration v10 (schedule_overrides) failed: $e');
+      }
+    }
+    if (oldVersion < 11) {
+      // Migration to version 11: add stock_unit to medications
+      try {
+        final cols = await db.rawQuery('PRAGMA table_info(medications)');
+        final hasStockUnit = cols.any((c) => c['name'] == 'stock_unit');
+        if (!hasStockUnit) {
+          await db.execute('ALTER TABLE medications ADD COLUMN stock_unit TEXT');
+        }
+      } catch (e) {
+        debugPrint('Migration v11 (stock_unit) failed: $e');
+      }
+    }
+
+    if (oldVersion < 12) {
+      // Migration to version 12: add package_size to medications
+      try {
+        final cols = await db.rawQuery('PRAGMA table_info(medications)');
+        final hasPackageSize = cols.any((c) => c['name'] == 'package_size');
+        if (!hasPackageSize) {
+          await db.execute('ALTER TABLE medications ADD COLUMN package_size REAL');
+        }
+      } catch (e) {
+        debugPrint('Migration v12 (package_size) failed: $e');
       }
     }
   }
@@ -599,7 +689,7 @@ class DatabaseService {
       final databasePath = await getDatabasesPath();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final backupPath = join(databasePath, 'dosifi_backup_$timestamp.db');
-      
+
       // Copy database file to backup location
       final sourceFile = File(join(databasePath, _databaseName));
       if (await sourceFile.exists()) {
@@ -620,6 +710,53 @@ class DatabaseService {
     if (_database != null) {
       await _database!.close();
       _database = null;
+    }
+  }
+
+  // Remove orphaned backup tables, triggers, and views that might linger from interrupted migrations
+  static Future<void> _postOpenCleanup(Database db) async {
+    // Known backup tables we might have created during migrations
+    final knownBackups = <String>[
+      'medications_backup',
+      'medications_backup_v6',
+      'schedules_backup_v7',
+      'supplies_backup_v8',
+    ];
+
+    // Drop known backup tables if they still exist
+    for (final table in knownBackups) {
+      try {
+        await db.execute('DROP TABLE IF EXISTS $table');
+      } catch (e) {
+        debugPrint('Cleanup: failed to drop table $table: $e');
+      }
+    }
+
+    // Scan sqlite_master for any object names referencing backup markers and drop them safely
+    final patterns = ['backup_v6', 'backup_v7', 'backup_v8', 'backup'];
+    try {
+      final rows = await db.rawQuery("SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL");
+      for (final row in rows) {
+        final type = (row['type'] as String?) ?? '';
+        final name = (row['name'] as String?) ?? '';
+        final sql = (row['sql'] as String?) ?? '';
+        final matches = patterns.any((p) => name.contains(p) || sql.contains(p));
+        if (!matches) continue;
+        try {
+          if (type == 'table') {
+            await db.execute('DROP TABLE IF EXISTS $name');
+          } else if (type == 'view') {
+            await db.execute('DROP VIEW IF EXISTS $name');
+          } else if (type == 'trigger') {
+            await db.execute('DROP TRIGGER IF EXISTS $name');
+          }
+          debugPrint('Cleanup: dropped $type $name');
+        } catch (e) {
+          debugPrint('Cleanup: failed to drop $type $name: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Cleanup scan failed: $e');
     }
   }
 }

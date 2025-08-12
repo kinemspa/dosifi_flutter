@@ -149,7 +149,7 @@ class Supply {
         supplyType = SupplyType.item;
         break;
     }
-    
+
     return Supply(
       id: map['id'] as int?,
       name: map['name'] as String,
@@ -160,9 +160,7 @@ class Supply {
       reorderLevel: map['reorder_level'] != null ? (map['reorder_level'] as num).toDouble() : null,
       unit: map['unit'] as String?,
       lotNumber: map['lot_number'] as String?,
-      expirationDate: map['expiration_date'] != null 
-          ? DateTime.parse(map['expiration_date'] as String)
-          : null,
+      expirationDate: map['expiration_date'] != null ? DateTime.parse(map['expiration_date'] as String) : null,
       location: map['location'] as String?,
       notes: map['notes'] as String?,
       isActive: (map['is_active'] as int) == 1,
@@ -209,11 +207,11 @@ class Supply {
 
   // Helper getters
   String get displayName => size != null ? '$name ($size)' : name;
-  
+
   String get effectiveUnit => unit ?? type.defaultUnit;
-  
+
   bool get isLowStock => reorderLevel != null && quantity <= reorderLevel!;
-  
+
   bool get isExpired {
     if (expirationDate == null) return false;
     return DateTime.now().isAfter(expirationDate!);

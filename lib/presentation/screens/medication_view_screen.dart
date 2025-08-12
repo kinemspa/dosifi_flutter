@@ -5,56 +5,67 @@ import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/core/services/medication_calculation_service.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
+import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/label_chip.dart';
+import 'package:dosifi_flutter/core/services/stock_management_service.dart';
 
 class MedicationViewScreen extends ConsumerWidget {
   final String medicationId;
 
-  const MedicationViewScreen({
-    super.key,
-    required this.medicationId,
-  });
+  const MedicationViewScreen({super.key, required this.medicationId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final medicationAsync = ref.watch(medicationByIdProvider(int.parse(medicationId)));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medication Details'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.navigateBackSmart(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => context.push('/medications/edit/$medicationId'),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        } else {
+          context.go('/medications');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Medication Details'),
+          leading: BackButton(
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.go('/medications');
+              }
+            },
           ),
-        ],
-      ),
-      body: medicationAsync.when(
-        data: (medication) {
-          if (medication == null) {
-            return const Center(
-              child: Text('Medication not found'),
-            );
-          }
-          return _buildMedicationDetails(context, ref, medication);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Error: $error'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.refresh(medicationByIdProvider(int.parse(medicationId))),
-                child: const Text('Retry'),
-              ),
-            ],
+          actions: [
+            IconButton(icon: const Icon(Icons.edit), onPressed: () => context.push('/medications/edit/$medicationId')),
+          ],
+        ),
+        body: medicationAsync.when(
+          data: (medication) {
+            if (medication == null) {
+              return const Center(child: Text('Medication not found'));
+            }
+            return _buildMedicationDetails(context, ref, medication);
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Error: $error'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.refresh(medicationByIdProvider(int.parse(medicationId))),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -76,17 +87,12 @@ class MedicationViewScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // Basic Information
-          _buildInfoSection(
-            context,
-            'Basic Information',
-            [
-              _InfoItem('Name', medication.name),
-              if (medication.brandManufacturer != null)
-                _InfoItem('Brand/Manufacturer', medication.brandManufacturer!),
-              _InfoItem('Type', medication.type.displayName),
-              _InfoItem('Strength', medication.displayStrength),
-            ],
-          ),
+          _buildInfoSection(context, 'Basic Information', [
+            _InfoItem('Name', medication.name),
+            if (medication.brandManufacturer != null) _InfoItem('Brand/Manufacturer', medication.brandManufacturer!),
+            _InfoItem('Type', medication.type.displayName),
+            _InfoItem('Strength', medication.displayStrength),
+          ]),
           const SizedBox(height: 16),
 
           // Stock Information
@@ -138,7 +144,7 @@ class MedicationViewScreen extends ConsumerWidget {
           gradient: LinearGradient(
             colors: [
               _getMedicationTypeColor(medication.type),
-              _getMedicationTypeColor(medication.type).withOpacity(0.8),
+              _getMedicationTypeColor(medication.type).withValues(alpha: 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -152,14 +158,10 @@ class MedicationViewScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    _getMedicationTypeIcon(medication.type),
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  child: Icon(_getMedicationTypeIcon(medication.type), color: Colors.white, size: 32),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -168,20 +170,13 @@ class MedicationViewScreen extends ConsumerWidget {
                     children: [
                       Text(
                         medication.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       if (medication.brandManufacturer != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           medication.brandManufacturer!,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
+                          style: const TextStyle(color: Colors.white70, fontSize: 16),
                         ),
                       ],
                     ],
@@ -210,19 +205,11 @@ class MedicationViewScreen extends ConsumerWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -233,39 +220,19 @@ class MedicationViewScreen extends ConsumerWidget {
     final statusItems = <Widget>[];
 
     if (medication.isLowStock) {
-      statusItems.add(_buildStatusChip(
-        'Low Stock',
-        Colors.orange,
-        Icons.inventory,
-      ));
+      statusItems.add(const LabelChip(label: 'Low Stock', icon: Icons.inventory, color: Colors.orange));
     }
 
     if (medication.isExpired) {
-      statusItems.add(_buildStatusChip(
-        'Expired',
-        Colors.red,
-        Icons.warning,
-      ));
+      statusItems.add(const LabelChip(label: 'Expired', icon: Icons.warning, color: Colors.red));
     } else if (medication.isExpiringSoon) {
-      statusItems.add(_buildStatusChip(
-        'Expires Soon',
-        Colors.amber,
-        Icons.schedule,
-      ));
+      statusItems.add(const LabelChip(label: 'Expires Soon', icon: Icons.schedule, color: Colors.amber));
     }
 
     if (medication.isActive) {
-      statusItems.add(_buildStatusChip(
-        'Active',
-        Colors.green,
-        Icons.check_circle,
-      ));
+      statusItems.add(const LabelChip(label: 'Active', icon: Icons.check_circle, color: Colors.green));
     } else {
-      statusItems.add(_buildStatusChip(
-        'Inactive',
-        Colors.grey,
-        Icons.pause_circle,
-      ));
+      statusItems.add(const LabelChip(label: 'Inactive', icon: Icons.pause_circle, color: Colors.grey));
     }
 
     if (statusItems.isEmpty) return const SizedBox.shrink();
@@ -273,65 +240,23 @@ class MedicationViewScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Status',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text('Status', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: statusItems,
-        ),
+        Wrap(spacing: 8, runSpacing: 8, children: statusItems),
       ],
     );
   }
 
-  Widget _buildStatusChip(String label, Color color, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildInfoSection(BuildContext context, String title, List<_InfoItem> items) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...items.map((item) => _buildInfoRow(item.label, item.value)),
-          ],
-        ),
+    return CompactCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...items.map((item) => _buildInfoRow(item.label, item.value)),
+        ],
       ),
     );
   }
@@ -346,18 +271,12 @@ class MedicationViewScreen extends ConsumerWidget {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -365,37 +284,30 @@ class MedicationViewScreen extends ConsumerWidget {
   }
 
   Widget _buildStockSection(BuildContext context, Medication medication) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Stock Information',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow('Current Stock', medication.stockDisplay),
-            if (medication.lowStockThreshold != null)
-              _buildInfoRow('Low Stock Threshold', '${medication.lowStockThreshold}'),
-            if (medication.lotBatchNumber != null)
-              _buildInfoRow('Lot/Batch Number', medication.lotBatchNumber!),
-            
-            // Stock level indicator
-            const SizedBox(height: 16),
-            Text(
-              'Stock Level',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildStockIndicator(medication),
-          ],
-        ),
+    return CompactCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Stock Information',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          _buildInfoRow('Current Stock', medication.stockDisplay),
+          if (medication.stockProgressLabel != null)
+            _buildInfoRow('Current/Total', medication.stockProgressLabel!),
+          if (medication.stockUnit != null) _buildInfoRow('Stock Unit', medication.stockUnit!.displayName),
+          if (medication.lowStockThreshold != null)
+            _buildInfoRow('Low Stock Threshold', '${medication.lowStockThreshold}'),
+          if (medication.lotBatchNumber != null) _buildInfoRow('Lot/Batch Number', medication.lotBatchNumber!),
+
+          // Stock level indicator
+          const SizedBox(height: 12),
+          Text('Stock Level', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          _buildStockIndicator(medication),
+        ],
       ),
     );
   }
@@ -404,10 +316,10 @@ class MedicationViewScreen extends ConsumerWidget {
     final threshold = medication.lowStockThreshold ?? _getDefaultLowStockThreshold(medication);
     final currentStock = medication.stockQuantity;
     final percentage = (currentStock / (threshold * 2)).clamp(0.0, 1.0);
-    
+
     Color indicatorColor;
     String statusText;
-    
+
     if (currentStock <= threshold * 0.25) {
       indicatorColor = Colors.red;
       statusText = 'Critical';
@@ -430,24 +342,18 @@ class MedicationViewScreen extends ConsumerWidget {
           children: [
             Text(
               statusText,
-              style: TextStyle(
-                color: indicatorColor,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: indicatorColor, fontWeight: FontWeight.bold),
             ),
             Text(
               '${(percentage * 100).round()}%',
-              style: TextStyle(
-                color: indicatorColor,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: indicatorColor, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: percentage,
-          backgroundColor: indicatorColor.withOpacity(0.3),
+          backgroundColor: indicatorColor.withValues(alpha: 0.3),
           valueColor: AlwaysStoppedAnimation<Color>(indicatorColor),
         ),
       ],
@@ -457,29 +363,30 @@ class MedicationViewScreen extends ConsumerWidget {
   Widget _buildExpirationSection(BuildContext context, Medication medication) {
     final expirationDate = medication.expirationDate!;
     final daysUntilExpiration = medication.daysUntilExpiration ?? 0;
-    
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Expiration Information',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow('Expiration Date', _formatFullDate(expirationDate)),
-            _buildInfoRow('Days Until Expiration', 
-              daysUntilExpiration > 0 ? '$daysUntilExpiration days' : 
-              daysUntilExpiration == 0 ? 'Expires today' : 'Expired ${-daysUntilExpiration} days ago'),
-            
-            const SizedBox(height: 16),
-            _buildExpirationIndicator(daysUntilExpiration),
-          ],
-        ),
+
+    return CompactCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Expiration Information',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          _buildInfoRow('Expiration Date', _formatFullDate(expirationDate)),
+          _buildInfoRow(
+            'Days Until Expiration',
+            daysUntilExpiration > 0
+                ? '$daysUntilExpiration days'
+                : daysUntilExpiration == 0
+                ? 'Expires today'
+                : 'Expired ${-daysUntilExpiration} days ago',
+          ),
+
+          const SizedBox(height: 12),
+          _buildExpirationIndicator(daysUntilExpiration),
+        ],
       ),
     );
   }
@@ -488,7 +395,7 @@ class MedicationViewScreen extends ConsumerWidget {
     Color indicatorColor;
     String statusText;
     double percentage;
-    
+
     if (daysUntilExpiration < 0) {
       indicatorColor = Colors.red;
       statusText = 'Expired';
@@ -515,17 +422,14 @@ class MedicationViewScreen extends ConsumerWidget {
           children: [
             Text(
               'Status: $statusText',
-              style: TextStyle(
-                color: indicatorColor,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: indicatorColor, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: percentage,
-          backgroundColor: indicatorColor.withOpacity(0.3),
+          backgroundColor: indicatorColor.withValues(alpha: 0.3),
           valueColor: AlwaysStoppedAnimation<Color>(indicatorColor),
         ),
       ],
@@ -541,22 +445,16 @@ class MedicationViewScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.store,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
+                Icon(Icons.store, color: Theme.of(context).colorScheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Storage Information',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Storage Instructions
             _buildStorageInfoRow(
               'Instructions',
@@ -564,7 +462,7 @@ class MedicationViewScreen extends ConsumerWidget {
               Icons.description,
             ),
             const SizedBox(height: 8),
-            
+
             // Refrigeration Requirements
             _buildStorageInfoRow(
               'Refrigeration',
@@ -573,41 +471,29 @@ class MedicationViewScreen extends ConsumerWidget {
               color: medication.requiresRefrigeration ? Colors.blue : Colors.green,
             ),
             const SizedBox(height: 8),
-            
+
             // Storage Temperature
-            _buildStorageInfoRow(
-              'Temperature',
-              medication.storageTemperature ?? 'Room temperature',
-              Icons.thermostat,
-            ),
+            _buildStorageInfoRow('Temperature', medication.storageTemperature ?? 'Room temperature', Icons.thermostat),
             const SizedBox(height: 8),
-            
+
             // Additional Info
             if (medication.barcode != null) ...[
-              _buildStorageInfoRow(
-                'Barcode',
-                medication.barcode!,
-                Icons.qr_code,
-              ),
+              _buildStorageInfoRow('Barcode', medication.barcode!, Icons.qr_code),
               const SizedBox(height: 8),
             ],
-            
+
             // Storage Tips
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.lightbulb,
-                    color: Colors.blue,
-                    size: 16,
-                  ),
+                  Icon(Icons.lightbulb, color: Colors.blue, size: 16),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -615,20 +501,10 @@ class MedicationViewScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Storage Tips',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700, fontSize: 12),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          _getStorageTips(medication),
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontSize: 11,
-                          ),
-                        ),
+                        Text(_getStorageTips(medication), style: TextStyle(color: Colors.blue.shade600, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -640,47 +516,33 @@ class MedicationViewScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildStorageInfoRow(String label, String value, IconData icon, {Color? color}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: color ?? Colors.grey.shade600,
-        ),
+        Icon(icon, size: 16, color: color ?? Colors.grey.shade600),
         const SizedBox(width: 8),
         SizedBox(
           width: 100,
           child: Text(
             label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade600,
-              fontSize: 13,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey.shade600, fontSize: 13),
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
+          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
         ),
       ],
     );
   }
-  
+
   String _getStorageTips(Medication medication) {
     if (medication.requiresRefrigeration) {
       return 'Keep refrigerated at 2-8°C. Do not freeze. Allow to reach room temperature before use.';
     }
-    
+
     switch (medication.type) {
       case MedicationType.liquid:
       case MedicationType.drops:
@@ -700,19 +562,19 @@ class MedicationViewScreen extends ConsumerWidget {
 
   Widget _buildAdvancedSection(BuildContext context, Medication medication) {
     final items = <_InfoItem>[];
-    
+
     if (medication.storageInstructions != null) {
       items.add(_InfoItem('Storage Instructions', medication.storageInstructions!));
     }
-    
+
     if (medication.requiresRefrigeration) {
       items.add(_InfoItem('Refrigeration', 'Required'));
     }
-    
+
     if (medication.storageTemperature != null) {
       items.add(_InfoItem('Storage Temperature', medication.storageTemperature!));
     }
-    
+
     if (medication.barcode != null) {
       items.add(_InfoItem('Barcode', medication.barcode!));
     }
@@ -724,26 +586,91 @@ class MedicationViewScreen extends ConsumerWidget {
 
   Widget _buildReconstitutionSection(BuildContext context, Medication medication) {
     final items = <_InfoItem>[];
-    
+
     if (medication.reconstitutionVolume != null) {
       items.add(_InfoItem('Reconstitution Volume', '${medication.reconstitutionVolume} mL'));
     }
-    
+
     if (medication.finalConcentration != null) {
       items.add(_InfoItem('Final Concentration', '${medication.finalConcentration}'));
     }
-    
+
     if (medication.reconstitutionNotes != null) {
       items.add(_InfoItem('Notes', medication.reconstitutionNotes!));
     }
-    
+
     if (medication.reconstitutionFluid != null) {
       items.add(_InfoItem('Reconstitution Fluid', medication.reconstitutionFluid!));
     }
 
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    return _buildInfoSection(context, 'Reconstitution Information', items);
+    return CompactCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Reconstitution Information',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (items.isEmpty)
+            const Text('No reconstitution details provided')
+          else
+            ...items.map((item) => _buildInfoRow(item.label, item.value)),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                // Guard: ensure we have dry vials available
+                final vials = medication.vialsInStock ?? 0;
+                if (vials <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No dry vials remaining to reconstitute.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                try {
+                  final result = await StockManagementService.recordReconstitution(
+                    medication: medication,
+                    diluentVolume: medication.reconstitutionVolume ?? 0,
+                    diluentType: medication.reconstitutionFluid,
+                    notes: 'Reconstituted from medication details screen',
+                  );
+                  if (!context.mounted) return;
+                  if (result.ok) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vial reconstituted and stock updated.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result.message ?? 'Unable to reconstitute.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error reconstituting: $e'), backgroundColor: Colors.red));
+                  }
+                }
+              },
+              icon: const Icon(Icons.science),
+              label: const Text('Reconstitute one vial'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCalculationsSection(BuildContext context, Medication medication) {
@@ -753,16 +680,13 @@ class MedicationViewScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Calculations',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Calculations', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             _buildInfoRow('Dose Precision', '${medication.dosePrecision}'),
-            _buildInfoRow('Total Active Ingredient', 
-              '${MedicationCalculationService.calculateTotalActiveIngredient(medication).toStringAsFixed(2)} ${medication.strengthUnit.displayName}'),
+            _buildInfoRow(
+              'Total Active Ingredient',
+              '${MedicationCalculationService.calculateTotalActiveIngredient(medication).toStringAsFixed(2)} ${medication.strengthUnit.displayName}',
+            ),
             _buildInfoRow('Allowed Dose Units', medication.allowedDoseUnits.join(', ')),
           ],
         ),
@@ -779,9 +703,7 @@ class MedicationViewScreen extends ConsumerWidget {
           children: [
             Text(
               'Notes & Instructions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             if (medication.description != null) ...[
@@ -792,9 +714,7 @@ class MedicationViewScreen extends ConsumerWidget {
               _buildNoteItem('Instructions', medication.instructions!),
               const SizedBox(height: 8),
             ],
-            if (medication.notes != null) ...[
-              _buildNoteItem('Notes', medication.notes!),
-            ],
+            if (medication.notes != null) ...[_buildNoteItem('Notes', medication.notes!)],
           ],
         ),
       ),
@@ -807,19 +727,13 @@ class MedicationViewScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
         ),
         const SizedBox(height: 4),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
           child: Text(content),
         ),
       ],
@@ -842,10 +756,7 @@ class MedicationViewScreen extends ConsumerWidget {
             onPressed: () => _showDeleteDialog(context, ref, medication),
             icon: const Icon(Icons.delete),
             label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
           ),
         ),
       ],
@@ -859,10 +770,7 @@ class MedicationViewScreen extends ConsumerWidget {
         title: const Text('Delete Medication'),
         content: Text('Are you sure you want to delete "${medication.name}"? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop();
@@ -870,17 +778,11 @@ class MedicationViewScreen extends ConsumerWidget {
               if (context.mounted) {
                 context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${medication.name} deleted successfully'),
-                    backgroundColor: Colors.red,
-                  ),
+                  SnackBar(content: Text('${medication.name} deleted successfully'), backgroundColor: Colors.red),
                 );
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: const Text('Delete'),
           ),
         ],
@@ -890,9 +792,9 @@ class MedicationViewScreen extends ConsumerWidget {
 
   bool _hasAdvancedInfo(Medication medication) {
     return medication.storageInstructions != null ||
-           medication.requiresRefrigeration ||
-           medication.storageTemperature != null ||
-           medication.barcode != null;
+        medication.requiresRefrigeration ||
+        medication.storageTemperature != null ||
+        medication.barcode != null;
   }
 
   Color _getMedicationTypeColor(MedicationType type) {
@@ -964,10 +866,7 @@ class MedicationViewScreen extends ConsumerWidget {
   }
 
   String _formatFullDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 

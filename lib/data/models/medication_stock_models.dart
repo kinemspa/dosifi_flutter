@@ -1,54 +1,5 @@
 import 'package:flutter/foundation.dart';
-
-/// Enumeration of all 15 supported medication types
-enum MedicationType {
-  tablet('Tablet'),
-  capsule('Capsule'), 
-  syringe('Pre-Filled Syringe'),
-  vial('Ready-Made Vial'),
-  lyophilizedVial('Lyophilized Vial'),
-  singleUsePen('Single-Use Pen'),
-  multiUsePen('Multi-Use Pen'),
-  liquid('Liquid'),
-  inhaler('Inhaler'),
-  cream('Cream'),
-  patch('Patch'),
-  drop('Drop'),
-  suppository('Suppository'),
-  spray('Spray'),
-  gel('Gel');
-
-  const MedicationType(this.displayName);
-  final String displayName;
-
-  static MedicationType fromString(String type) {
-    return MedicationType.values.firstWhere(
-      (e) => e.displayName.toLowerCase() == type.toLowerCase(),
-      orElse: () => MedicationType.tablet,
-    );
-  }
-}
-
-/// Common strength units for medications
-enum StrengthUnit {
-  mcg('mcg'),
-  mg('mg'),
-  g('g'),
-  units('Units'),
-  iu('IU'),
-  ml('mL'),
-  percent('%');
-
-  const StrengthUnit(this.displayName);
-  final String displayName;
-
-  static StrengthUnit fromString(String unit) {
-    return StrengthUnit.values.firstWhere(
-      (e) => e.displayName.toLowerCase() == unit.toLowerCase(),
-      orElse: () => StrengthUnit.mg,
-    );
-  }
-}
+import 'package:dosifi_flutter/data/models/medication.dart';
 
 /// Base abstract class for all medication stock types
 abstract class MedicationStock {
@@ -213,7 +164,7 @@ class SyringeStock extends MedicationStock {
   });
 
   @override
-  MedicationType get medicationType => MedicationType.syringe;
+  MedicationType get medicationType => MedicationType.preFilledSyringe;
 
   @override
   double get totalRemainingUnits => totalSyringes;
@@ -305,7 +256,7 @@ class VialStock extends MedicationStock {
   });
 
   @override
-  MedicationType get medicationType => MedicationType.vial;
+  MedicationType get medicationType => MedicationType.readyMadeVial;
 
   @override
   double get totalRemainingUnits => totalRemainingVolumeMl;
@@ -468,7 +419,7 @@ class LyophilizedVialStock extends MedicationStock {
   /// Reconstitute a vial (convert from unreconstituted to reconstituted)
   LyophilizedVialStock reconstitute() {
     if (totalVials <= 0) return this;
-    
+
     return LyophilizedVialStock(
       medName: medName,
       powderStrengthPerVial: powderStrengthPerVial,
@@ -584,13 +535,13 @@ class MultiUsePenStock extends MedicationStock {
   MultiUsePenStock updateStock(double changeAmount) {
     int newRemaining = (remainingDosesInCurrentCartridge - changeAmount).round();
     int newCartridges = totalCartridges;
-    
+
     // Handle cartridge replacement
     if (newRemaining <= 0 && newCartridges > 0) {
       newCartridges -= 1;
       newRemaining = dosesPerCartridge + newRemaining; // newRemaining is negative here
     }
-    
+
     return MultiUsePenStock(
       medName: medName,
       strengthPerCartridge: strengthPerCartridge,
@@ -989,7 +940,7 @@ class DropStock extends MedicationStock {
   });
 
   @override
-  MedicationType get medicationType => MedicationType.drop;
+  MedicationType get medicationType => MedicationType.drops;
 
   @override
   double get totalRemainingUnits => totalDropsRemaining.toDouble();

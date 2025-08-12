@@ -9,6 +9,9 @@ import 'package:dosifi_flutter/data/models/schedule.dart';
 import 'package:dosifi_flutter/presentation/providers/dose_scheduling_provider.dart';
 import 'package:dosifi_flutter/services/notification_service.dart';
 import 'package:dosifi_flutter/presentation/widgets/dose_action_buttons.dart';
+import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/label_chip.dart';
+import 'package:dosifi_flutter/core/services/stock_management_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -32,7 +35,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // Initialize notifications first
       final notificationService = NotificationService();
       await notificationService.requestAndInitialize();
-      
+
       // Initialize today's doses and upcoming doses
       final doseScheduling = ref.read(doseSchedulingProvider.notifier);
       await doseScheduling.initializeTodaysDoses();
@@ -61,7 +64,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        
+
         // Ask for confirmation before exiting the app
         final shouldPop = await showDialog<bool>(
           context: context,
@@ -69,34 +72,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             title: const Text('Exit App'),
             content: const Text('Are you sure you want to exit?'),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Exit'),
-              ),
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Exit')),
             ],
           ),
         );
-        
+
         if (shouldPop == true && context.mounted) {
           Navigator.of(context).pop();
         }
       },
       child: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildWelcomeCard(context),
+              const SizedBox(height: 12),
+              _buildNextDoseBanner(context),
               const SizedBox(height: 16),
               _buildTodaysMedications(context),
+              const SizedBox(height: 16),
+              _buildAlertsSummary(context),
               const SizedBox(height: 16),
               _buildQuickStats(context),
               const SizedBox(height: 16),
@@ -112,39 +111,162 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  Widget _buildNextDoseBanner(BuildContext context) {
+    final schedulesAsync = ref.watch(scheduleListProvider);
+    return schedulesAsync.when(
+      data: (schedules) {
+        final now = DateTime.now();
+        Schedule? next;
+        DateTime? nextDateTime;
+
+        // Consider today's active schedules after now
+        for (final s in schedules.where((s) => s.isActiveOnDate(now))) {
+          final parts = s.timeOfDay.split(':');
+          final hour = int.tryParse(parts[0]) ?? 0;
+          final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+          final dt = DateTime(now.year, now.month, now.day, hour, minute);
+          if (dt.isAfter(now)) {
+            if (nextDateTime == null || dt.isBefore(nextDateTime!)) {
+              next = s;
+              nextDateTime = dt;
+            }
+          }
+        }
+
+        if (next == null || nextDateTime == null) {
+          return const SizedBox.shrink();
+        }
+
+        final remaining = nextDateTime!.difference(now);
+        final remainingText = _formatRemaining(remaining);
+
+        return CompactCard(
+          accentColor: Theme.of(context).colorScheme.primary,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.alarm, color: Colors.blue),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Next dose in $remainingText',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${nextDateTime!.hour.toString().padLeft(2, '0')}:${nextDateTime!.minute.toString().padLeft(2, '0')} • ${next!.doseAmount} ${next!.doseUnit}',
+                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              DoseActionButtons(
+                schedule: next!,
+                scheduledDateTime: nextDateTime,
+                isCompact: true,
+                onActionCompleted: () {
+                  ref.invalidate(doseLogListProvider);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (e, _) => const SizedBox.shrink(),
+    );
+  }
+
+  String _formatRemaining(Duration d) {
+    if (d.inMinutes < 1) return 'moments';
+    if (d.inHours < 1) return '${d.inMinutes} min';
+    final hours = d.inHours;
+    final mins = d.inMinutes % 60;
+    return mins == 0 ? '${hours}h' : '${hours}h ${mins}m';
+  }
 
   Widget _buildRecentActivities(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: ListTile(
-        leading: Icon(Icons.timeline, color: Theme.of(context).colorScheme.primary),
-        title: Text('Recent Activities', style: Theme.of(context).textTheme.titleLarge),
-        subtitle: Text('Log of recent medication activities'),
+    return CompactCard(
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.timeline, color: Theme.of(context).colorScheme.primary, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Recent Activities',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Log of recent medication activities',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                ),
+              ],
+            ),
+          ),
+          const LabelChip(icon: Icons.open_in_new, label: 'View'),
+        ],
       ),
     );
   }
 
   Widget _buildAlerts(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return CompactCard(
+      accentColor: Theme.of(context).colorScheme.error,
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.warning, color: Theme.of(context).colorScheme.error, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.warning, color: Theme.of(context).colorScheme.error),
-                const SizedBox(width: 8),
-                Text('Alerts', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.error)),
+                Text(
+                  'Alerts',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text('No missed doses today!', style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
-            const SizedBox(height: 8),
-            Text('No missed doses today!', style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -160,58 +282,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildWelcomeCard(BuildContext context) {
     final schedulesAsync = ref.watch(scheduleListProvider);
-    
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: AppTheme.primaryGradient,
-        ),
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.waving_hand, color: Colors.white, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  _getGreeting(),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            schedulesAsync.when(
-              data: (schedules) {
-                final todaysSchedules = _getTodaysSchedules(schedules);
-                return Text(
-                  'You have ${todaysSchedules.length} ${todaysSchedules.length == 1 ? 'medication' : 'medications'} scheduled for today',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                );
-              },
-              loading: () => Text(
-                'Loading your schedule...',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
+
+    return Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: AppTheme.primaryGradient),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.waving_hand, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                _getGreeting(),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
               ),
-              error: (_, __) => Text(
-                'Unable to load today\'s schedule',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          schedulesAsync.when(
+            data: (schedules) {
+              final todaysSchedules = _getTodaysSchedules(schedules);
+              return Text(
+                'You have ${todaysSchedules.length} ${todaysSchedules.length == 1 ? 'medication' : 'medications'} scheduled for today',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+              );
+            },
+            loading: () => Text(
+              'Loading your schedule...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
             ),
-          ],
-        ),
+            error: (_, __) => Text(
+              'Unable to load today\'s schedule',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -219,74 +327,73 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildTodaysMedications(BuildContext context) {
     final schedulesAsync = ref.watch(scheduleListProvider);
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.today, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 8),
-                Text('Today\'s Medications', style: Theme.of(context).textTheme.titleLarge),
-              ],
-            ),
-            const SizedBox(height: 16),
-            schedulesAsync.when(
-              data: (schedules) {
-                final todaysSchedules = _getTodaysSchedules(schedules);
-                if (todaysSchedules.isEmpty) {
-                  return const Text('No medications scheduled for today', style: TextStyle(color: Colors.grey));
-                }
+    return CompactCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.today, color: Theme.of(context).colorScheme.primary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Today\'s Medications',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          schedulesAsync.when(
+            data: (schedules) {
+              final todaysSchedules = _getTodaysSchedules(schedules);
+              if (todaysSchedules.isEmpty) {
+                return const Text('No medications scheduled for today', style: TextStyle(color: Colors.grey));
+              }
 
-                return Column(
-                  children: todaysSchedules.map((schedule) {
-                    return _buildMedicationItemWithSchedule(
-                      context,
-                      schedule,
-                    );
-                  }).toList(),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Text('Error: $error'),
-            ),
-          ],
-        ),
+              return Column(
+                children: todaysSchedules.map((schedule) {
+                  return _buildMedicationItemWithSchedule(context, schedule);
+                }).toList(),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Text('Error: $error'),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMedicationItemWithSchedule(BuildContext context, Schedule schedule) {
     final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
-    
+
     // Check if dose has been taken today
     final today = DateTime.now();
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-    final scheduledDateTime = DateTime(
-      today.year,
-      today.month,
-      today.day,
-      hour,
-      minute,
-    );
-    
+    final scheduledDateTime = DateTime(today.year, today.month, today.day, hour, minute);
+
     final doseLogsAsync = ref.watch(doseLogListProvider);
     final existingDoseLog = doseLogsAsync.when(
       data: (doseLogs) {
         try {
-          return doseLogs.firstWhere((log) => 
-            log.medicationId == schedule.medicationId &&
-            log.scheduledTime.year == scheduledDateTime.year &&
-            log.scheduledTime.month == scheduledDateTime.month &&
-            log.scheduledTime.day == scheduledDateTime.day &&
-            log.scheduledTime.hour == scheduledDateTime.hour &&
-            log.scheduledTime.minute == scheduledDateTime.minute
+          return doseLogs.firstWhere(
+            (log) =>
+                log.medicationId == schedule.medicationId &&
+                log.scheduledTime.year == scheduledDateTime.year &&
+                log.scheduledTime.month == scheduledDateTime.month &&
+                log.scheduledTime.day == scheduledDateTime.day &&
+                log.scheduledTime.hour == scheduledDateTime.hour &&
+                log.scheduledTime.minute == scheduledDateTime.minute,
           );
         } catch (e) {
           return null;
@@ -295,14 +402,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       loading: () => null,
       error: (_, __) => null,
     );
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
           Icon(
             existingDoseLog?.status.name == 'taken' ? Icons.check_circle : Icons.schedule,
-            color: existingDoseLog?.status.name == 'taken' ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
+            color: existingDoseLog?.status.name == 'taken'
+                ? AppTheme.successColor
+                : Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -310,10 +419,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 medicationAsync.when(
-                  data: (medication) => Text(
-                    medication?.name ?? 'Unknown Medication',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
+                  data: (medication) =>
+                      Text(medication?.name ?? 'Unknown Medication', style: Theme.of(context).textTheme.bodyLarge),
                   loading: () => const Text('Loading...'),
                   error: (_, __) => const Text('Error loading medication'),
                 ),
@@ -321,14 +428,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     Text(schedule.timeOfDay, style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(width: 8),
-                    Text('• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}', 
-                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                    Text(
+                      '• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ),
                   ],
                 ),
                 Row(
                   children: [
-                    Text('${schedule.doseAmount} ${schedule.doseUnit}', 
-                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                    Text(
+                      '${schedule.doseAmount} ${schedule.doseUnit}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ),
                   ],
                 ),
               ],
@@ -351,7 +462,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildMedicationItemWithId(BuildContext context, int medicationId, String time, String dose, bool taken) {
     final medicationAsync = ref.watch(medicationByIdProvider(medicationId));
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -366,10 +477,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 medicationAsync.when(
-                  data: (medication) => Text(
-                    medication?.name ?? 'Unknown Medication',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
+                  data: (medication) =>
+                      Text(medication?.name ?? 'Unknown Medication', style: Theme.of(context).textTheme.bodyLarge),
                   loading: () => const Text('Loading...'),
                   error: (_, __) => const Text('Error loading medication'),
                 ),
@@ -383,7 +492,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ],
             ),
           ),
-          if (!taken) ...[  
+          if (!taken) ...[
             TextButton(
               onPressed: () {
                 // TODO: Mark as taken
@@ -434,16 +543,60 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  Widget _buildAlertsSummary(BuildContext context) {
+    return FutureBuilder<StockStatus>(
+      future: StockManagementService.getStockStatus(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const CompactCard(
+            child: Row(
+              children: [
+                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(width: 8),
+                Text('Loading alerts...'),
+              ],
+            ),
+          );
+        }
+        final status = snapshot.data!;
+        return CompactCard(
+          accentColor: Theme.of(context).colorScheme.error,
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.health_and_safety, color: Colors.red, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Row(
+                  children: [
+                    LabelChip(icon: Icons.inventory_2, label: 'Low: ${status.lowStockCount}', color: Colors.orange),
+                    LabelChip(icon: Icons.error, label: 'Expired: ${status.expiredCount}', color: Colors.red),
+                    LabelChip(icon: Icons.schedule, label: 'Soon: ${status.expiringSoonCount}', color: Colors.amber),
+                  ],
+                ),
+              ),
+              const LabelChip(icon: Icons.open_in_new, label: 'View'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildQuickStats(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: _buildStatCard(context, '12', 'Total Medications', Icons.medication),
-        ),
+        Expanded(child: _buildStatCard(context, '12', 'Total Medications', Icons.medication)),
         const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(context, '95%', 'Adherence Rate', Icons.trending_up),
-        ),
+        Expanded(child: _buildStatCard(context, '95%', 'Adherence Rate', Icons.trending_up)),
       ],
     );
   }
@@ -465,11 +618,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
+            Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -524,11 +673,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Icon(icon, color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
         ],
       ),
     );
@@ -538,9 +683,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         maxChildSize: 0.9,
@@ -552,10 +695,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               margin: const EdgeInsets.only(top: 8),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -565,9 +705,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Notifications',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -614,13 +752,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildNotificationItem(
-    String title,
-    String message,
-    String time,
-    IconData icon,
-    Color iconColor,
-  ) {
+  Widget _buildNotificationItem(String title, String message, String time, IconData icon, Color iconColor) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -628,22 +760,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           backgroundColor: iconColor.withValues(alpha: 0.1),
           child: Icon(icon, color: iconColor, size: 20),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(message),
             const SizedBox(height: 4),
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
+            Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
           ],
         ),
         isThreeLine: true,
@@ -651,4 +774,3 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 }
-

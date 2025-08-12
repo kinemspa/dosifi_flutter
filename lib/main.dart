@@ -10,30 +10,23 @@ import 'package:dosifi_flutter/core/services/notification_action_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Test debug print at startup
   debugPrint('🔴🔴🔴 [MAIN DEBUG] APP STARTING - Debug prints are working!');
   debugPrint('==================================================');
-  
+
   // Initialize services
   await _initializeApp();
-  runApp(
-    const ProviderScope(
-      child: DosifiApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: DosifiApp()));
 }
 
 Future<void> _initializeApp() async {
   // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+
   // Initialize notification service (skip in test environment)
   if (!_isTestEnvironment()) {
-try {
+    try {
       final notificationService = NotificationService();
       await notificationService.initialize();
       await notificationService.requestPermissions();
@@ -45,7 +38,7 @@ try {
   } else {
     debugPrint('Skipping notification service initialization in test environment');
   }
-  
+
   // Initialize database
   // try {
   //   await DatabaseService.database;
@@ -56,7 +49,7 @@ try {
   // } catch (e) {
   //   debugPrint('Database initialization error: $e');
   // }
-  
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -69,7 +62,7 @@ try {
 }
 
 /// Helper function to detect if we're running in a test environment
-/// 
+///
 /// Returns true if the app is currently running in a Flutter test or web environment.
 /// Used to skip certain initializations during testing.
 bool _isTestEnvironment() {
@@ -95,7 +88,7 @@ class DosifiApp extends ConsumerWidget {
         await handler.handleNotificationTap(toProcess);
       };
     });
-    
+
     return MaterialApp.router(
       title: 'Dosifi',
       debugShowCheckedModeBanner: false,

@@ -36,8 +36,7 @@ class AnimatedGradientButton extends StatefulWidget {
   State<AnimatedGradientButton> createState() => _AnimatedGradientButtonState();
 }
 
-class _AnimatedGradientButtonState extends State<AnimatedGradientButton>
-    with TickerProviderStateMixin {
+class _AnimatedGradientButtonState extends State<AnimatedGradientButton> with TickerProviderStateMixin {
   late AnimationController _pressController;
   late AnimationController _rippleController;
   late Animation<double> _scaleAnimation;
@@ -46,32 +45,20 @@ class _AnimatedGradientButtonState extends State<AnimatedGradientButton>
   @override
   void initState() {
     super.initState();
-    
-    _pressController = AnimationController(
-      duration: widget.animationDuration,
-      vsync: this,
-    );
 
-    _rippleController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
+    _pressController = AnimationController(duration: widget.animationDuration, vsync: this);
+
+    _rippleController = AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _pressController,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _pressController, curve: Curves.easeInOut));
 
     _rippleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _rippleController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _rippleController, curve: Curves.easeOut));
   }
 
   @override
@@ -168,17 +155,14 @@ class _AnimatedGradientButtonState extends State<AnimatedGradientButton>
                               ),
                             )
                           else if (widget.icon != null) ...[
-                            Icon(
-                              widget.icon,
-                              color: effectiveTextColor,
-                              size: 20,
-                            ),
+                            Icon(widget.icon, color: effectiveTextColor, size: 20),
                             const SizedBox(width: 8),
                           ],
                           if (!widget.loading)
                             Text(
                               widget.text,
-                              style: widget.textStyle ??
+                              style:
+                                  widget.textStyle ??
                                   theme.textTheme.titleMedium?.copyWith(
                                     color: effectiveTextColor,
                                     fontWeight: FontWeight.w600,

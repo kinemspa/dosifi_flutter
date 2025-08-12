@@ -11,36 +11,30 @@ class DoseSchedulingService {
   final ScheduleRepository _scheduleRepository;
   final DoseLogRepository _doseLogRepository;
 
-  DoseSchedulingService({
-    required ScheduleRepository scheduleRepository,
-    required DoseLogRepository doseLogRepository,
-  }) : _scheduleRepository = scheduleRepository,
-       _doseLogRepository = doseLogRepository;
+  DoseSchedulingService({required ScheduleRepository scheduleRepository, required DoseLogRepository doseLogRepository})
+    : _scheduleRepository = scheduleRepository,
+      _doseLogRepository = doseLogRepository;
 
   /// Generate dose logs from active schedules for a specific date range
   Future<void> generateDoseLogsForDateRange(DateTime startDate, DateTime endDate) async {
     debugPrint('🕐 Generating dose logs from $startDate to $endDate');
-    
+
     final schedules = await _scheduleRepository.getActiveSchedules();
     final existingLogs = await _doseLogRepository.getDoseLogsInRange(startDate, endDate);
-    
+
     // Create a set of existing log identifiers to avoid duplicates
-    final existingLogKeys = existingLogs.map((log) => 
-      '${log.medicationId}_${log.scheduledTime.toIso8601String()}'
-    ).toSet();
-    
+    final existingLogKeys = existingLogs
+        .map((log) => '${log.medicationId}_${log.scheduledTime.toIso8601String()}')
+        .toSet();
+
     final logsToCreate = <DoseLog>[];
-    
+
     for (final schedule in schedules) {
-      final scheduledTimes = _calculateScheduledTimesForDateRange(
-        schedule, 
-        startDate, 
-        endDate
-      );
-      
+      final scheduledTimes = _calculateScheduledTimesForDateRange(schedule, startDate, endDate);
+
       for (final scheduledTime in scheduledTimes) {
         final logKey = '${schedule.medicationId}_${scheduledTime.toIso8601String()}';
-        
+
         // Only create if it doesn't already exist
         if (!existingLogKeys.contains(logKey)) {
           final doseLog = DoseLog.create(
@@ -50,17 +44,17 @@ class DoseSchedulingService {
             status: DoseStatus.pending,
             doseAmount: schedule.doseAmount,
           );
-          
+
           logsToCreate.add(doseLog);
         }
       }
     }
-    
+
     // Batch insert the new dose logs
     for (final log in logsToCreate) {
       await _doseLogRepository.insertDoseLog(log);
     }
-    
+
     debugPrint('🕐 Created ${logsToCreate.length} dose logs');
   }
 
@@ -69,7 +63,7 @@ class DoseSchedulingService {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    
+
     await generateDoseLogsForDateRange(startOfDay, endOfDay);
   }
 
@@ -77,37 +71,27 @@ class DoseSchedulingService {
   Future<void> generateUpcomingDoseLogs() async {
     final now = DateTime.now();
     final endDate = now.add(const Duration(days: 7));
-    
+
     await generateDoseLogsForDateRange(now, endDate);
   }
 
   /// Calculate scheduled times for a schedule within a date range
-  List<DateTime> _calculateScheduledTimesForDateRange(
-    Schedule schedule, 
-    DateTime startDate, 
-    DateTime endDate
-  ) {
+  List<DateTime> _calculateScheduledTimesForDateRange(Schedule schedule, DateTime startDate, DateTime endDate) {
     final scheduledTimes = <DateTime>[];
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-    
+
     var currentDate = DateTime(startDate.year, startDate.month, startDate.day);
-    
+
     while (currentDate.isBefore(endDate)) {
       if (schedule.isActiveOnDate(currentDate)) {
-        final scheduledTime = DateTime(
-          currentDate.year,
-          currentDate.month,
-          currentDate.day,
-          hour,
-          minute,
-        );
+        final scheduledTime = DateTime(currentDate.year, currentDate.month, currentDate.day, hour, minute);
         scheduledTimes.add(scheduledTime);
       }
       currentDate = currentDate.add(const Duration(days: 1));
     }
-    
+
     return scheduledTimes;
   }
 
@@ -117,7 +101,7 @@ class DoseSchedulingService {
     if (doseLog == null) {
       throw Exception('Dose log not found');
     }
-    
+
     // Create a new dose log with the snoozed time
     final snoozedTime = DateTime.now().add(snoozeDuration);
     final snoozedLog = DoseLog.create(
@@ -128,10 +112,10 @@ class DoseSchedulingService {
       doseAmount: doseLog.doseAmount,
       notes: 'Snoozed from ${DateFormat('HH:mm').format(doseLog.scheduledTime)}',
     );
-    
+
     // Mark the original as skipped
     await _doseLogRepository.markDoseAsSkipped(doseLogId, notes: 'Snoozed');
-    
+
     // Insert the new snoozed dose
     final newId = await _doseLogRepository.insertDoseLog(snoozedLog);
     return snoozedLog.copyWith(id: newId);
@@ -160,13 +144,13 @@ class DoseSchedulingService {
   /// Mark overdue pending doses as missed
   Future<void> markOverdueDosesAsMissed() async {
     final overdueDoses = await getOverdueDoses();
-    
+
     for (final dose in overdueDoses) {
       if (dose.status == DoseStatus.pending && dose.id != null) {
         await _doseLogRepository.markDoseAsMissed(dose.id!);
       }
     }
-    
+
     debugPrint('🚨 Marked ${overdueDoses.length} doses as missed');
   }
 
@@ -174,15 +158,15 @@ class DoseSchedulingService {
   Future<Map<int, int>> calculateMedicationForecast(int medicationId, int days) async {
     final endDate = DateTime.now().add(Duration(days: days));
     final schedules = await _scheduleRepository.getSchedulesForMedication(medicationId);
-    
+
     int totalDosesNeeded = 0;
     final now = DateTime.now();
-    
+
     for (final schedule in schedules) {
       final scheduledTimes = _calculateScheduledTimesForDateRange(schedule, now, endDate);
       totalDosesNeeded += scheduledTimes.length;
     }
-    
+
     return {medicationId: totalDosesNeeded};
   }
 
@@ -199,21 +183,20 @@ class DoseSchedulingService {
   /// Clean up old dose logs (older than specified days)
   Future<void> cleanupOldDoseLogs({int daysToKeep = 90}) async {
     final cutoffDate = DateTime.now().subtract(Duration(days: daysToKeep));
-    
+
     // Get logs to delete first
     final logsToDelete = await _doseLogRepository.getDoseLogsInRange(
-      DateTime.fromMillisecondsSinceEpoch(0), 
-      cutoffDate
+      DateTime.fromMillisecondsSinceEpoch(0),
+      cutoffDate,
     );
-    
+
     // Delete each log
     for (final log in logsToDelete) {
       if (log.id != null) {
         await _doseLogRepository.deleteDoseLog(log.id!);
       }
     }
-    
+
     debugPrint('🧹 Cleaned up ${logsToDelete.length} dose logs older than $daysToKeep days');
   }
-
 }

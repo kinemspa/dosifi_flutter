@@ -31,8 +31,7 @@ class AnimatedGradientCard extends StatefulWidget {
   State<AnimatedGradientCard> createState() => _AnimatedGradientCardState();
 }
 
-class _AnimatedGradientCardState extends State<AnimatedGradientCard>
-    with SingleTickerProviderStateMixin {
+class _AnimatedGradientCardState extends State<AnimatedGradientCard> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _elevationAnimation;
@@ -40,26 +39,17 @@ class _AnimatedGradientCardState extends State<AnimatedGradientCard>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.animationDuration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.animationDuration, vsync: this);
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.98,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _elevationAnimation = Tween<double>(
       begin: 4.0,
       end: 8.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -94,14 +84,16 @@ class _AnimatedGradientCardState extends State<AnimatedGradientCard>
             decoration: BoxDecoration(
               gradient: widget.gradient ?? AppTheme.primaryGradient,
               borderRadius: widget.borderRadius ?? BorderRadius.circular(20),
-              boxShadow: widget.shadows ?? [
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                  offset: Offset(0, _elevationAnimation.value / 2),
-                  blurRadius: _elevationAnimation.value * 2,
-                  spreadRadius: 0,
-                ),
-              ],
+              boxShadow:
+                  widget.shadows ??
+                  [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      offset: Offset(0, _elevationAnimation.value / 2),
+                      blurRadius: _elevationAnimation.value * 2,
+                      spreadRadius: 0,
+                    ),
+                  ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -111,10 +103,7 @@ class _AnimatedGradientCardState extends State<AnimatedGradientCard>
                 onTapUp: _handleTapUp,
                 onTapCancel: _handleTapCancel,
                 borderRadius: (widget.borderRadius ?? BorderRadius.circular(20)) as BorderRadius,
-                child: Padding(
-                  padding: widget.padding ?? const EdgeInsets.all(16.0),
-                  child: widget.child,
-                ),
+                child: Padding(padding: widget.padding ?? const EdgeInsets.all(16.0), child: widget.child),
               ),
             ),
           ),

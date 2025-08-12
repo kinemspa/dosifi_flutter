@@ -6,14 +6,15 @@ import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
+import 'package:dosifi_flutter/core/widgets/section_header.dart';
+import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/helper_block.dart';
 
 class AddScheduleScreen extends ConsumerStatefulWidget {
   final String? scheduleId;
-  
-  const AddScheduleScreen({
-    super.key,
-    this.scheduleId,
-  });
+  final bool compactSheetMode;
+
+  const AddScheduleScreen({super.key, this.scheduleId, this.compactSheetMode = false});
 
   @override
   ConsumerState<AddScheduleScreen> createState() => _AddScheduleScreenState();
@@ -24,7 +25,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   final _doseAmountController = TextEditingController();
   final _strengthPerUnitController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   int? _selectedMedicationId;
   ScheduleType _selectedScheduleType = ScheduleType.daily;
   TimeOfDay? _selectedTime;
@@ -66,65 +67,48 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(isEditMode ? 'Edit Schedule' : 'Add Schedule'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.navigateBackSmart(),
-        ),
-        actions: [
-          if (isEditMode)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _showDeleteDialog,
-            ),
-        ],
-      ),
-      body: _isLoading
+    final formBody = _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               children: [
-                // Step indicator
                 _buildStepIndicator(),
-                const SizedBox(height: 32),
-                
-                // Medication Selection Section
+                const SizedBox(height: 16),
                 _buildMedicationSelectionSection(),
-                const SizedBox(height: 32),
-                
-                // Schedule Type and Time Section
+                const SizedBox(height: 16),
                 _buildScheduleTypeSection(),
-                const SizedBox(height: 32),
-                
-                // Dose Information Section
+                const SizedBox(height: 16),
                 _buildDoseInformationSection(),
-                const SizedBox(height: 32),
-                
-                // Date Range Section
+                const SizedBox(height: 16),
                 _buildDateRangeSection(),
-                
-                // Schedule-specific options
                 if (_selectedScheduleType == ScheduleType.weekly) ...[
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   _buildWeeklyOptionsSection(),
                 ],
                 if (_selectedScheduleType == ScheduleType.cycling) ...[
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   _buildCyclingOptionsSection(),
                 ],
-                
-                const SizedBox(height: 40),
-                
-                // Save button
+                const SizedBox(height: 24),
                 _buildSaveButton(),
               ],
             ),
-          ),
+          );
+
+    if (widget.compactSheetMode) {
+      return formBody;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(isEditMode ? 'Edit Schedule' : 'Add Schedule'),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.navigateBackSmart()),
+        actions: [if (isEditMode) IconButton(icon: const Icon(Icons.delete), onPressed: _showDeleteDialog)],
+      ),
+      body: formBody,
     );
   }
 
@@ -140,36 +124,17 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.schedule,
-              color: Colors.white,
-              size: 20,
-            ),
+            decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+            child: const Icon(Icons.schedule, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Medication Schedule',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                Text('Medication Schedule', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 SizedBox(height: 4),
-                Text(
-                  'Set up when and how to take your medication',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
+                Text('Set up when and how to take your medication', style: TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
           ),
@@ -179,75 +144,70 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   }
 
   Widget _buildMedicationSelectionSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Select Medication'),
-            
-            // Medication dropdown
+            const SectionHeader(title: 'Select Medication'),
             Consumer(
               builder: (context, ref, child) {
                 final medicationsAsync = ref.watch(medicationListProvider);
-                
                 return medicationsAsync.when(
-                  data: (medications) => DropdownButtonFormField<int>(
-                    value: _selectedMedicationId,
-                    decoration: const InputDecoration(
-                      labelText: 'Medication *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.medication),
-                      helperText: 'Choose the medication for this schedule',
-                    ),
-                    isExpanded: true,
-                    items: medications.map((medication) {
-                      return DropdownMenuItem(
-                        value: medication.id,
-                        child: Row(
-                          children: [
-                            Icon(
-                              _getMedicationIcon(medication.type),
-                              size: 20,
-                              color: Colors.blue,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    medication.name,
-                                    style: const TextStyle(fontWeight: FontWeight.w500),
-                                  ),
-                                  Text(
-                                    '${medication.strengthPerUnit} ${medication.strengthUnit.displayName}',
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                  data: (medications) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<int>(
+                        value: _selectedMedicationId,
+                        decoration: const InputDecoration(
+                          labelText: 'Medication *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.medication),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedMedicationId = value;
-                        // Auto-populate strength when medication is selected
-                        if (value != null) {
-                          final medication = medications.firstWhere((m) => m.id == value);
-                          _strengthPerUnitController.text = medication.strengthPerUnit.toString();
-                        }
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select a medication';
-                      }
-                      return null;
-                    },
+                        isExpanded: true,
+                        items: medications.map((medication) {
+                          return DropdownMenuItem(
+                            value: medication.id,
+                            child: Row(
+                              children: [
+                                Icon(_getMedicationIcon(medication.type), size: 20, color: Colors.blue),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(medication.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                      Text(
+                                        '${medication.strengthPerUnit} ${medication.strengthUnit.displayName}',
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMedicationId = value;
+                            if (value != null) {
+                              final medication = medications.firstWhere((m) => m.id == value);
+                              _strengthPerUnitController.text = medication.strengthPerUnit.toString();
+                            }
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select a medication';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      const HelperBlock.info('Choose the medication for this schedule', icon: Icons.help_outline),
+                    ],
                   ),
                   loading: () => const LinearProgressIndicator(),
                   error: (error, _) => Text('Error loading medications: $error'),
@@ -258,17 +218,17 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
         ),
       ),
     );
-  }
+}
 
   Widget _buildScheduleTypeSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Schedule Type & Time'),
-            
+            const SectionHeader(title: 'Schedule Type & Time'),
+
             // Schedule type dropdown
             DropdownButtonFormField<ScheduleType>(
               value: _selectedScheduleType,
@@ -276,7 +236,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 labelText: 'Schedule Type *',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.repeat),
-                helperText: 'How often should this medication be taken?',
               ),
               isExpanded: true,
               items: ScheduleType.values.map((type) {
@@ -284,11 +243,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                   value: type,
                   child: Row(
                     children: [
-                      Icon(
-                        _getScheduleTypeIcon(type),
-                        size: 20,
-                        color: Colors.green,
-                      ),
+                      Icon(_getScheduleTypeIcon(type), size: 20, color: Colors.green),
                       const SizedBox(width: 8),
                       Text(type.displayName),
                     ],
@@ -305,8 +260,10 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 });
               },
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('How often should this medication be taken?', icon: Icons.help_outline),
             const SizedBox(height: 16),
-            
+
             // Time picker
             InkWell(
               onTap: _selectTime,
@@ -316,12 +273,9 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                   suffixIcon: Icon(Icons.access_time),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.schedule),
-                  helperText: 'What time should this dose be taken?',
                 ),
                 child: Text(
-                  _selectedTime != null
-                      ? _selectedTime!.format(context)
-                      : 'Select time',
+                  _selectedTime != null ? _selectedTime!.format(context) : 'Select time',
                   style: TextStyle(
                     color: _selectedTime != null
                         ? Theme.of(context).textTheme.bodyLarge?.color
@@ -330,6 +284,8 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('What time should this dose be taken?', icon: Icons.help_outline),
           ],
         ),
       ),
@@ -337,14 +293,14 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   }
 
   Widget _buildDoseInformationSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Dose Information'),
-            
+            const SectionHeader(title: 'Dose Information'),
+
             Row(
               children: [
                 Expanded(
@@ -355,7 +311,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                       labelText: 'Dose Amount *',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.scale),
-                      helperText: 'How much to take',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
@@ -374,18 +329,12 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedDoseUnit,
-                    decoration: const InputDecoration(
-                      labelText: 'Unit',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder()),
                     isExpanded: true,
                     items: _doseUnits.map((unit) {
                       return DropdownMenuItem(
                         value: unit,
-                        child: Text(
-                          unit,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(unit, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -397,8 +346,10 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('How much to take', icon: Icons.help_outline),
             const SizedBox(height: 16),
-            
+
             // Dose form dropdown
             DropdownButtonFormField<String>(
               value: _selectedDoseForm,
@@ -406,7 +357,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 labelText: 'Dose Form',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.medication),
-                helperText: 'How is the medication taken?',
               ),
               isExpanded: true,
               items: _doseForms.map((form) {
@@ -421,8 +371,10 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 });
               },
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('How is the medication taken?', icon: Icons.help_outline),
             const SizedBox(height: 16),
-            
+
             // Strength per unit (auto-populated from medication)
             TextFormField(
               controller: _strengthPerUnitController,
@@ -430,7 +382,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 labelText: 'Strength Per Unit',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.straighten),
-                helperText: 'Automatically filled from medication',
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
@@ -451,14 +402,14 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   }
 
   Widget _buildDateRangeSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Date Range'),
-            
+            const SectionHeader(title: 'Date Range'),
+
             // Start date
             InkWell(
               onTap: _selectStartDate,
@@ -469,13 +420,13 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.event_available),
                 ),
-                child: Text(
-                  '${_startDate.day}/${_startDate.month}/${_startDate.year}',
-                ),
+                child: Text('${_startDate.day}/${_startDate.month}/${_startDate.year}'),
               ),
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('Select when this schedule should start', icon: Icons.help_outline),
             const SizedBox(height: 16),
-            
+
             // End date (optional)
             InkWell(
               onTap: _selectEndDate,
@@ -485,12 +436,9 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                   suffixIcon: Icon(Icons.calendar_today),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.event_busy),
-                  helperText: 'Leave empty for indefinite schedule',
                 ),
                 child: Text(
-                  _endDate != null
-                      ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                      : 'No end date',
+                  _endDate != null ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}' : 'No end date',
                   style: TextStyle(
                     color: _endDate != null
                         ? Theme.of(context).textTheme.bodyLarge?.color
@@ -499,6 +447,8 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('Leave empty for an indefinite schedule', icon: Icons.help_outline),
           ],
         ),
       ),
@@ -506,26 +456,23 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   }
 
   Widget _buildWeeklyOptionsSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Weekly Schedule Options'),
-            
-            const Text(
-              'Select the days of the week:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
+            const SectionHeader(title: 'Weekly Schedule Options'),
+
+            const Text('Select the days of the week:', style: TextStyle(fontSize: 14, color: Colors.grey)),
             const SizedBox(height: 12),
-            
+
             Wrap(
               spacing: 8,
               children: List.generate(7, (index) {
                 final dayIndex = index + 1; // 1 = Monday, 7 = Sunday
                 final isSelected = _selectedDaysOfWeek.contains(dayIndex);
-                
+
                 return FilterChip(
                   label: Text(_weekDays[index]),
                   selected: isSelected,
@@ -548,14 +495,14 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   }
 
   Widget _buildCyclingOptionsSection() {
-    return Card(
+    return CompactCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Cycling Schedule Options'),
-            
+            const SectionHeader(title: 'Cycling Schedule Options'),
+
             Row(
               children: [
                 Expanded(
@@ -564,7 +511,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                       labelText: 'Days On *',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.play_arrow),
-                      helperText: 'Days to take medication',
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -591,7 +537,6 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                       labelText: 'Days Off *',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.pause),
-                      helperText: 'Days to skip medication',
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -613,6 +558,8 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            const HelperBlock.info('Days to take and days to skip medication in each cycle', icon: Icons.help_outline),
           ],
         ),
       ),
@@ -641,10 +588,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
             : Icon(isEditMode ? Icons.update : Icons.add),
         label: Text(
           isEditMode ? 'Update Schedule' : 'Add Schedule',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -653,12 +597,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      child: Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
     );
   }
 
@@ -705,10 +644,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
 
   // Date and time picker methods
   void _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime ?? TimeOfDay.now(),
-    );
+    final TimeOfDay? picked = await showTimePicker(context: context, initialTime: _selectedTime ?? TimeOfDay.now());
     if (picked != null) {
       setState(() {
         _selectedTime = picked;
@@ -753,12 +689,11 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Schedule'),
-        content: const Text('Are you sure you want to delete this schedule? This will also remove all future planned doses.'),
+        content: const Text(
+          'Are you sure you want to delete this schedule? This will also remove all future planned doses.',
+        ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -777,20 +712,16 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // Delete schedule logic here
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Schedule deleted successfully')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Schedule deleted successfully')));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting schedule: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting schedule: $e')));
       }
     } finally {
       if (mounted) {
@@ -804,21 +735,17 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
   void _saveSchedule() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a time')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a time')));
       return;
     }
     if (_selectedMedicationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a medication')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a medication')));
       return;
     }
     if (_selectedScheduleType == ScheduleType.weekly && _selectedDaysOfWeek.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one day for weekly schedule')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select at least one day for weekly schedule')));
       return;
     }
 
@@ -831,7 +758,8 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
       final schedule = Schedule.create(
         medicationId: _selectedMedicationId!,
         scheduleType: _selectedScheduleType.name,
-        timeOfDay: '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+        timeOfDay:
+            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         daysOfWeek: _selectedScheduleType == ScheduleType.weekly ? _selectedDaysOfWeek : null,
         startDate: _startDate,
         endDate: _endDate,
@@ -842,7 +770,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
         doseForm: _selectedDoseForm,
         strengthPerUnit: double.parse(_strengthPerUnitController.text.trim()),
       );
-      
+
       print('📅 [ADD SCHEDULE] Schedule object created: ${schedule.toMap()}');
 
       if (isEditMode) {
@@ -866,7 +794,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
     } catch (e, stackTrace) {
       print('❌ [ADD SCHEDULE] Error saving schedule: $e');
       print('❌ [ADD SCHEDULE] Stack trace: $stackTrace');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

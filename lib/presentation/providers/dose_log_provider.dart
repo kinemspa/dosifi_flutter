@@ -29,7 +29,7 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
     try {
       final id = await _repository.insertDoseLog(doseLog);
       final newDoseLog = doseLog.copyWith(id: id);
-      
+
       state.whenData((doseLogs) {
         state = AsyncValue.data([newDoseLog, ...doseLogs]);
       });
@@ -41,7 +41,7 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
   Future<void> updateDoseLog(DoseLog doseLog) async {
     try {
       await _repository.updateDoseLog(doseLog);
-      
+
       state.whenData((doseLogs) {
         final updatedList = doseLogs.map((d) {
           return d.id == doseLog.id ? doseLog : d;
@@ -56,7 +56,7 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
   Future<void> markDoseAsTaken(int id, {DateTime? takenTime, double? doseAmount, String? notes}) async {
     try {
       await _repository.markDoseAsTaken(id, takenTime: takenTime, doseAmount: doseAmount, notes: notes);
-      
+
       state.whenData((doseLogs) {
         final updatedList = doseLogs.map((d) {
           if (d.id == id) {
@@ -79,14 +79,11 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
   Future<void> markDoseAsSkipped(int id, {String? notes}) async {
     try {
       await _repository.markDoseAsSkipped(id, notes: notes);
-      
+
       state.whenData((doseLogs) {
         final updatedList = doseLogs.map((d) {
           if (d.id == id) {
-            return d.copyWith(
-              status: DoseStatus.skipped,
-              notes: notes ?? d.notes,
-            );
+            return d.copyWith(status: DoseStatus.skipped, notes: notes ?? d.notes);
           }
           return d;
         }).toList();
@@ -100,7 +97,7 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
   Future<void> markDoseAsMissed(int id) async {
     try {
       await _repository.markDoseAsMissed(id);
-      
+
       state.whenData((doseLogs) {
         final updatedList = doseLogs.map((d) {
           if (d.id == id) {
@@ -118,7 +115,7 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
   Future<void> deleteDoseLog(int id) async {
     try {
       await _repository.deleteDoseLog(id);
-      
+
       state.whenData((doseLogs) {
         final updatedList = doseLogs.where((d) => d.id != id).toList();
         state = AsyncValue.data(updatedList);
@@ -130,8 +127,7 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
 }
 
 // Provider for the dose log list state notifier
-final doseLogListProvider = 
-    StateNotifierProvider<DoseLogListNotifier, AsyncValue<List<DoseLog>>>((ref) {
+final doseLogListProvider = StateNotifierProvider<DoseLogListNotifier, AsyncValue<List<DoseLog>>>((ref) {
   final repository = ref.watch(doseLogRepositoryProvider);
   return DoseLogListNotifier(repository);
 });
@@ -142,10 +138,9 @@ final todaysDoseLogsProvider = Provider<AsyncValue<List<DoseLog>>>((ref) {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    
+
     return doseLogs.where((doseLog) {
-      return doseLog.scheduledTime.isAfter(startOfDay) && 
-             doseLog.scheduledTime.isBefore(endOfDay);
+      return doseLog.scheduledTime.isAfter(startOfDay) && doseLog.scheduledTime.isBefore(endOfDay);
     }).toList()..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
   });
 });
@@ -196,11 +191,7 @@ class ComplianceRequest {
   final DateTime startDate;
   final DateTime endDate;
 
-  ComplianceRequest({
-    required this.medicationId,
-    required this.startDate,
-    required this.endDate,
-  });
+  ComplianceRequest({required this.medicationId, required this.startDate, required this.endDate});
 
   @override
   bool operator ==(Object other) {

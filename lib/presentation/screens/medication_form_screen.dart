@@ -4,14 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
+import 'package:dosifi_flutter/core/widgets/helper_block.dart';
 
 class MedicationFormScreen extends ConsumerStatefulWidget {
   final String? medicationId; // null for add, not null for edit
-  
-  const MedicationFormScreen({
-    super.key,
-    this.medicationId,
-  });
+
+  const MedicationFormScreen({super.key, this.medicationId});
 
   @override
   ConsumerState<MedicationFormScreen> createState() => _MedicationFormScreenState();
@@ -120,66 +118,52 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(isEditMode ? 'Edit Medication' : 'Add Medication'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.navigateBackSmart(),
-        ),
-        actions: [
-          if (isEditMode)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _showDeleteDialog,
-            ),
-        ],
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.navigateBackSmart()),
+        actions: [if (isEditMode) IconButton(icon: const Icon(Icons.delete), onPressed: _showDeleteDialog)],
       ),
       body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                // Step indicator
-                _buildStepIndicator(),
-                const SizedBox(height: 32),
-                
-                // Medication Type - First and Required
-                _buildMedicationTypeSection(),
-                
-                // Only show rest of form if type is selected
-                if (_selectedType != null) ...[
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  // Step indicator
+                  _buildStepIndicator(),
                   const SizedBox(height: 32),
-                  _buildBasicInformationSection(),
-                  const SizedBox(height: 32),
-                  _buildStrengthSection(),
-                  const SizedBox(height: 32),
-                  _buildStockInformationSection(),
-                  const SizedBox(height: 32),
-                  _buildCustomFieldsForType(),
+
+                  // Medication Type - First and Required
+                  _buildMedicationTypeSection(),
+
+                  // Only show rest of form if type is selected
                   if (_selectedType != null) ...[
                     const SizedBox(height: 32),
-                    _buildStorageSection(),
+                    _buildBasicInformationSection(),
                     const SizedBox(height: 32),
-                    _buildAdditionalInfoSection(),
+                    _buildStrengthSection(),
+                    const SizedBox(height: 32),
+                    _buildStockInformationSection(),
+                    const SizedBox(height: 32),
+                    _buildCustomFieldsForType(),
+                    if (_selectedType != null) ...[
+                      const SizedBox(height: 32),
+                      _buildStorageSection(),
+                      const SizedBox(height: 32),
+                      _buildAdditionalInfoSection(),
+                    ],
+                    const SizedBox(height: 40),
+                    _buildSaveButton(),
                   ],
-                  const SizedBox(height: 40),
-                  _buildSaveButton(),
                 ],
-              ],
+              ),
             ),
-          ),
     );
   }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      child: Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
     );
   }
 
@@ -191,7 +175,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('Basic Information'),
-            
+
             // Name (Required)
             TextFormField(
               controller: _nameController,
@@ -233,11 +217,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                   value: type,
                   child: Row(
                     children: [
-                      Icon(
-                        _getMedicationTypeIcon(type),
-                        size: 20,
-                        color: _getMedicationTypeColor(type),
-                      ),
+                      Icon(_getMedicationTypeIcon(type), size: 20, color: _getMedicationTypeColor(type)),
                       const SizedBox(width: 8),
                       Text(type.displayName),
                     ],
@@ -259,10 +239,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                   flex: 2,
                   child: TextFormField(
                     controller: _strengthController,
-                    decoration: const InputDecoration(
-                      labelText: 'Strength *',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Strength *', border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -279,15 +256,9 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                 Expanded(
                   child: DropdownButtonFormField<StrengthUnit>(
                     value: _selectedStrengthUnit,
-                    decoration: const InputDecoration(
-                      labelText: 'Unit *',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Unit *', border: OutlineInputBorder()),
                     items: StrengthUnit.values.map((unit) {
-                      return DropdownMenuItem(
-                        value: unit,
-                        child: Text(unit.displayName),
-                      );
+                      return DropdownMenuItem(value: unit, child: Text(unit.displayName));
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
@@ -325,7 +296,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('Stock Information'),
-            
+
             // Current Stock
             TextFormField(
               controller: _stockController,
@@ -390,12 +361,8 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
                 child: Text(
-                  _expirationDate != null
-                      ? _formatDate(_expirationDate!)
-                      : 'Select expiration date',
-                  style: _expirationDate != null
-                      ? null
-                      : TextStyle(color: Colors.grey[600]),
+                  _expirationDate != null ? _formatDate(_expirationDate!) : 'Select expiration date',
+                  style: _expirationDate != null ? null : TextStyle(color: Colors.grey[600]),
                 ),
               ),
             ),
@@ -413,7 +380,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('Storage Information'),
-            
+
             // Storage Instructions
             TextFormField(
               controller: _storageInstructionsController,
@@ -464,7 +431,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('Reconstitution Information'),
-            
+
             // Reconstitution Volume
             TextFormField(
               controller: _reconstitutionVolumeController,
@@ -542,7 +509,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('Additional Information'),
-            
+
             // Description
             TextFormField(
               controller: _descriptionController,
@@ -584,10 +551,19 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
             // Barcode
             TextFormField(
               controller: _barcodeController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Barcode',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.qr_code_2),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.qr_code_2),
+                suffixIcon: IconButton(
+                  tooltip: 'Scan barcode (coming soon)'
+                  ,icon: const Icon(Icons.camera_alt_outlined),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Barcode scanner coming soon')),
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -603,7 +579,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 3650)), // 10 years
     );
-    
+
     if (selectedDate != null) {
       setState(() {
         _expirationDate = selectedDate;
@@ -631,9 +607,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditMode 
-              ? 'Medication updated successfully' 
-              : 'Medication added successfully'),
+            content: Text(isEditMode ? 'Medication updated successfully' : 'Medication added successfully'),
             backgroundColor: Colors.green,
           ),
         );
@@ -660,54 +634,40 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
     final medication = Medication.create(
       name: _nameController.text.trim(),
       type: _selectedType!,
-      brandManufacturer: _brandController.text.trim().isNotEmpty 
-          ? _brandController.text.trim() 
-          : null,
+      brandManufacturer: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
       strengthPerUnit: double.parse(_strengthController.text),
       strengthUnit: _selectedStrengthUnit!,
       stockQuantity: double.parse(_stockController.text),
-      lotBatchNumber: _lotBatchController.text.trim().isNotEmpty 
-          ? _lotBatchController.text.trim() 
-          : null,
+      lotBatchNumber: _lotBatchController.text.trim().isNotEmpty ? _lotBatchController.text.trim() : null,
       expirationDate: _expirationDate,
-      storageInstructions: _storageInstructionsController.text.trim().isNotEmpty 
-          ? _storageInstructionsController.text.trim() 
+      storageInstructions: _storageInstructionsController.text.trim().isNotEmpty
+          ? _storageInstructionsController.text.trim()
           : null,
       requiresRefrigeration: _requiresRefrigeration,
-      reconstitutionVolume: _reconstitutionVolumeController.text.trim().isNotEmpty 
-          ? double.parse(_reconstitutionVolumeController.text) 
+      reconstitutionVolume: _reconstitutionVolumeController.text.trim().isNotEmpty
+          ? double.parse(_reconstitutionVolumeController.text)
           : null,
-      finalConcentration: _finalConcentrationController.text.trim().isNotEmpty 
-          ? double.parse(_finalConcentrationController.text) 
+      finalConcentration: _finalConcentrationController.text.trim().isNotEmpty
+          ? double.parse(_finalConcentrationController.text)
           : null,
-      reconstitutionNotes: _reconstitutionNotesController.text.trim().isNotEmpty 
-          ? _reconstitutionNotesController.text.trim() 
+      reconstitutionNotes: _reconstitutionNotesController.text.trim().isNotEmpty
+          ? _reconstitutionNotesController.text.trim()
           : null,
-      reconstitutionFluid: _reconstitutionFluidController.text.trim().isNotEmpty 
-          ? _reconstitutionFluidController.text.trim() 
+      reconstitutionFluid: _reconstitutionFluidController.text.trim().isNotEmpty
+          ? _reconstitutionFluidController.text.trim()
           : null,
-      description: _descriptionController.text.trim().isNotEmpty 
-          ? _descriptionController.text.trim() 
-          : null,
-      instructions: _instructionsController.text.trim().isNotEmpty 
-          ? _instructionsController.text.trim() 
-          : null,
-      notes: _notesController.text.trim().isNotEmpty 
-          ? _notesController.text.trim() 
-          : null,
-      barcode: _barcodeController.text.trim().isNotEmpty 
-          ? _barcodeController.text.trim() 
-          : null,
+      description: _descriptionController.text.trim().isNotEmpty ? _descriptionController.text.trim() : null,
+      instructions: _instructionsController.text.trim().isNotEmpty ? _instructionsController.text.trim() : null,
+      notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+      barcode: _barcodeController.text.trim().isNotEmpty ? _barcodeController.text.trim() : null,
     );
 
     await ref.read(medicationListProvider.notifier).addMedication(medication);
   }
 
   Future<void> _updateMedication() async {
-    final existingMedication = await ref.read(
-      medicationByIdProvider(int.parse(widget.medicationId!)).future,
-    );
-    
+    final existingMedication = await ref.read(medicationByIdProvider(int.parse(widget.medicationId!)).future);
+
     if (existingMedication == null) {
       throw Exception('Medication not found');
     }
@@ -715,37 +675,25 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
     final updatedMedication = existingMedication.copyWith(
       name: _nameController.text.trim(),
       type: _selectedType!,
-      brandManufacturer: _brandController.text.trim().isNotEmpty 
-          ? _brandController.text.trim() 
-          : null,
+      brandManufacturer: _brandController.text.trim().isNotEmpty ? _brandController.text.trim() : null,
       strengthPerUnit: double.parse(_strengthController.text),
       strengthUnit: _selectedStrengthUnit!,
       stockQuantity: double.parse(_stockController.text),
-      lotBatchNumber: _lotBatchController.text.trim().isNotEmpty 
-          ? _lotBatchController.text.trim() 
-          : null,
+      lotBatchNumber: _lotBatchController.text.trim().isNotEmpty ? _lotBatchController.text.trim() : null,
       expirationDate: _expirationDate,
-      reconstitutionVolume: _reconstitutionVolumeController.text.trim().isNotEmpty 
-          ? double.parse(_reconstitutionVolumeController.text) 
+      reconstitutionVolume: _reconstitutionVolumeController.text.trim().isNotEmpty
+          ? double.parse(_reconstitutionVolumeController.text)
           : null,
-      finalConcentration: _finalConcentrationController.text.trim().isNotEmpty 
-          ? double.parse(_finalConcentrationController.text) 
+      finalConcentration: _finalConcentrationController.text.trim().isNotEmpty
+          ? double.parse(_finalConcentrationController.text)
           : null,
-      reconstitutionNotes: _reconstitutionNotesController.text.trim().isNotEmpty 
-          ? _reconstitutionNotesController.text.trim() 
+      reconstitutionNotes: _reconstitutionNotesController.text.trim().isNotEmpty
+          ? _reconstitutionNotesController.text.trim()
           : null,
-      description: _descriptionController.text.trim().isNotEmpty 
-          ? _descriptionController.text.trim() 
-          : null,
-      instructions: _instructionsController.text.trim().isNotEmpty 
-          ? _instructionsController.text.trim() 
-          : null,
-      notes: _notesController.text.trim().isNotEmpty 
-          ? _notesController.text.trim() 
-          : null,
-      barcode: _barcodeController.text.trim().isNotEmpty 
-          ? _barcodeController.text.trim() 
-          : null,
+      description: _descriptionController.text.trim().isNotEmpty ? _descriptionController.text.trim() : null,
+      instructions: _instructionsController.text.trim().isNotEmpty ? _instructionsController.text.trim() : null,
+      notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+      barcode: _barcodeController.text.trim().isNotEmpty ? _barcodeController.text.trim() : null,
       isActive: _isActive,
     );
 
@@ -759,40 +707,27 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         title: const Text('Delete Medication'),
         content: const Text('Are you sure you want to delete this medication? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop();
               try {
-                await ref.read(medicationListProvider.notifier)
-                    .deleteMedication(int.parse(widget.medicationId!));
+                await ref.read(medicationListProvider.notifier).deleteMedication(int.parse(widget.medicationId!));
                 if (mounted) {
                   context.pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Medication deleted successfully'),
-                      backgroundColor: Colors.red,
-                    ),
+                    const SnackBar(content: Text('Medication deleted successfully'), backgroundColor: Colors.red),
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error deleting medication: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error deleting medication: $e'), backgroundColor: Colors.red));
                 }
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: const Text('Delete'),
           ),
         ],
@@ -887,13 +822,10 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _selectedType == null 
-                ? 'Step 1: Select medication type to continue'
-                : 'Step 2: Fill in the medication details',
-              style: TextStyle(
-                color: Colors.blue[700],
-                fontWeight: FontWeight.w500,
-              ),
+              _selectedType == null
+                  ? 'Step 1: Select medication type to continue'
+                  : 'Step 2: Fill in the medication details',
+              style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -914,18 +846,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.blue[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.category, color: Colors.blue[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Medication Type',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Text(' *', style: TextStyle(color: Colors.red)),
               ],
@@ -935,9 +862,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               value: _selectedType,
               decoration: InputDecoration(
                 hintText: 'Select medication type...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.grey[50],
                 prefixIcon: const Icon(Icons.medical_services),
@@ -947,11 +872,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                   value: type,
                   child: Row(
                     children: [
-                      Icon(
-                        _getMedicationTypeIcon(type),
-                        size: 20,
-                        color: _getMedicationTypeColor(type),
-                      ),
+                      Icon(_getMedicationTypeIcon(type), size: 20, color: _getMedicationTypeColor(type)),
                       const SizedBox(width: 12),
                       Text(type.displayName),
                     ],
@@ -1000,18 +921,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.info, color: Colors.green[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Basic Information',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1021,9 +937,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               decoration: InputDecoration(
                 labelText: 'Medication Name *',
                 hintText: 'Enter the medication name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.grey[50],
                 prefixIcon: const Icon(Icons.medication),
@@ -1041,9 +955,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               decoration: InputDecoration(
                 labelText: 'Brand / Manufacturer',
                 hintText: 'Optional brand or manufacturer',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.grey[50],
                 prefixIcon: const Icon(Icons.business),
@@ -1068,18 +980,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.scale, color: Colors.orange[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Strength Information',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1093,9 +1000,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                     decoration: InputDecoration(
                       labelText: 'Strength Per Unit *',
                       hintText: '0.0',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.grey[50],
                       prefixIcon: const Icon(Icons.straighten),
@@ -1118,17 +1023,12 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                     value: _selectedStrengthUnit,
                     decoration: InputDecoration(
                       labelText: 'Unit *',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.grey[50],
                     ),
                     items: _getAvailableStrengthUnits().map((unit) {
-                      return DropdownMenuItem(
-                        value: unit,
-                        child: Text(unit.displayName),
-                      );
+                      return DropdownMenuItem(value: unit, child: Text(unit.displayName));
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
@@ -1164,18 +1064,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.purple[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.purple[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.inventory, color: Colors.purple[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Stock Information',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1189,16 +1084,14 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                     decoration: InputDecoration(
                       labelText: '${_getStockLabel()} *',
                       hintText: _getStockHint(),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.grey[50],
                       prefixIcon: const Icon(Icons.inventory_2),
                     ),
-                    keyboardType: _isStockInteger() 
-                      ? TextInputType.number 
-                      : const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: _isStockInteger()
+                        ? TextInputType.number
+                        : const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Enter quantity';
@@ -1235,28 +1128,11 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.help_outline, color: Colors.blue[700], size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _getStockHelperText(),
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            // Helper block
+            const SizedBox(height: 4),
+            HelperBlock.info(
+              _getStockHelperText(),
+              icon: Icons.help_outline,
             ),
           ],
         ),
@@ -1296,18 +1172,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.cyan[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.cyan[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.vaccines, color: Colors.cyan[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Injectable Details',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1317,9 +1188,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               decoration: InputDecoration(
                 labelText: 'Volume per unit (mL)',
                 hintText: 'e.g., 1.0, 2.5, 10.0',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.grey[50],
                 prefixIcon: const Icon(Icons.water_drop),
@@ -1333,9 +1202,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Concentration after reconstitution',
                   hintText: 'e.g., 50 mg/mL',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   filled: true,
                   fillColor: Colors.grey[50],
                   prefixIcon: const Icon(Icons.science),
@@ -1361,18 +1228,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.lightBlue[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.lightBlue[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.water_drop, color: Colors.lightBlue[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Drops Information',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1382,9 +1244,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               decoration: InputDecoration(
                 labelText: 'Bottle size (mL)',
                 hintText: 'e.g., 5, 10, 15',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.grey[50],
                 prefixIcon: const Icon(Icons.local_drink),
@@ -1410,18 +1270,13 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(8)),
                   child: Icon(Icons.healing, color: Colors.orange[700]),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Topical Information',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1434,9 +1289,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
                     decoration: InputDecoration(
                       labelText: 'Tube/Container size',
                       hintText: '30',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.grey[50],
                       prefixIcon: const Icon(Icons.straighten),
@@ -1471,34 +1324,29 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[600],
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 2,
         ),
         child: _isLoading
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(isEditMode ? Icons.update : Icons.add),
-                const SizedBox(width: 8),
-                Text(
-                  isEditMode ? 'Update Medication' : 'Add Medication',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ],
-            ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(isEditMode ? Icons.update : Icons.add),
+                  const SizedBox(width: 8),
+                  Text(
+                    isEditMode ? 'Update Medication' : 'Add Medication',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -1529,7 +1377,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
 
   List<StrengthUnit> _getAvailableStrengthUnits() {
     if (_selectedType == null) return StrengthUnit.values;
-    
+
     switch (_selectedType!) {
       case MedicationType.tablet:
       case MedicationType.capsule:
@@ -1581,7 +1429,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
 
   String _getStockLabel() {
     if (_selectedType == null) return 'Stock Quantity';
-    
+
     switch (_selectedType!) {
       case MedicationType.tablet:
         return 'Number of Tablets';
@@ -1608,7 +1456,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
 
   String _getStockHint() {
     if (_selectedType == null) return '';
-    
+
     switch (_selectedType!) {
       case MedicationType.tablet:
       case MedicationType.capsule:
@@ -1630,7 +1478,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
 
   String _getStockHelperText() {
     if (_selectedType == null) return '';
-    
+
     switch (_selectedType!) {
       case MedicationType.tablet:
       case MedicationType.capsule:
@@ -1656,7 +1504,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
 
   bool _isStockInteger() {
     if (_selectedType == null) return false;
-    
+
     switch (_selectedType!) {
       case MedicationType.tablet:
       case MedicationType.capsule:

@@ -4,7 +4,7 @@ class EmbeddedReconstitutionCalculator extends StatefulWidget {
   final Function(double volume, double concentration, String notes)? onCalculationResult;
   final double? initialStrength;
   final String? initialStrengthUnit;
-  
+
   const EmbeddedReconstitutionCalculator({
     super.key,
     this.onCalculationResult,
@@ -19,19 +19,19 @@ class EmbeddedReconstitutionCalculator extends StatefulWidget {
 class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutionCalculator> {
   final _strengthController = TextEditingController();
   final _desiredDoseController = TextEditingController();
-  
+
   String _strengthUnit = 'mg';
   final String _doseUnit = 'Units';
   String _syringeSize = '1mL';
   String? _targetVialSize;
-  
+
   Map<String, dynamic>? _results;
-  
+
   final List<String> _strengthUnits = ['mg', 'mcg', 'Units', 'IU'];
   final List<String> _doseUnits = ['mg', 'mcg', 'Units', 'IU'];
   final List<String> _syringeSizes = ['0.3mL', '0.5mL', '1mL', '3mL', '5mL'];
   final List<String?> _vialSizes = [null, '1mL', '3mL', '5mL', '10mL', '20mL'];
-  
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +49,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       });
     }
   }
-  
+
   @override
   void didUpdateWidget(EmbeddedReconstitutionCalculator oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -65,17 +65,17 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       _calculate();
     }
   }
-  
+
   void _calculate() {
     final strength = double.tryParse(_strengthController.text);
-    
+
     if (strength == null || strength == 0) {
       setState(() {
         _results = null;
       });
       return;
     }
-    
+
     // Convert strength to base units
     double strengthInUnits = strength;
     if (_strengthUnit == 'mg') {
@@ -86,33 +86,33 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       strengthInUnits = strength * 1000; // Convert g to mg
     }
     // For IU and Units, keep as is
-    
+
     // Parse syringe size
     final double syringeVolume = double.parse(_syringeSize.replaceAll('mL', ''));
-    
+
     setState(() {
       _results = _calculateOptions(strengthInUnits, syringeVolume);
     });
   }
-  
+
   Map<String, dynamic> _calculateOptions(double strength, double syringeVolume) {
     final Map<String, dynamic> results = {};
-    
+
     if (_targetVialSize != null) {
       // With target vial volume
       final double vialVolume = double.parse(_targetVialSize!.replaceAll('mL', ''));
-      
+
       // Concentrated: 1mL reconstitution
       final double concentratedVolume = 1.0;
       final double concentratedConcentration = strength / concentratedVolume;
-      
+
       // Average: 60% of vial volume
       final double avgVolume = vialVolume * 0.6;
       final double avgConcentration = strength / avgVolume;
-      
+
       // Diluted: full vial volume
       final double dilutedConcentration = strength / vialVolume;
-      
+
       results['concentrated'] = {
         'volume': concentratedVolume,
         'concentration': concentratedConcentration,
@@ -146,10 +146,10 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
         'description': '10mL reconstitution (diluted)',
       };
     }
-    
+
     return results;
   }
-  
+
   void _selectOption(String option) {
     if (_results != null && _results!.containsKey(option)) {
       final result = _results![option];
@@ -160,16 +160,13 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
           result['description'] as String,
         );
       }
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Selected: ${result['description']}'),
-          backgroundColor: Colors.green,
-        ),
-      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Selected: ${result['description']}'), backgroundColor: Colors.green));
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -177,9 +174,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       children: [
         Text(
           'Reconstitution Calculator',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Row(
@@ -201,14 +196,8 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _strengthUnit,
-                decoration: const InputDecoration(
-                  labelText: 'Unit',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: _strengthUnits.map((unit) => 
-                  DropdownMenuItem(value: unit, child: Text(unit))
-                ).toList(),
+                decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder(), isDense: true),
+                items: _strengthUnits.map((unit) => DropdownMenuItem(value: unit, child: Text(unit))).toList(),
                 onChanged: (value) {
                   setState(() {
                     _strengthUnit = value!;
@@ -230,9 +219,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                   border: OutlineInputBorder(),
                   isDense: true,
                 ),
-                items: _syringeSizes.map((size) => 
-                  DropdownMenuItem(value: size, child: Text(size))
-                ).toList(),
+                items: _syringeSizes.map((size) => DropdownMenuItem(value: size, child: Text(size))).toList(),
                 onChanged: (value) {
                   setState(() {
                     _syringeSize = value!;
@@ -250,12 +237,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                   border: OutlineInputBorder(),
                   isDense: true,
                 ),
-                items: _vialSizes.map((size) => 
-                  DropdownMenuItem(
-                    value: size, 
-                    child: Text(size ?? 'None')
-                  )
-                ).toList(),
+                items: _vialSizes.map((size) => DropdownMenuItem(value: size, child: Text(size ?? 'None'))).toList(),
                 onChanged: (value) {
                   setState(() {
                     _targetVialSize = value;
@@ -270,9 +252,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
         if (_results != null) ...[
           Text(
             'Reconstitution Options:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           ..._results!.entries.map((entry) {
@@ -280,7 +260,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
             final data = entry.value;
             final concentration = data['concentration'] as double;
             final description = data['description'] as String;
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: InkWell(
@@ -297,23 +277,14 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              option.toUpperCase(),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              description,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
+                            Text(option.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(description, style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ),
                       Text(
                         '${concentration.toStringAsFixed(1)} $_strengthUnit/mL',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                       ),
                       const Icon(Icons.arrow_forward_ios, size: 16),
                     ],
@@ -326,7 +297,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       ],
     );
   }
-  
+
   @override
   void dispose() {
     _strengthController.dispose();

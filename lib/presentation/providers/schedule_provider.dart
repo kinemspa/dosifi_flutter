@@ -4,6 +4,8 @@ import 'package:dosifi_flutter/data/models/schedule.dart';
 import 'package:dosifi_flutter/data/repositories/schedule_repository.dart';
 import 'package:dosifi_flutter/services/notification_service.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
+import 'package:dosifi_flutter/data/repositories/schedule_override_repository.dart';
+import 'package:dosifi_flutter/data/models/schedule_override.dart';
 
 // Repository provider
 final scheduleRepositoryProvider = Provider<ScheduleRepository>((ref) {
@@ -27,7 +29,7 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
       debugPrint('Skipping notification initialization in test environment');
       return;
     }
-    
+
     try {
       await _notificationService.initialize();
       await _notificationService.requestPermissions();
@@ -50,23 +52,23 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     try {
       debugPrint('📅 [SCHEDULE PROVIDER] Starting to add schedule for medication ${schedule.medicationId}');
       debugPrint('📅 [SCHEDULE PROVIDER] Schedule data: ${schedule.toMap()}');
-      
+
       final id = await _repository.insertSchedule(schedule);
       debugPrint('📅 [SCHEDULE PROVIDER] Schedule saved with ID: $id');
-      
+
       final newSchedule = schedule.copyWith(id: id);
-      
+
       // Schedule notifications for this schedule
       debugPrint('📅 [SCHEDULE PROVIDER] Starting to schedule notifications');
       await _scheduleNotifications(newSchedule);
       debugPrint('📅 [SCHEDULE PROVIDER] Notifications scheduled successfully');
-      
+
       state.whenData((schedules) {
         final updatedSchedules = [...schedules, newSchedule];
         state = AsyncValue.data(updatedSchedules);
         debugPrint('📅 [SCHEDULE PROVIDER] State updated with ${updatedSchedules.length} schedules');
       });
-      
+
       debugPrint('📅 [SCHEDULE PROVIDER] Schedule added successfully');
     } catch (e, stack) {
       debugPrint('❌ [SCHEDULE PROVIDER] Error adding schedule: $e');
@@ -79,7 +81,7 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
   Future<void> updateSchedule(Schedule schedule) async {
     try {
       await _repository.updateSchedule(schedule);
-      
+
       state.whenData((schedules) {
         final updatedList = schedules.map((s) {
           return s.id == schedule.id ? schedule : s;
@@ -94,7 +96,7 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
   Future<void> deleteSchedule(int id) async {
     try {
       await _repository.deleteSchedule(id);
-      
+
       state.whenData((schedules) {
         final updatedList = schedules.where((s) => s.id != id).toList();
         state = AsyncValue.data(updatedList);
@@ -107,12 +109,12 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
   Future<void> toggleScheduleActive(int id, bool isActive) async {
     try {
       await _repository.updateScheduleStatus(id, isActive);
-      
+
       if (!isActive) {
         // Cancel notifications for inactive schedule
         await _notificationService.cancelNotificationsForSchedule(id);
       }
-      
+
       state.whenData((schedules) {
         final updatedList = schedules.map((s) {
           if (s.id == id) {
@@ -130,11 +132,11 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
   Future<void> _scheduleNotifications(Schedule schedule) async {
     try {
       if (!schedule.isActive) return;
-      
+
       // Get medication details
       final medicationAsync = await _ref.read(medicationByIdProvider(schedule.medicationId).future);
       if (medicationAsync == null) return;
-      
+
       // Schedule notifications for the next 30 days
       await _notificationService.scheduleNotificationsForSchedule(
         schedule: schedule,
@@ -146,11 +148,69 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
       print('Error scheduling notifications: $e');
     }
   }
+
+  // Apply or clear a one-day override and reschedule just that day
+  Future<void> setDayOverride({
+    required int scheduleId,
+    required DateTime date,
+    String? timeOfDay,
+    double? doseAmount,
+    String? doseUnit,
+    bool isCancelled = false,
+    String? notes,
+  }) async {
+    final overrideRepo = ScheduleOverrideRepository();
+    final override = ScheduleOverride.create(
+      scheduleId: scheduleId,
+      date: date,
+      timeOfDay: timeOfDay,
+      doseAmount: doseAmount,
+      doseUnit: doseUnit,
+      isCancelled: isCancelled,
+      notes: notes,
+    );
+    await overrideRepo.upsertOverride(override);
+
+    // Cancel any pending notification for that schedule/date
+    await _notificationService.cancelNotificationForScheduleDate(scheduleId, date);
+
+    // If cancelled, nothing more to do
+    if (isCancelled) return;
+
+    // Find schedule and medication to reschedule this single notification
+    final schedules = state.value ?? await _repository.getActiveSchedules();
+    final schedule = schedules.firstWhere((s) => s.id == scheduleId);
+    final medication = await _ref.read(medicationByIdProvider(schedule.medicationId).future);
+    if (medication == null) return;
+
+    // Determine final time
+    final t = (timeOfDay ?? schedule.timeOfDay).split(':');
+    final hour = int.parse(t[0]);
+    final minute = t.length > 1 ? int.parse(t[1]) : 0;
+    final when = DateTime(date.year, date.month, date.day, hour, minute);
+    if (!when.isAfter(DateTime.now())) return;
+
+    final title = '💊 Time for ${medication.name}';
+    final timeOnly = '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
+    final dateOnly = '${when.day}/${when.month}/${when.year}';
+    final da = doseAmount ?? schedule.doseAmount;
+    final du = doseUnit ?? schedule.doseUnit;
+    final body = '$timeOnly • $dateOnly\n$da $du • ${medication.displayStrength}';
+
+    final id = _notificationService.computeNotificationId(scheduleId, when);
+    await _notificationService.scheduleNotificationWithActions(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: when,
+      schedule: schedule,
+      medication: medication,
+    );
+  }
 }
 
 // Provider for the schedule list state notifier
-final scheduleListProvider = 
-    StateNotifierProvider<ScheduleListNotifier, AsyncValue<List<Schedule>>>((ref) {
+final scheduleListProvider = StateNotifierProvider<ScheduleListNotifier, AsyncValue<List<Schedule>>>((ref) {
   final repository = ref.watch(scheduleRepositoryProvider);
   return ScheduleListNotifier(repository, ref);
 });
@@ -164,17 +224,17 @@ final schedulesByMedicationProvider = FutureProvider.family<List<Schedule>, int>
 // Provider for today's schedules
 final todaySchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
   final allSchedules = ref.watch(scheduleListProvider);
-  
+
   return allSchedules.whenData((schedules) {
     final today = DateTime.now();
     return schedules.where((schedule) {
       // Check if the schedule is active
       if (!schedule.isActive) return false;
-      
+
       // Check if today is within the schedule's date range
       if (schedule.startDate.isAfter(today)) return false;
       if (schedule.endDate != null && schedule.endDate!.isBefore(today)) return false;
-      
+
       // Check if it matches the repeat pattern for today
       return _matchesRepeatPattern(schedule, today);
     }).toList();
@@ -184,11 +244,11 @@ final todaySchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
 // Helper function to check if a schedule matches the repeat pattern for a given day
 bool _matchesRepeatPattern(Schedule schedule, DateTime day) {
   final scheduleType = ScheduleType.fromString(schedule.scheduleType);
-  
+
   switch (scheduleType) {
     case ScheduleType.daily:
       return true; // Daily schedules match every day
-    
+
     case ScheduleType.weekly:
       if (schedule.daysOfWeek == null || schedule.daysOfWeek!.isEmpty) {
         return false;
@@ -196,7 +256,7 @@ bool _matchesRepeatPattern(Schedule schedule, DateTime day) {
       // Convert DateTime weekday (1=Monday, 7=Sunday) to our format (1=Sunday, 7=Saturday)
       final dayOfWeek = day.weekday == 7 ? 1 : day.weekday + 1;
       return schedule.daysOfWeek!.contains(dayOfWeek);
-    
+
     case ScheduleType.cycling:
       if (schedule.cycleDaysOn == null || schedule.cycleDaysOff == null) {
         return false;
@@ -205,10 +265,10 @@ bool _matchesRepeatPattern(Schedule schedule, DateTime day) {
       final cycleLength = schedule.cycleDaysOn! + schedule.cycleDaysOff!;
       final dayInCycle = daysSinceStart % cycleLength;
       return dayInCycle < schedule.cycleDaysOn!;
-    
+
     case ScheduleType.asNeeded:
       return false; // As needed schedules don't have automatic patterns
-    
+
     default:
       return true; // Default to true for unknown types
   }
@@ -217,18 +277,18 @@ bool _matchesRepeatPattern(Schedule schedule, DateTime day) {
 // Provider for upcoming schedules (next 7 days)
 final upcomingSchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
   final allSchedules = ref.watch(scheduleListProvider);
-  
+
   return allSchedules.whenData((schedules) {
     final today = DateTime.now();
     final nextWeek = today.add(const Duration(days: 7));
-    
+
     return schedules.where((schedule) {
       if (!schedule.isActive) return false;
-      
+
       // Check if the schedule falls within the next 7 days
       if (schedule.startDate.isAfter(nextWeek)) return false;
       if (schedule.endDate != null && schedule.endDate!.isBefore(today)) return false;
-      
+
       return true;
     }).toList();
   });

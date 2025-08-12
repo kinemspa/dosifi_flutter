@@ -99,15 +99,10 @@ class Schedule {
       scheduleType: map['schedule_type'] as String,
       timeOfDay: map['time_of_day'] as String,
       daysOfWeek: map['days_of_week'] != null
-          ? (map['days_of_week'] as String)
-              .split(',')
-              .map((e) => int.parse(e))
-              .toList()
+          ? (map['days_of_week'] as String).split(',').map((e) => int.parse(e)).toList()
           : null,
       startDate: DateTime.parse(map['start_date'] as String),
-      endDate: map['end_date'] != null 
-          ? DateTime.parse(map['end_date'] as String)
-          : null,
+      endDate: map['end_date'] != null ? DateTime.parse(map['end_date'] as String) : null,
       cycleDaysOn: map['cycle_days_on'] as int?,
       cycleDaysOff: map['cycle_days_off'] as int?,
       doseAmount: (map['dose_amount'] as num).toDouble(),
@@ -161,26 +156,24 @@ class Schedule {
   // Helper method to check if schedule is active on a specific date
   bool isActiveOnDate(DateTime date) {
     if (!isActive) return false;
-    
+
     // Check if date is within schedule range
     if (date.isBefore(startDate)) return false;
     if (endDate != null && date.isAfter(endDate!)) return false;
-    
+
     // Check for cycling schedules
-    if (scheduleType == ScheduleType.cycling.name && 
-        cycleDaysOn != null && 
-        cycleDaysOff != null) {
+    if (scheduleType == ScheduleType.cycling.name && cycleDaysOn != null && cycleDaysOff != null) {
       final daysSinceStart = date.difference(startDate).inDays;
       final cycleLength = cycleDaysOn! + cycleDaysOff!;
       final dayInCycle = daysSinceStart % cycleLength;
       return dayInCycle < cycleDaysOn!;
     }
-    
+
     // Check for weekly schedules
     if (scheduleType == ScheduleType.weekly.name && daysOfWeek != null) {
       return daysOfWeek!.contains(date.weekday);
     }
-    
+
     // Daily and other types are active every day
     return true;
   }
@@ -208,9 +201,6 @@ enum ScheduleType {
   const ScheduleType(this.displayName);
 
   static ScheduleType fromString(String type) {
-    return ScheduleType.values.firstWhere(
-      (e) => e.name == type,
-      orElse: () => ScheduleType.daily,
-    );
+    return ScheduleType.values.firstWhere((e) => e.name == type, orElse: () => ScheduleType.daily);
   }
 }

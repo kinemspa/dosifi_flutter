@@ -103,7 +103,7 @@ class MedicationTypeUtils {
   // Get available strength units for medication type
   static List<StrengthUnit> getAvailableStrengthUnits(MedicationType? type) {
     if (type == null) return StrengthUnit.values;
-    
+
     switch (type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
@@ -132,7 +132,7 @@ class MedicationTypeUtils {
     }
   }
 
-  // Get stock unit for medication type
+  // Get stock unit label for medication type (display-only default)
   static String getStockUnit(MedicationType type) {
     switch (type) {
       case MedicationType.tablet:
@@ -145,14 +145,14 @@ class MedicationTypeUtils {
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        return 'vials';
+        return 'mL';
       case MedicationType.cream:
       case MedicationType.ointment:
       case MedicationType.gel:
-        return 'grams';
+        return 'g';
       case MedicationType.inhaler:
       case MedicationType.spray:
-        return 'devices';
+        return 'doses';
       case MedicationType.patch:
         return 'patches';
       case MedicationType.suppository:
@@ -165,10 +165,45 @@ class MedicationTypeUtils {
     }
   }
 
+  // Options for selecting stock unit per type (controls persistence for applicable cases)
+  static List<String> getStockUnitOptions(MedicationType? type) {
+    if (type == null) return const ['units'];
+    switch (type) {
+      case MedicationType.liquid:
+      case MedicationType.drops:
+        return const ['mL'];
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+      case MedicationType.lyophilizedVial:
+        // For injectables we may track in mL or Units/IU after reconstitution
+        return const ['mL', 'Units', 'IU'];
+      case MedicationType.cream:
+      case MedicationType.ointment:
+      case MedicationType.gel:
+        return const ['g', 'mL'];
+      case MedicationType.inhaler:
+      case MedicationType.spray:
+        return const ['doses'];
+      case MedicationType.patch:
+        return const ['patches'];
+      case MedicationType.tablet:
+        return const ['tablets'];
+      case MedicationType.capsule:
+        return const ['capsules'];
+      case MedicationType.suppository:
+        return const ['pieces'];
+      case MedicationType.singleUsePen:
+      case MedicationType.multiUsePen:
+        return const ['pens'];
+      case MedicationType.other:
+        return const ['units'];
+    }
+  }
+
   // Get stock label for medication type
   static String getStockLabel(MedicationType? type) {
     if (type == null) return 'Stock Quantity';
-    
+
     switch (type) {
       case MedicationType.tablet:
         return 'Number of Tablets';
@@ -203,7 +238,7 @@ class MedicationTypeUtils {
   // Get stock hint text for medication type
   static String getStockHint(MedicationType? type) {
     if (type == null) return '';
-    
+
     switch (type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
@@ -229,7 +264,7 @@ class MedicationTypeUtils {
   // Get stock helper text for medication type
   static String getStockHelperText(MedicationType? type) {
     if (type == null) return '';
-    
+
     switch (type) {
       case MedicationType.tablet:
       case MedicationType.capsule:
@@ -263,7 +298,7 @@ class MedicationTypeUtils {
   // Check if stock should be integer for medication type
   static bool isStockInteger(MedicationType? type) {
     if (type == null) return false;
-    
+
     switch (type) {
       case MedicationType.tablet:
       case MedicationType.capsule:

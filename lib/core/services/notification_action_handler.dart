@@ -12,11 +12,7 @@ class ParsedNotificationAction {
   final String action; // take|snooze|cancel|schedule|tap
   final int scheduleId;
   final DateTime scheduledDateTime;
-  ParsedNotificationAction({
-    required this.action,
-    required this.scheduleId,
-    required this.scheduledDateTime,
-  });
+  ParsedNotificationAction({required this.action, required this.scheduleId, required this.scheduledDateTime});
 }
 
 class NotificationActionHandler {
@@ -72,7 +68,9 @@ class NotificationActionHandler {
       final scheduleId = parsed.scheduleId;
       final scheduledDateTime = parsed.scheduledDateTime;
       if (kDebugMode) {
-        print('NotificationActionHandler: Parsed -> action=$action, scheduleId=$scheduleId, scheduled=$scheduledDateTime');
+        print(
+          'NotificationActionHandler: Parsed -> action=$action, scheduleId=$scheduleId, scheduled=$scheduledDateTime',
+        );
       }
 
       // Get the schedule
@@ -97,7 +95,8 @@ class NotificationActionHandler {
       );
 
       final existingDoseLog = doseLogs.cast<DoseLog?>().firstWhere(
-        (log) => log != null &&
+        (log) =>
+            log != null &&
             log.medicationId == schedule.medicationId &&
             log.scheduledTime.isAtSameMomentAs(scheduledDateTime),
         orElse: () => null,
@@ -133,13 +132,8 @@ class NotificationActionHandler {
     }
   }
 
-
   /// Handle taking a dose from notification
-  Future<void> _handleTakeDose(
-    Schedule schedule,
-    DateTime scheduledDateTime,
-    DoseLog? existingDoseLog,
-  ) async {
+  Future<void> _handleTakeDose(Schedule schedule, DateTime scheduledDateTime, DoseLog? existingDoseLog) async {
     try {
       if (kDebugMode) {
         print('NotificationActionHandler: Taking dose for schedule ${schedule.id}');
@@ -148,26 +142,22 @@ class NotificationActionHandler {
       final now = DateTime.now();
 
       // Create or update dose log as taken
-      final doseLog = existingDoseLog?.copyWith(
-        status: DoseStatus.taken,
-        takenTime: now,
-        doseAmount: schedule.doseAmount,
-      ) ?? DoseLog.create(
-        medicationId: schedule.medicationId,
-        scheduleId: schedule.id,
-        scheduledTime: scheduledDateTime,
-        status: DoseStatus.taken,
-        doseAmount: schedule.doseAmount,
-      );
+      final doseLog =
+          existingDoseLog?.copyWith(status: DoseStatus.taken, takenTime: now, doseAmount: schedule.doseAmount) ??
+          DoseLog.create(
+            medicationId: schedule.medicationId,
+            scheduleId: schedule.id,
+            scheduledTime: scheduledDateTime,
+            status: DoseStatus.taken,
+            doseAmount: schedule.doseAmount,
+          );
 
       if (existingDoseLog?.id != null) {
-        await ref.read(doseLogListProvider.notifier).updateDoseLog(
-          doseLog.copyWith(id: existingDoseLog!.id)
-        );
+        await ref.read(doseLogListProvider.notifier).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
       } else {
         // Add new dose log and mark as taken
         await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
-        
+
         // Find the created dose log to mark as taken (which handles stock deduction)
         final updatedDoseLogsAsync = ref.read(doseLogListProvider);
         final updatedDoseLogs = await updatedDoseLogsAsync.when(
@@ -175,20 +165,19 @@ class NotificationActionHandler {
           loading: () async => <DoseLog>[],
           error: (_, __) async => <DoseLog>[],
         );
-        
+
         final createdDoseLog = updatedDoseLogs.cast<DoseLog>().firstWhere(
-          (log) => log.medicationId == schedule.medicationId &&
-                  log.scheduledTime.isAtSameMomentAs(scheduledDateTime) &&
-                  log.status == DoseStatus.taken,
+          (log) =>
+              log.medicationId == schedule.medicationId &&
+              log.scheduledTime.isAtSameMomentAs(scheduledDateTime) &&
+              log.status == DoseStatus.taken,
           orElse: () => throw Exception('Created dose log not found'),
         );
-        
+
         if (createdDoseLog.id != null) {
-          await ref.read(doseLogListProvider.notifier).markDoseAsTaken(
-            createdDoseLog.id!,
-            takenTime: now,
-            doseAmount: schedule.doseAmount,
-          );
+          await ref
+              .read(doseLogListProvider.notifier)
+              .markDoseAsTaken(createdDoseLog.id!, takenTime: now, doseAmount: schedule.doseAmount);
         }
       }
 
@@ -219,11 +208,7 @@ class NotificationActionHandler {
   }
 
   /// Handle snoozing a dose from notification
-  Future<void> _handleSnoozeDose(
-    Schedule schedule,
-    DateTime scheduledDateTime,
-    DoseLog? existingDoseLog,
-  ) async {
+  Future<void> _handleSnoozeDose(Schedule schedule, DateTime scheduledDateTime, DoseLog? existingDoseLog) async {
     try {
       if (kDebugMode) {
         print('NotificationActionHandler: Snoozing dose for schedule ${schedule.id}');
@@ -272,30 +257,24 @@ class NotificationActionHandler {
   }
 
   /// Handle canceling a dose from notification
-  Future<void> _handleCancelDose(
-    Schedule schedule,
-    DateTime scheduledDateTime,
-    DoseLog? existingDoseLog,
-  ) async {
+  Future<void> _handleCancelDose(Schedule schedule, DateTime scheduledDateTime, DoseLog? existingDoseLog) async {
     try {
       if (kDebugMode) {
         print('NotificationActionHandler: Canceling dose for schedule ${schedule.id}');
       }
 
       // Create or update dose log as skipped
-      final doseLog = existingDoseLog?.copyWith(
-        status: DoseStatus.skipped,
-      ) ?? DoseLog.create(
-        medicationId: schedule.medicationId,
-        scheduleId: schedule.id,
-        scheduledTime: scheduledDateTime,
-        status: DoseStatus.skipped,
-      );
+      final doseLog =
+          existingDoseLog?.copyWith(status: DoseStatus.skipped) ??
+          DoseLog.create(
+            medicationId: schedule.medicationId,
+            scheduleId: schedule.id,
+            scheduledTime: scheduledDateTime,
+            status: DoseStatus.skipped,
+          );
 
       if (existingDoseLog?.id != null) {
-        await ref.read(doseLogListProvider.notifier).updateDoseLog(
-          doseLog.copyWith(id: existingDoseLog!.id)
-        );
+        await ref.read(doseLogListProvider.notifier).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
       } else {
         await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
       }

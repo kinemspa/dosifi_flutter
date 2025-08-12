@@ -8,33 +8,33 @@ class MedicationUtils {
       case MedicationType.tablet:
       case MedicationType.capsule:
         return [StrengthUnit.mcg, StrengthUnit.mg];
-      
+
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
         return [StrengthUnit.mcg, StrengthUnit.mg, StrengthUnit.g, StrengthUnit.iu, StrengthUnit.units];
-      
+
       case MedicationType.liquid:
       case MedicationType.drops:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g, StrengthUnit.ml, StrengthUnit.percent];
-      
+
       case MedicationType.cream:
       case MedicationType.ointment:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g, StrengthUnit.percent];
-      
+
       case MedicationType.patch:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.iu];
-      
+
       case MedicationType.inhaler:
         return [StrengthUnit.mcg, StrengthUnit.mg];
-      
+
       case MedicationType.suppository:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g];
-      
+
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
         return [StrengthUnit.mcg, StrengthUnit.mg, StrengthUnit.g, StrengthUnit.iu, StrengthUnit.units];
-      
+
       case MedicationType.spray:
       case MedicationType.gel:
       case MedicationType.other:
@@ -124,27 +124,14 @@ class MedicationUtils {
   /// Get professional medication categories for better organization
   static Map<String, List<MedicationType>> getMedicationCategories() {
     return {
-      'Oral Medications': [
-        MedicationType.tablet,
-        MedicationType.capsule,
-        MedicationType.liquid,
-      ],
+      'Oral Medications': [MedicationType.tablet, MedicationType.capsule, MedicationType.liquid],
       'Injectable Medications': [
         MedicationType.preFilledSyringe,
         MedicationType.readyMadeVial,
         MedicationType.lyophilizedVial,
       ],
-      'Topical Medications': [
-        MedicationType.cream,
-        MedicationType.ointment,
-        MedicationType.patch,
-      ],
-      'Other Forms': [
-        MedicationType.drops,
-        MedicationType.inhaler,
-        MedicationType.suppository,
-        MedicationType.other,
-      ],
+      'Topical Medications': [MedicationType.cream, MedicationType.ointment, MedicationType.patch],
+      'Other Forms': [MedicationType.drops, MedicationType.inhaler, MedicationType.suppository, MedicationType.other],
     };
   }
 
@@ -204,14 +191,14 @@ class MedicationUtils {
           return 'Strength seems too high for mg unit';
         }
         break;
-      
+
       case MedicationType.liquid:
       case MedicationType.drops:
         if (unit == StrengthUnit.percent && strength > 100) {
           return 'Percentage cannot exceed 100%';
         }
         break;
-      
+
       default:
         break;
     }
@@ -228,26 +215,26 @@ class MedicationUtils {
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
         return StrengthUnit.mg;
-      
+
       case MedicationType.liquid:
       case MedicationType.drops:
         return StrengthUnit.mg;
-      
+
       case MedicationType.cream:
       case MedicationType.ointment:
       case MedicationType.gel:
         return StrengthUnit.percent;
-      
+
       case MedicationType.patch:
       case MedicationType.inhaler:
       case MedicationType.spray:
         return StrengthUnit.mcg;
-      
+
       case MedicationType.suppository:
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
         return StrengthUnit.mg;
-      
+
       case MedicationType.other:
         return StrengthUnit.mg;
     }

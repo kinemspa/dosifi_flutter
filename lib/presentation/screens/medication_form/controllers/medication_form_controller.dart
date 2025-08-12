@@ -38,7 +38,9 @@ class MedicationFormController extends ChangeNotifier {
   bool _isActive = true;
   bool _isLoading = false;
 
-  MedicationFormController(this.ref, this.medicationId);
+  MedicationFormController(this.ref, this.medicationId) {
+    _wireTextListeners();
+  }
 
   // Getters
   MedicationType? get selectedType => _selectedType;
@@ -65,6 +67,11 @@ class MedicationFormController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedStockUnit(String? unit) {
+    _selectedStockUnit = unit;
+    notifyListeners();
+  }
+
   void setExpirationDate(DateTime? date) {
     _expirationDate = date;
     notifyListeners();
@@ -72,6 +79,10 @@ class MedicationFormController extends ChangeNotifier {
 
   void setRequiresRefrigeration(bool value) {
     _requiresRefrigeration = value;
+    // Auto-manage temperature field when refrigeration is required
+    if (_requiresRefrigeration) {
+      storageTemperatureController.text = '2–8 °C';
+    }
     notifyListeners();
   }
 
@@ -88,7 +99,7 @@ class MedicationFormController extends ChangeNotifier {
   // Load medication data for editing
   Future<void> loadMedicationData() async {
     if (!isEditMode) return;
-    
+
     final medication = await ref.read(medicationByIdProvider(int.parse(medicationId!)).future);
     if (medication != null) {
       populateFormWithMedication(medication);
@@ -116,11 +127,11 @@ class MedicationFormController extends ChangeNotifier {
 
     _selectedType = medication.type;
     _selectedStrengthUnit = medication.strengthUnit;
-    _selectedStockUnit = MedicationTypeUtils.getStockUnit(medication.type);
+    _selectedStockUnit = medication.stockUnit?.displayName ?? MedicationTypeUtils.getStockUnit(medication.type);
     _expirationDate = medication.expirationDate;
     _requiresRefrigeration = medication.requiresRefrigeration;
     _isActive = medication.isActive;
-    
+
     notifyListeners();
   }
 
@@ -141,49 +152,54 @@ class MedicationFormController extends ChangeNotifier {
     return formKey.currentState?.validate() ?? false;
   }
 
+  // Map selected stock unit string to StrengthUnit where applicable
+  StrengthUnit? _mapStockUnitToEnum(String? unit) {
+    switch (unit) {
+      case 'mL':
+        return StrengthUnit.ml;
+      case 'Units':
+        return StrengthUnit.units;
+      case 'IU':
+        return StrengthUnit.iu;
+      case 'g':
+        return StrengthUnit.g;
+      default:
+        return null;
+    }
+  }
+
   // Create new medication
   Future<void> createMedication() async {
     final medication = Medication.create(
       name: nameController.text.trim(),
       type: _selectedType!,
-      brandManufacturer: brandController.text.trim().isNotEmpty 
-          ? brandController.text.trim() 
-          : null,
+      brandManufacturer: brandController.text.trim().isNotEmpty ? brandController.text.trim() : null,
       strengthPerUnit: double.parse(strengthController.text),
       strengthUnit: _selectedStrengthUnit!,
       stockQuantity: double.parse(stockController.text),
-      lotBatchNumber: lotBatchController.text.trim().isNotEmpty 
-          ? lotBatchController.text.trim() 
-          : null,
+      stockUnit: _mapStockUnitToEnum(_selectedStockUnit),
+      lotBatchNumber: lotBatchController.text.trim().isNotEmpty ? lotBatchController.text.trim() : null,
       expirationDate: _expirationDate,
-      storageInstructions: storageInstructionsController.text.trim().isNotEmpty 
-          ? storageInstructionsController.text.trim() 
+      storageInstructions: storageInstructionsController.text.trim().isNotEmpty
+          ? storageInstructionsController.text.trim()
           : null,
       requiresRefrigeration: _requiresRefrigeration,
-      reconstitutionVolume: reconstitutionVolumeController.text.trim().isNotEmpty 
-          ? double.parse(reconstitutionVolumeController.text) 
+      reconstitutionVolume: reconstitutionVolumeController.text.trim().isNotEmpty
+          ? double.parse(reconstitutionVolumeController.text)
           : null,
-      finalConcentration: finalConcentrationController.text.trim().isNotEmpty 
-          ? double.parse(finalConcentrationController.text) 
+      finalConcentration: finalConcentrationController.text.trim().isNotEmpty
+          ? double.parse(finalConcentrationController.text)
           : null,
-      reconstitutionNotes: reconstitutionNotesController.text.trim().isNotEmpty 
-          ? reconstitutionNotesController.text.trim() 
+      reconstitutionNotes: reconstitutionNotesController.text.trim().isNotEmpty
+          ? reconstitutionNotesController.text.trim()
           : null,
-      reconstitutionFluid: reconstitutionFluidController.text.trim().isNotEmpty 
-          ? reconstitutionFluidController.text.trim() 
+      reconstitutionFluid: reconstitutionFluidController.text.trim().isNotEmpty
+          ? reconstitutionFluidController.text.trim()
           : null,
-      description: descriptionController.text.trim().isNotEmpty 
-          ? descriptionController.text.trim() 
-          : null,
-      instructions: instructionsController.text.trim().isNotEmpty 
-          ? instructionsController.text.trim() 
-          : null,
-      notes: notesController.text.trim().isNotEmpty 
-          ? notesController.text.trim() 
-          : null,
-      barcode: barcodeController.text.trim().isNotEmpty 
-          ? barcodeController.text.trim() 
-          : null,
+      description: descriptionController.text.trim().isNotEmpty ? descriptionController.text.trim() : null,
+      instructions: instructionsController.text.trim().isNotEmpty ? instructionsController.text.trim() : null,
+      notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+      barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
     );
 
     await ref.read(medicationListProvider.notifier).addMedication(medication);
@@ -191,10 +207,8 @@ class MedicationFormController extends ChangeNotifier {
 
   // Update existing medication
   Future<void> updateMedication() async {
-    final existingMedication = await ref.read(
-      medicationByIdProvider(int.parse(medicationId!)).future,
-    );
-    
+    final existingMedication = await ref.read(medicationByIdProvider(int.parse(medicationId!)).future);
+
     if (existingMedication == null) {
       throw Exception('Medication not found');
     }
@@ -202,37 +216,25 @@ class MedicationFormController extends ChangeNotifier {
     final updatedMedication = existingMedication.copyWith(
       name: nameController.text.trim(),
       type: _selectedType!,
-      brandManufacturer: brandController.text.trim().isNotEmpty 
-          ? brandController.text.trim() 
-          : null,
+      brandManufacturer: brandController.text.trim().isNotEmpty ? brandController.text.trim() : null,
       strengthPerUnit: double.parse(strengthController.text),
       strengthUnit: _selectedStrengthUnit!,
       stockQuantity: double.parse(stockController.text),
-      lotBatchNumber: lotBatchController.text.trim().isNotEmpty 
-          ? lotBatchController.text.trim() 
-          : null,
+      lotBatchNumber: lotBatchController.text.trim().isNotEmpty ? lotBatchController.text.trim() : null,
       expirationDate: _expirationDate,
-      reconstitutionVolume: reconstitutionVolumeController.text.trim().isNotEmpty 
-          ? double.parse(reconstitutionVolumeController.text) 
+      reconstitutionVolume: reconstitutionVolumeController.text.trim().isNotEmpty
+          ? double.parse(reconstitutionVolumeController.text)
           : null,
-      finalConcentration: finalConcentrationController.text.trim().isNotEmpty 
-          ? double.parse(finalConcentrationController.text) 
+      finalConcentration: finalConcentrationController.text.trim().isNotEmpty
+          ? double.parse(finalConcentrationController.text)
           : null,
-      reconstitutionNotes: reconstitutionNotesController.text.trim().isNotEmpty 
-          ? reconstitutionNotesController.text.trim() 
+      reconstitutionNotes: reconstitutionNotesController.text.trim().isNotEmpty
+          ? reconstitutionNotesController.text.trim()
           : null,
-      description: descriptionController.text.trim().isNotEmpty 
-          ? descriptionController.text.trim() 
-          : null,
-      instructions: instructionsController.text.trim().isNotEmpty 
-          ? instructionsController.text.trim() 
-          : null,
-      notes: notesController.text.trim().isNotEmpty 
-          ? notesController.text.trim() 
-          : null,
-      barcode: barcodeController.text.trim().isNotEmpty 
-          ? barcodeController.text.trim() 
-          : null,
+      description: descriptionController.text.trim().isNotEmpty ? descriptionController.text.trim() : null,
+      instructions: instructionsController.text.trim().isNotEmpty ? instructionsController.text.trim() : null,
+      notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+      barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
       isActive: _isActive,
     );
 
@@ -242,8 +244,15 @@ class MedicationFormController extends ChangeNotifier {
   // Delete medication
   Future<void> deleteMedication() async {
     if (!isEditMode) return;
-    await ref.read(medicationListProvider.notifier)
-        .deleteMedication(int.parse(medicationId!));
+    await ref.read(medicationListProvider.notifier).deleteMedication(int.parse(medicationId!));
+  }
+
+  void _wireTextListeners() {
+    // Rebuild listeners for summary banner and dependent UI
+    nameController.addListener(notifyListeners);
+    strengthController.addListener(notifyListeners);
+    stockController.addListener(notifyListeners);
+    storageTemperatureController.addListener(notifyListeners);
   }
 
   @override
@@ -271,6 +280,9 @@ class MedicationFormController extends ChangeNotifier {
 }
 
 // Provider for the form controller
-final medicationFormControllerProvider = ChangeNotifierProvider.family<MedicationFormController, String?>((ref, medicationId) {
+final medicationFormControllerProvider = ChangeNotifierProvider.family<MedicationFormController, String?>((
+  ref,
+  medicationId,
+) {
   return MedicationFormController(ref, medicationId);
 });

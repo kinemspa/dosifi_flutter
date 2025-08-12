@@ -6,10 +6,7 @@ import 'package:dosifi_flutter/data/models/dose_log.dart';
 
 // Dose Scheduling Service Provider
 final doseSchedulingServiceProvider = Provider<DoseSchedulingService>((ref) {
-  return DoseSchedulingService(
-    scheduleRepository: ScheduleRepository(),
-    doseLogRepository: DoseLogRepository(),
-  );
+  return DoseSchedulingService(scheduleRepository: ScheduleRepository(), doseLogRepository: DoseLogRepository());
 });
 
 // State notifier for managing dose scheduling operations
@@ -88,39 +85,30 @@ class DoseSchedulingNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 // Provider for the dose scheduling state notifier
-final doseSchedulingProvider = 
-    StateNotifierProvider<DoseSchedulingNotifier, AsyncValue<void>>((ref) {
+final doseSchedulingProvider = StateNotifierProvider<DoseSchedulingNotifier, AsyncValue<void>>((ref) {
   final service = ref.watch(doseSchedulingServiceProvider);
   return DoseSchedulingNotifier(service);
 });
 
 // Provider for medication forecast
-final medicationForecastProvider = 
-    FutureProvider.family<Map<int, int>, MedicationForecastRequest>((ref, request) async {
+final medicationForecastProvider = FutureProvider.family<Map<int, int>, MedicationForecastRequest>((
+  ref,
+  request,
+) async {
   final service = ref.watch(doseSchedulingServiceProvider);
   return await service.calculateMedicationForecast(request.medicationId, request.days);
 });
 
 // Provider for compliance rate
-final complianceRateProvider = 
-    FutureProvider.family<double, ComplianceRateRequest>((ref, request) async {
+final complianceRateProvider = FutureProvider.family<double, ComplianceRateRequest>((ref, request) async {
   final service = ref.watch(doseSchedulingServiceProvider);
-  return await service.getComplianceRate(
-    request.medicationId, 
-    request.startDate, 
-    request.endDate
-  );
+  return await service.getComplianceRate(request.medicationId, request.startDate, request.endDate);
 });
 
 // Provider for dose statistics
-final doseStatisticsProvider = 
-    FutureProvider.family<Map<String, int>, DoseStatisticsRequest>((ref, request) async {
+final doseStatisticsProvider = FutureProvider.family<Map<String, int>, DoseStatisticsRequest>((ref, request) async {
   final service = ref.watch(doseSchedulingServiceProvider);
-  return await service.getDoseStatistics(
-    request.medicationId, 
-    request.startDate, 
-    request.endDate
-  );
+  return await service.getDoseStatistics(request.medicationId, request.startDate, request.endDate);
 });
 
 // Provider for overdue doses
@@ -134,17 +122,12 @@ class MedicationForecastRequest {
   final int medicationId;
   final int days;
 
-  MedicationForecastRequest({
-    required this.medicationId,
-    required this.days,
-  });
+  MedicationForecastRequest({required this.medicationId, required this.days});
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is MedicationForecastRequest &&
-        other.medicationId == medicationId &&
-        other.days == days;
+    return other is MedicationForecastRequest && other.medicationId == medicationId && other.days == days;
   }
 
   @override
@@ -156,11 +139,7 @@ class ComplianceRateRequest {
   final DateTime startDate;
   final DateTime endDate;
 
-  ComplianceRateRequest({
-    required this.medicationId,
-    required this.startDate,
-    required this.endDate,
-  });
+  ComplianceRateRequest({required this.medicationId, required this.startDate, required this.endDate});
 
   @override
   bool operator ==(Object other) {
@@ -180,11 +159,7 @@ class DoseStatisticsRequest {
   final DateTime startDate;
   final DateTime endDate;
 
-  DoseStatisticsRequest({
-    required this.medicationId,
-    required this.startDate,
-    required this.endDate,
-  });
+  DoseStatisticsRequest({required this.medicationId, required this.startDate, required this.endDate});
 
   @override
   bool operator ==(Object other) {

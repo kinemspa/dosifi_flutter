@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';
 
@@ -21,7 +22,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Map<String, bool> _permissionStatus = {};
   String _testResults = '';
   bool _showDiagnostics = false;
-  
+
   // Test form controllers
   final _titleController = TextEditingController(text: 'Test Notification');
   final _bodyController = TextEditingController(text: 'This is a test notification from Dosifi');
@@ -65,11 +66,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // Check permissions
       final hasPermission = await _notificationService.requestPermissions();
       final permissionStatus = await _notificationService.getPermissionStatus();
-      
+
       setState(() {
         _permissionGranted = hasPermission;
         _permissionStatus = permissionStatus;
-        _testResults += '[${DateTime.now().toLocal()}] ${hasPermission ? '✅' : '❌'} Notification permission: $hasPermission\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ${hasPermission ? '✅' : '❌'} Notification permission: $hasPermission\n';
         _testResults += '[${DateTime.now().toLocal()}] 📋 Permission details: $permissionStatus\n';
         _testResults += '[${DateTime.now().toLocal()}] 🌏 Device timezone: ${DateTime.now().timeZoneName}\n';
         _testResults += '[${DateTime.now().toLocal()}] 🌏 TZ Local: ${tz.local.name}\n';
@@ -106,11 +108,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       final baseTime = DateTime.now().add(const Duration(seconds: 3));
-      
+
       // Schedule 5 notifications with slightly different times
       for (int i = 1; i <= 5; i++) {
         final scheduledTime = baseTime.add(Duration(seconds: i - 1));
-        
+
         await _notificationService.scheduleNotification(
           id: DateTime.now().millisecondsSinceEpoch ~/ 1000 + i,
           title: 'Multi-Test $i/5',
@@ -118,16 +120,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           scheduledDate: scheduledTime,
           payload: 'multi_test_$i',
         );
-        
+
         setState(() {
           _testResults += '[${DateTime.now().toLocal()}] ✅ Scheduled notification $i for $scheduledTime\n';
         });
       }
-      
+
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] 🎯 All 5 notifications scheduled! They should appear starting in 3 seconds\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🎯 All 5 notifications scheduled! They should appear starting in 3 seconds\n';
       });
-      
+
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
@@ -155,7 +158,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final testSchedule = Schedule.create(
         medicationId: 1,
         scheduleType: 'daily',
-        timeOfDay: '${DateTime.now().add(const Duration(seconds: 10)).hour.toString().padLeft(2, '0')}:${DateTime.now().add(const Duration(seconds: 10)).minute.toString().padLeft(2, '0')}',
+        timeOfDay:
+            '${DateTime.now().add(const Duration(seconds: 10)).hour.toString().padLeft(2, '0')}:${DateTime.now().add(const Duration(seconds: 10)).minute.toString().padLeft(2, '0')}',
         startDate: DateTime.now(),
         doseAmount: 1.0,
         doseUnit: 'tablet',
@@ -174,7 +178,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       setState(() {
         _testResults += '[${DateTime.now().toLocal()}] ✅ Medication reminder scheduled for $scheduledTime\n';
         _testResults += '[${DateTime.now().toLocal()}] 💊 Medication: ${testMedication.name}\n';
-        _testResults += '[${DateTime.now().toLocal()}] 📅 Schedule: ${testSchedule.doseAmount} ${testSchedule.doseUnit}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 📅 Schedule: ${testSchedule.doseAmount} ${testSchedule.doseUnit}\n';
       });
 
       await _loadPendingNotifications();
@@ -193,7 +198,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       final success = await _notificationService.scheduleTestNotification();
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ${success ? '✅' : '❌'} Quick test: ${success ? 'Success' : 'Failed'}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ${success ? '✅' : '❌'} Quick test: ${success ? 'Success' : 'Failed'}\n';
         if (success) {
           _testResults += '[${DateTime.now().toLocal()}] ⏰ Notification should appear in 10 seconds\n';
         }
@@ -257,202 +263,160 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Notification Settings Section
-          _buildSettingsSection(
-            'Notifications',
-            Icons.notifications,
-            [
-              ListTile(
-                leading: Icon(Icons.notifications_active, 
-                    color: _permissionGranted ? Colors.green : Colors.orange),
-                title: const Text('Notification Permissions'),
-                subtitle: Text(_permissionGranted ? 'Enabled' : 'Disabled'),
-                trailing: Switch(
-                  value: _permissionGranted,
-                  onChanged: (value) async {
-                    if (value) {
-                      await _notificationService.requestPermissions();
-                      await _checkNotificationStatus();
-                    }
-                  },
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.schedule),
-                title: const Text('Reminder Frequency'),
-                subtitle: const Text('Daily reminders'),
-                trailing: const Text('Coming Soon'),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
+          _buildSettingsSection('Notifications', Icons.notifications, [
+            ListTile(
+              leading: Icon(Icons.notifications_active, color: _permissionGranted ? Colors.green : Colors.orange),
+              title: const Text('Notification Permissions'),
+              subtitle: Text(_permissionGranted ? 'Enabled' : 'Disabled'),
+              trailing: Switch(
+                value: _permissionGranted,
+                onChanged: (value) async {
+                  if (value) {
+                    await _notificationService.requestPermissions();
+                    await _checkNotificationStatus();
+                  }
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.volume_up),
-                title: const Text('Notification Sound'),
-                subtitle: const Text('Default'),
-                trailing: const Text('Coming Soon'),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.schedule),
+              title: const Text('Reminder Frequency'),
+              subtitle: const Text('Daily reminders'),
+              trailing: const Text('Coming Soon'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.volume_up),
+              title: const Text('Notification Sound'),
+              subtitle: const Text('Default'),
+              trailing: const Text('Coming Soon'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+          ]),
           const SizedBox(height: 20),
 
           // App Preferences Section
-          _buildSettingsSection(
-            'App Preferences',
-            Icons.settings,
-            [
-              ListTile(
-                leading: const Icon(Icons.palette),
-                title: const Text('Theme'),
-                subtitle: const Text('System default'),
-                trailing: const Text('Coming Soon'),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: const Text('Language'),
-                subtitle: const Text('English'),
-                trailing: const Text('Coming Soon'),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-            ],
-          ),
+          _buildSettingsSection('App Preferences', Icons.settings, [
+            ListTile(
+              leading: const Icon(Icons.palette),
+              title: const Text('Theme'),
+              subtitle: const Text('System default'),
+              trailing: const Text('Coming Soon'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language'),
+              subtitle: const Text('English'),
+              trailing: const Text('Coming Soon'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+          ]),
           const SizedBox(height: 20),
 
           // Data & Privacy Section
-          _buildSettingsSection(
-            'Data & Privacy',
-            Icons.security,
-            [
-              ListTile(
-                leading: const Icon(Icons.backup),
-                title: const Text('Backup Data'),
-                subtitle: const Text('Export medication data'),
-                trailing: const Text('Coming Soon'),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.restore),
-                title: const Text('Restore Data'),
-                subtitle: const Text('Import medication data'),
-                trailing: const Text('Coming Soon'),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-            ],
-          ),
+          _buildSettingsSection('Data & Privacy', Icons.security, [
+            ListTile(
+              leading: const Icon(Icons.backup),
+              title: const Text('Backup Data'),
+              subtitle: const Text('Export medication data'),
+              trailing: const Text('Coming Soon'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.restore),
+              title: const Text('Restore Data'),
+              subtitle: const Text('Import medication data'),
+              trailing: const Text('Coming Soon'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+          ]),
           const SizedBox(height: 20),
 
           // Diagnostics Section
-          _buildSettingsSection(
-            'Diagnostics',
-            Icons.medical_services,
-            [
-              ListTile(
-                leading: Icon(
-                  Icons.bug_report,
-                  color: _showDiagnostics ? Colors.blue : Colors.grey,
-                ),
-                title: const Text('Notification Testing'),
-                subtitle: Text(_showDiagnostics ? 'Hide diagnostic tools' : 'Show diagnostic tools'),
-                trailing: Icon(_showDiagnostics ? Icons.expand_less : Icons.expand_more),
-                onTap: () {
-                  setState(() {
-                    _showDiagnostics = !_showDiagnostics;
-                  });
-                },
-              ),
-              if (_showDiagnostics) ...[
-                const Divider(indent: 16),
-                _buildNotificationDiagnostics(),
-              ],
-            ],
-          ),
+          _buildSettingsSection('Diagnostics', Icons.medical_services, [
+            ListTile(
+              leading: Icon(Icons.bug_report, color: _showDiagnostics ? Colors.blue : Colors.grey),
+              title: const Text('Notification Testing'),
+              subtitle: Text(_showDiagnostics ? 'Hide diagnostic tools' : 'Show diagnostic tools'),
+              trailing: Icon(_showDiagnostics ? Icons.expand_less : Icons.expand_more),
+              onTap: () {
+                setState(() {
+                  _showDiagnostics = !_showDiagnostics;
+                });
+              },
+            ),
+            if (_showDiagnostics) ...[const Divider(indent: 16), _buildNotificationDiagnostics()],
+          ]),
           const SizedBox(height: 20),
 
           // About Section
-          _buildSettingsSection(
-            'About',
-            Icons.info,
-            [
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('App Version'),
-                subtitle: const Text('1.0.0'),
-                onTap: () {
-                  _showAboutDialog();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.privacy_tip),
-                title: const Text('Privacy Policy'),
-                trailing: const Icon(Icons.open_in_new),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.help_outline),
-                title: const Text('Help & Support'),
-                trailing: const Icon(Icons.open_in_new),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon!')),
-                  );
-                },
-              ),
-            ],
-          ),
+          _buildSettingsSection('About', Icons.info, [
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('App Version'),
+              subtitle: const Text('1.0.0'),
+              onTap: () {
+                _showAboutDialog();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip),
+              title: const Text('Privacy Policy'),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('Help & Support'),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+              },
+            ),
+          ]),
         ],
       ),
     );
   }
 
   Widget _buildSettingsSection(String title, IconData icon, List<Widget> children) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+    return CompactCard(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
+                child: Icon(icon, color: Theme.of(context).primaryColor, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            ],
           ),
-          ...children,
           const SizedBox(height: 8),
+          ...children,
         ],
       ),
     );
@@ -488,53 +452,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildDiagnosticStatusSection() {
-    return Card(
-      color: Colors.blue[50],
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'System Status',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+    return CompactCard(
+      accentColor: Colors.blue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('System Status', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                _serviceInitialized ? Icons.check_circle : Icons.error,
+                color: _serviceInitialized ? Colors.green : Colors.red,
+                size: 16,
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  _serviceInitialized ? Icons.check_circle : Icons.error,
-                  color: _serviceInitialized ? Colors.green : Colors.red,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text('Service: ${_serviceInitialized ? 'Active' : 'Inactive'}'),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  _permissionGranted ? Icons.notifications_active : Icons.notifications_off,
-                  color: _permissionGranted ? Colors.green : Colors.orange,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text('Permissions: ${_permissionGranted ? 'Granted' : 'Denied'}'),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.schedule, color: Colors.blue, size: 16),
-                const SizedBox(width: 8),
-                Text('Pending: ${_pendingNotifications.length}'),
-              ],
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              Text('Service: ${_serviceInitialized ? 'Active' : 'Inactive'}'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                _permissionGranted ? Icons.notifications_active : Icons.notifications_off,
+                color: _permissionGranted ? Colors.green : Colors.orange,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Text('Permissions: ${_permissionGranted ? 'Granted' : 'Denied'}'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.schedule, color: Colors.blue, size: 16),
+              const SizedBox(width: 8),
+              Text('Pending: ${_pendingNotifications.length}'),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -543,12 +499,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Tests',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text('Quick Tests', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -594,12 +545,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Advanced Tests',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text('Advanced Tests', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -640,25 +586,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             Text(
               'Pending (${_pendingNotifications.length})',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            IconButton(
-              onPressed: _loadPendingNotifications,
-              icon: const Icon(Icons.refresh),
-              iconSize: 18,
-            ),
+            IconButton(onPressed: _loadPendingNotifications, icon: const Icon(Icons.refresh), iconSize: 18),
           ],
         ),
         const SizedBox(height: 8),
         if (_pendingNotifications.isEmpty)
           const Text(
             'No pending notifications',
-            style: TextStyle(
-              color: Colors.grey,
-              fontStyle: FontStyle.italic,
-            ),
+            style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
           )
         else
           Container(
@@ -668,42 +605,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               itemCount: _pendingNotifications.length,
               itemBuilder: (context, index) {
                 final notification = _pendingNotifications[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 2),
-                  color: Colors.blue[50],
-                  child: ListTile(
-                    dense: true,
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue,
-                      radius: 12,
-                      child: Text(
-                        notification.id.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
+                return CompactCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          notification.id.toString(),
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.blue),
                         ),
                       ),
-                    ),
-                    title: Text(
-                      notification.title ?? 'No title',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    subtitle: Text(
-                      notification.body ?? 'No body',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    trailing: IconButton(
-                      onPressed: () async {
-                        await _notificationService.cancelNotification(notification.id);
-                        await _loadPendingNotifications();
-                        setState(() {
-                          _testResults += '[${DateTime.now().toLocal()}] 🗑️ Canceled notification ${notification.id}\n';
-                        });
-                      },
-                      icon: const Icon(Icons.delete, color: Colors.red, size: 16),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              notification.title ?? 'No title',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              notification.body ?? 'No body',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          await _notificationService.cancelNotification(notification.id);
+                          await _loadPendingNotifications();
+                          setState(() {
+                            _testResults +=
+                                '[${DateTime.now().toLocal()}] 🗑️ Canceled notification ${notification.id}\n';
+                          });
+                        },
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 16),
+                        tooltip: 'Cancel',
+                      ),
+                    ],
                   ),
                 );
               },
@@ -720,17 +669,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Test Log',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            IconButton(
-              onPressed: _clearResults,
-              icon: const Icon(Icons.clear),
-              iconSize: 18,
-            ),
+            Text('Test Log', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            IconButton(onPressed: _clearResults, icon: const Icon(Icons.clear), iconSize: 18),
           ],
         ),
         const SizedBox(height: 8),
@@ -746,11 +686,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: SingleChildScrollView(
             child: Text(
               _testResults.isEmpty ? 'No test results yet...' : _testResults,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 10,
-                color: Colors.greenAccent,
-              ),
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: Colors.greenAccent),
             ),
           ),
         ),
@@ -781,12 +717,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text('• Smart notifications'),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
       ),
     );
   }

@@ -41,6 +41,13 @@ void main() {
       final parsed = NotificationActionHandler.parseNotificationInput(payload);
       expect(parsed, isNull);
     });
+
+    test('parses unknown action string and preserves it', () {
+      final payload = 'ack_123_1700000003000';
+      final parsed = NotificationActionHandler.parseNotificationInput(payload);
+      expect(parsed, isNotNull);
+      expect(parsed!.action, 'ack');
+      expect(parsed.scheduleId, 123);
+    });
   });
 }
-

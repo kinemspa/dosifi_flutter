@@ -16,20 +16,13 @@ class DoseLogRepository {
   // Read
   Future<List<DoseLog>> getAllDoseLogs() async {
     final db = await _db;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'dose_logs',
-      orderBy: 'scheduled_time DESC',
-    );
+    final List<Map<String, dynamic>> maps = await db.query('dose_logs', orderBy: 'scheduled_time DESC');
     return List.generate(maps.length, (i) => DoseLog.fromMap(maps[i]));
   }
 
   Future<DoseLog?> getDoseLogById(int id) async {
     final db = await _db;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'dose_logs',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final List<Map<String, dynamic>> maps = await db.query('dose_logs', where: 'id = ?', whereArgs: [id]);
     if (maps.isEmpty) return null;
     return DoseLog.fromMap(maps.first);
   }
@@ -60,7 +53,7 @@ class DoseLogRepository {
     final db = await _db;
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    
+
     final List<Map<String, dynamic>> maps = await db.query(
       'dose_logs',
       where: 'scheduled_time >= ? AND scheduled_time < ?',
@@ -88,7 +81,7 @@ class DoseLogRepository {
   Future<List<DoseLog>> getOverdueDoseLogs() async {
     final db = await _db;
     final oneHourAgo = DateTime.now().subtract(const Duration(hours: 1));
-    
+
     final List<Map<String, dynamic>> maps = await db.query(
       'dose_logs',
       where: 'status = ? AND scheduled_time < ?',
@@ -112,61 +105,58 @@ class DoseLogRepository {
   // Update
   Future<int> updateDoseLog(DoseLog doseLog) async {
     final db = await _db;
-    return await db.update(
-      'dose_logs',
-      doseLog.toMap(),
-      where: 'id = ?',
-      whereArgs: [doseLog.id],
-    );
+    return await db.update('dose_logs', doseLog.toMap(), where: 'id = ?', whereArgs: [doseLog.id]);
   }
 
   /// Mark a dose as taken with advanced type-specific calculation
-  Future<int> markDoseAsTaken(int id, {DateTime? takenTime, double? doseAmount, String? doseUnit, String? notes}) async {
+  Future<int> markDoseAsTaken(
+    int id, {
+    DateTime? takenTime,
+    double? doseAmount,
+    String? doseUnit,
+    String? notes,
+  }) async {
     final db = await _db;
-    
+
     // First, get the dose log to retrieve medication info
     final doseLog = await getDoseLogById(id);
     if (doseLog == null) {
       throw Exception('Dose log not found');
     }
-    
+
     // Start a transaction to ensure both operations succeed or fail together
     return await db.transaction((txn) async {
       // Get the medication details for advanced calculations
-      final medicationMaps = await txn.query(
-        'medications',
-        where: 'id = ?',
-        whereArgs: [doseLog.medicationId],
-      );
-      
+      final medicationMaps = await txn.query('medications', where: 'id = ?', whereArgs: [doseLog.medicationId]);
+
       if (medicationMaps.isEmpty) {
         throw Exception('Medication not found');
       }
-      
+
       final medication = Medication.fromMap(medicationMaps.first);
-      
+
       // Determine dose amount and unit
       final finalDoseAmount = doseAmount ?? doseLog.doseAmount ?? 1.0;
       final finalDoseUnit = doseUnit ?? 'units'; // Default unit if not specified
-      
+
       // Validate dose amount using advanced validation
       final validationError = MedicationCalculationService.validateDoseAmount(
-        medication, 
-        finalDoseAmount, 
-        finalDoseUnit
+        medication,
+        finalDoseAmount,
+        finalDoseUnit,
       );
-      
+
       if (validationError != null) {
         throw Exception('Dose validation failed: $validationError');
       }
-      
+
       // Calculate exact deduction using advanced calculation service
       final stockDeduction = MedicationCalculationService.calculateDoseDeduction(
-        medication, 
-        finalDoseAmount, 
-        finalDoseUnit
+        medication,
+        finalDoseAmount,
+        finalDoseUnit,
       );
-      
+
       // Update the dose log status
       final result = await txn.update(
         'dose_logs',
@@ -179,22 +169,19 @@ class DoseLogRepository {
         where: 'id = ?',
         whereArgs: [id],
       );
-      
+
       // Calculate new stock quantity with safety bounds
       final currentStock = medication.stockQuantity;
       final newStockQuantity = (currentStock - stockDeduction).clamp(0.0, double.infinity);
-      
+
       // Update medication stock with precise deduction
       await txn.update(
         'medications',
-        {
-          'stock_quantity': newStockQuantity,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
+        {'stock_quantity': newStockQuantity, 'updated_at': DateTime.now().toIso8601String()},
         where: 'id = ?',
         whereArgs: [doseLog.medicationId],
       );
-      
+
       return result;
     });
   }
@@ -203,10 +190,7 @@ class DoseLogRepository {
     final db = await _db;
     return await db.update(
       'dose_logs',
-      {
-        'status': DoseStatus.skipped.name,
-        if (notes != null) 'notes': notes,
-      },
+      {'status': DoseStatus.skipped.name, if (notes != null) 'notes': notes},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -214,49 +198,34 @@ class DoseLogRepository {
 
   Future<int> markDoseAsMissed(int id) async {
     final db = await _db;
-    return await db.update(
-      'dose_logs',
-      {'status': DoseStatus.missed.name},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.update('dose_logs', {'status': DoseStatus.missed.name}, where: 'id = ?', whereArgs: [id]);
   }
 
   // Delete
   Future<int> deleteDoseLog(int id) async {
     final db = await _db;
-    return await db.delete(
-      'dose_logs',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('dose_logs', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> deleteDoseLogsForSchedule(int scheduleId) async {
     final db = await _db;
-    return await db.delete(
-      'dose_logs',
-      where: 'schedule_id = ?',
-      whereArgs: [scheduleId],
-    );
+    return await db.delete('dose_logs', where: 'schedule_id = ?', whereArgs: [scheduleId]);
   }
 
   // Analytics methods
   Future<Map<String, int>> getDoseComplianceStats(int medicationId, DateTime startDate, DateTime endDate) async {
     final db = await _db;
-    final List<Map<String, dynamic>> results = await db.rawQuery('''
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      '''
       SELECT status, COUNT(*) as count
       FROM dose_logs
       WHERE medication_id = ? AND scheduled_time >= ? AND scheduled_time <= ?
       GROUP BY status
-    ''', [medicationId, startDate.toIso8601String(), endDate.toIso8601String()]);
+    ''',
+      [medicationId, startDate.toIso8601String(), endDate.toIso8601String()],
+    );
 
-    final stats = <String, int>{
-      'taken': 0,
-      'missed': 0,
-      'skipped': 0,
-      'pending': 0,
-    };
+    final stats = <String, int>{'taken': 0, 'missed': 0, 'skipped': 0, 'pending': 0};
 
     for (final result in results) {
       final status = result['status'] ?? '';
@@ -271,7 +240,7 @@ class DoseLogRepository {
     final stats = await getDoseComplianceStats(medicationId, startDate, endDate);
     final total = stats.values.reduce((a, b) => a + b);
     if (total == 0) return 0.0;
-    
+
     final taken = stats['taken'] ?? 0;
     return (taken / total) * 100;
   }

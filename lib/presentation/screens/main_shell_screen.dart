@@ -5,31 +5,104 @@ class MainShellScreen extends StatelessWidget {
   final Widget child;
   final String? currentPath;
 
-  const MainShellScreen({
-    super.key,
-    required this.child,
-    this.currentPath,
-  });
+  const MainShellScreen({super.key, required this.child, this.currentPath});
+
+  int _currentIndexFromPath(String? path) {
+    switch (path) {
+      case '/':
+        return 0;
+      case '/medications':
+        return 1;
+      case '/schedule':
+        return 2;
+      case '/calendar':
+        return 3;
+      case '/supplies':
+        return 4;
+      case '/settings':
+        return 5;
+      default:
+        return 0;
+    }
+  }
+
+  void _onNavTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/');
+        break;
+      case 1:
+        context.go('/medications');
+        break;
+      case 2:
+        context.go('/schedule');
+        break;
+      case 3:
+        context.go('/calendar');
+        break;
+      case 4:
+        context.go('/supplies');
+        break;
+      case 5:
+        context.go('/settings');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final idx = _currentIndexFromPath(currentPath);
     return Scaffold(
       appBar: AppBar(
         title: Text(_getScreenTitle()),
-        automaticallyImplyLeading: true, // Show hamburger menu
+        automaticallyImplyLeading: true,
         actions: [
-          // Add notification button for home screen
           if (currentPath == '/')
             IconButton(
               icon: const Icon(Icons.notifications_outlined),
               onPressed: () {
                 _showNotificationsBottomSheet(context);
               },
+              tooltip: 'Notifications',
             ),
         ],
       ),
       drawer: _buildNavigationDrawer(context),
-      body: child,
+      body: SafeArea(child: child),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: idx,
+        onDestinationSelected: (i) => _onNavTap(context, i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(
+            icon: Icon(Icons.medication_outlined),
+            selectedIcon: Icon(Icons.medication),
+            label: 'Meds',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.schedule_outlined),
+            selectedIcon: Icon(Icons.schedule),
+            label: 'Schedule',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Calendar',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
+            label: 'Supplies',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+        height: 72,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      ),
     );
   }
 
@@ -58,9 +131,7 @@ class MainShellScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         maxChildSize: 0.9,
@@ -72,10 +143,7 @@ class MainShellScreen extends StatelessWidget {
               margin: const EdgeInsets.only(top: 8),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -85,9 +153,7 @@ class MainShellScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Notifications',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -153,22 +219,13 @@ class MainShellScreen extends StatelessWidget {
           backgroundColor: iconColor.withValues(alpha: 0.1),
           child: Icon(icon, color: iconColor, size: 20),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(message),
             const SizedBox(height: 4),
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
+            Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
           ],
         ),
         isThreeLine: true,
@@ -258,6 +315,16 @@ class MainShellScreen extends StatelessWidget {
                     context.go('/test/notifications');
                   },
                 ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.view_agenda,
+                  title: 'Medication Cards Preview',
+                  subtitle: 'See all card styles/examples',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/dev/medication-cards');
+                  },
+                ),
               ],
             ),
           ),
@@ -271,11 +338,7 @@ class MainShellScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey,
-        ),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
       ),
     );
   }
@@ -290,13 +353,7 @@ class MainShellScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          fontSize: 12,
-          color: Colors.grey[600],
-        ),
-      ),
+      subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
@@ -324,12 +381,7 @@ class MainShellScreen extends StatelessWidget {
             Text('• Usage analytics and reports'),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
       ),
     );
   }

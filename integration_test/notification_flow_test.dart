@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -38,7 +37,7 @@ void main() {
           if (tester.any(instantButton)) {
             await tester.tap(instantButton);
             await tester.pumpAndSettle();
-            
+
             // Check if test results updated
             expect(find.textContaining('Testing instant notification'), findsAtLeastNWidgets(1));
           }
@@ -48,7 +47,7 @@ void main() {
           if (tester.any(scheduledButton)) {
             await tester.tap(scheduledButton);
             await tester.pumpAndSettle();
-            
+
             // Check if test results updated
             expect(find.textContaining('Testing scheduled notification'), findsAtLeastNWidgets(1));
           }
@@ -99,4 +98,3 @@ void main() {
     });
   });
 }
-

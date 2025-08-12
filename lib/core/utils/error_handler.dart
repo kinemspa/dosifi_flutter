@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Enhanced error handling utility for the Dosifi medication management app.
-/// 
+///
 /// Provides:
 /// - User-friendly error messages
 /// - Detailed logging for debugging
@@ -9,37 +9,28 @@ import 'package:flutter/material.dart';
 /// - Recovery suggestions for common errors
 class ErrorHandler {
   /// Logs an error with full context and stack trace
-  /// 
+  ///
   /// [error] - The error object
   /// [stackTrace] - Stack trace for debugging
   /// [context] - Additional context about where the error occurred
-  static void logError(
-    dynamic error, 
-    StackTrace? stackTrace, {
-    String? context,
-  }) {
+  static void logError(dynamic error, StackTrace? stackTrace, {String? context}) {
     final contextMessage = context != null ? '[$context] ' : '';
     debugPrint('${contextMessage}Error: $error');
-    
+
     if (stackTrace != null) {
       debugPrintStack(stackTrace: stackTrace);
     }
   }
 
   /// Shows a user-friendly error dialog with recovery options
-  /// 
+  ///
   /// [context] - BuildContext for showing dialog
   /// [error] - The error that occurred
   /// [onRetry] - Optional callback for retry functionality
   /// [title] - Custom title for the error dialog
-  static void showErrorDialog(
-    BuildContext context,
-    dynamic error, {
-    VoidCallback? onRetry,
-    String? title,
-  }) {
+  static void showErrorDialog(BuildContext context, dynamic error, {VoidCallback? onRetry, String? title}) {
     final errorInfo = _getErrorInfo(error);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -51,25 +42,14 @@ class ErrorHandler {
             Text(errorInfo.message),
             if (errorInfo.suggestion != null) ...[
               const SizedBox(height: 16),
-              Text(
-                'Suggestion:',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Suggestion:', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              Text(
-                errorInfo.suggestion!,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text(errorInfo.suggestion!, style: Theme.of(context).textTheme.bodySmall),
             ],
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK')),
           if (onRetry != null)
             ElevatedButton(
               onPressed: () {
@@ -84,28 +64,18 @@ class ErrorHandler {
   }
 
   /// Shows a snackbar with error information
-  /// 
+  ///
   /// [context] - BuildContext for showing snackbar
   /// [error] - The error that occurred
   /// [onRetry] - Optional callback for retry action
-  static void showErrorSnackBar(
-    BuildContext context,
-    dynamic error, {
-    VoidCallback? onRetry,
-  }) {
+  static void showErrorSnackBar(BuildContext context, dynamic error, {VoidCallback? onRetry}) {
     final errorInfo = _getErrorInfo(error);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(errorInfo.message),
         backgroundColor: Theme.of(context).colorScheme.error,
-        action: onRetry != null
-            ? SnackBarAction(
-                label: 'Retry',
-                textColor: Colors.white,
-                onPressed: onRetry,
-              )
-            : null,
+        action: onRetry != null ? SnackBarAction(label: 'Retry', textColor: Colors.white, onPressed: onRetry) : null,
         duration: const Duration(seconds: 4),
       ),
     );
@@ -116,9 +86,7 @@ class ErrorHandler {
     final errorString = error.toString().toLowerCase();
 
     // Network related errors
-    if (errorString.contains('network') ||
-        errorString.contains('connection') ||
-        errorString.contains('timeout')) {
+    if (errorString.contains('network') || errorString.contains('connection') || errorString.contains('timeout')) {
       return _ErrorInfo(
         title: 'Connection Problem',
         message: 'Unable to connect to the server. Please check your internet connection.',
@@ -127,8 +95,7 @@ class ErrorHandler {
     }
 
     // Permission related errors
-    if (errorString.contains('permission') ||
-        errorString.contains('denied')) {
+    if (errorString.contains('permission') || errorString.contains('denied')) {
       return _ErrorInfo(
         title: 'Permission Required',
         message: 'The app needs permission to perform this action.',
@@ -137,9 +104,7 @@ class ErrorHandler {
     }
 
     // Database related errors
-    if (errorString.contains('database') ||
-        errorString.contains('sql') ||
-        errorString.contains('table')) {
+    if (errorString.contains('database') || errorString.contains('sql') || errorString.contains('table')) {
       return _ErrorInfo(
         title: 'Data Storage Error',
         message: 'There was a problem accessing your medication data.',
@@ -148,8 +113,7 @@ class ErrorHandler {
     }
 
     // Notification related errors
-    if (errorString.contains('notification') ||
-        errorString.contains('scheduling')) {
+    if (errorString.contains('notification') || errorString.contains('scheduling')) {
       return _ErrorInfo(
         title: 'Notification Error',
         message: 'Unable to set up medication reminders.',
@@ -158,9 +122,7 @@ class ErrorHandler {
     }
 
     // File system errors
-    if (errorString.contains('file') ||
-        errorString.contains('directory') ||
-        errorString.contains('storage')) {
+    if (errorString.contains('file') || errorString.contains('directory') || errorString.contains('storage')) {
       return _ErrorInfo(
         title: 'Storage Error',
         message: 'Unable to access device storage.',
@@ -183,11 +145,7 @@ class _ErrorInfo {
   final String message;
   final String? suggestion;
 
-  const _ErrorInfo({
-    required this.title,
-    required this.message,
-    this.suggestion,
-  });
+  const _ErrorInfo({required this.title, required this.message, this.suggestion});
 }
 
 /// Extension to add error handling capabilities to BuildContext

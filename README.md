@@ -8,7 +8,7 @@ Dosifi is a comprehensive medication management Flutter application designed to 
 1. **Medication Management**
    - Add, edit, and delete medications with comprehensive forms
    - Track medication details including dosage, frequency, and instructions
-   - Search and filter medications with real-time results
+   - Filter medications with real-time results (search UI temporarily removed)
    - Support for various medication types (tablets, capsules, liquids, injections, etc.)
    - Automatic dose calculations based on medication strength
    - Medication schedule tracking with tabs for different time periods
@@ -77,7 +77,12 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 
 ## Recent Improvements
 
-### Navigation & UX Enhancements (Latest Update)
+### UI Enhancements (Latest)
+- Medication cards on the Medications screen now include a horizontal progress bar along the bottom indicating stock remaining (based on package size)
+- Removed the temporary "Medication Card Layout View" selector from the Medications screen action bar
+- Search button and expandable search field are hidden/disabled on the Medications screen
+
+### Navigation \u0026 UX Enhancements
 - **Restructured Router Configuration**: Fixed child routes as top-level routes for proper back button functionality
 - **Consistent Navigation Flow**: Removed redundant manual back buttons, allowing Flutter's default navigation to work seamlessly
 - **System Back Button Handling**: Added exit confirmation dialog on dashboard for better UX

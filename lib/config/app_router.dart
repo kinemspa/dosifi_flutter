@@ -16,6 +16,7 @@ import 'package:dosifi_flutter/presentation/screens/add_supply_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/add_schedule_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/notification_test_screen.dart';
 import 'package:dosifi_flutter/presentation/screens/settings_screen.dart';
+import 'package:dosifi_flutter/presentation/screens/medication_cards_preview.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -32,10 +33,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const SplashScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
+            return FadeTransition(opacity: animation, child: child);
           },
         ),
       ),
@@ -44,10 +42,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'home',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(
-            currentPath: state.fullPath,
-            child: const DashboardScreen(),
-          ),
+          child: MainShellScreen(currentPath: state.fullPath, child: const DashboardScreen()),
         ),
       ),
       GoRoute(
@@ -55,10 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'medications',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(
-            currentPath: state.fullPath,
-            child: const MedicationsListScreen(),
-          ),
+          child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsListScreen()),
         ),
       ),
       GoRoute(
@@ -66,10 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'supplies',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(
-            currentPath: state.fullPath,
-            child: const SuppliesScreen(),
-          ),
+          child: MainShellScreen(currentPath: state.fullPath, child: const SuppliesScreen()),
         ),
       ),
       GoRoute(
@@ -77,10 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'schedule',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(
-            currentPath: state.fullPath,
-            child: const ScheduleScreen(),
-          ),
+          child: MainShellScreen(currentPath: state.fullPath, child: const ScheduleScreen()),
         ),
       ),
       GoRoute(
@@ -88,10 +74,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'calendar',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(
-            currentPath: state.fullPath,
-            child: const CalendarScreen(),
-          ),
+          child: MainShellScreen(currentPath: state.fullPath, child: const CalendarScreen()),
         ),
       ),
       GoRoute(
@@ -99,10 +82,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'settings',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(
-            currentPath: state.fullPath,
-            child: const SettingsScreen(),
-          ),
+          child: MainShellScreen(currentPath: state.fullPath, child: const SettingsScreen()),
         ),
       ),
       // Development/Testing routes
@@ -111,9 +91,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'notification-test',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
+          child: MainShellScreen(currentPath: state.fullPath, child: const NotificationTestScreen()),
+        ),
+      ),
+      GoRoute(
+        path: '/dev/medication-cards',
+        name: 'dev-medication-cards',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
           child: MainShellScreen(
             currentPath: state.fullPath,
-            child: const NotificationTestScreen(),
+            child: const MedicationCardsPreviewScreen(),
           ),
         ),
       ),
@@ -121,10 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/medications/add',
         name: 'add-medication',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const MedicationFormScreen(),
-        ),
+        pageBuilder: (context, state) => MaterialPage(key: state.pageKey, child: const MedicationFormScreen()),
       ),
       GoRoute(
         path: '/medications/edit/:id',
@@ -152,10 +137,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/supplies/add',
         name: 'add-supply',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const AddSupplyScreen(),
-        ),
+        pageBuilder: (context, state) => MaterialPage(key: state.pageKey, child: const AddSupplyScreen()),
       ),
       GoRoute(
         path: '/supplies/edit/:id',
@@ -172,10 +154,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/schedules/add',
         name: 'add-schedule',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const AddScheduleScreen(),
-        ),
+        pageBuilder: (context, state) => MaterialPage(key: state.pageKey, child: const AddScheduleScreen()),
       ),
       GoRoute(
         path: '/schedules/edit/:id',
@@ -196,26 +175,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              Text(
-                'Page not found',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
+              Text('Page not found', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 8),
-              Text(
-                state.error?.toString() ?? 'Unknown error',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(state.error?.toString() ?? 'Unknown error', style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => context.go('/'),
-                child: const Text('Go Home'),
-              ),
+              ElevatedButton(onPressed: () => context.go('/'), child: const Text('Go Home')),
             ],
           ),
         ),
@@ -240,12 +206,12 @@ extension NavigationExtensions on BuildContext {
   void navigateToEditSchedule(String id) => go('/schedules/edit/$id');
   void navigateToNotificationTest() => go('/test/notifications');
   void navigateToSettings() => go('/settings');
-  
+
   /// Smart back navigation that goes to the appropriate main screen
   void navigateBackSmart() {
     // Get the current location to determine which main screen to return to
     final currentLocation = GoRouterState.of(this).uri.toString();
-    
+
     // Check if we can pop, otherwise navigate to the appropriate main screen
     if (canPop()) {
       pop();

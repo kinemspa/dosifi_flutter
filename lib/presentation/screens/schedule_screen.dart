@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:dosifi_flutter/config/app_router.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';
 import 'package:dosifi_flutter/data/models/dose_log.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/services/notification_service.dart';
-import 'package:dosifi_flutter/presentation/screens/calendar_screen.dart';
 import 'package:dosifi_flutter/presentation/widgets/dose_action_buttons.dart';
+import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/label_chip.dart';
+import 'package:dosifi_flutter/core/utils/compact_form_sheet.dart';
+import 'package:dosifi_flutter/presentation/screens/add_schedule_screen.dart';
+import 'package:dosifi_flutter/presentation/providers/schedule_layout_provider.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -19,13 +22,12 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 }
 
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTickerProviderStateMixin {
-  final DateTime _selectedDay = DateTime.now();
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -43,26 +45,46 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         children: [
           Material(
             color: Theme.of(context).primaryColor,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
-              indicatorColor: Colors.white,
-              tabs: const [
-                Tab(text: 'Today', icon: Icon(Icons.today)),
-                Tab(text: 'Calendar', icon: Icon(Icons.calendar_month)),
-                Tab(text: 'All Schedules', icon: Icon(Icons.schedule)),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white70,
+                    indicatorColor: Colors.white,
+                    tabs: const [
+                      Tab(text: 'Today', icon: Icon(Icons.today)),
+                      Tab(text: 'All Schedules', icon: Icon(Icons.schedule)),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<ScheduleCardLayout>(
+                  tooltip: 'Card style',
+                  icon: const Icon(Icons.view_agenda, color: Colors.white),
+                  onSelected: (layout) => ref.read(scheduleLayoutProvider.notifier).setLayout(layout),
+                  itemBuilder: (context) => ScheduleCardLayout.values
+                      .map(
+                        (l) => PopupMenuItem(
+                          value: l,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(l.displayName),
+                              Text(l.description, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
               ],
             ),
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildTodayTab(schedulesAsync),
-                _buildCalendarTab(schedulesAsync),
-                _buildAllSchedulesTab(schedulesAsync),
-              ],
+              children: [_buildTodayTab(schedulesAsync), _buildAllSchedulesTab(schedulesAsync)],
             ),
           ),
         ],
@@ -91,7 +113,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     return schedulesAsync.when(
       data: (schedules) {
         final todaySchedules = _getSchedulesForDay(schedules, DateTime.now());
-        
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -99,9 +121,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
             children: [
               Text(
                 'Today\'s Doses',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               if (todaySchedules.isEmpty)
@@ -113,39 +133,57 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 
   Widget _buildTodayDoseCard(Schedule schedule) {
+    final layout = ref.watch(scheduleLayoutProvider);
+    switch (layout) {
+      case ScheduleCardLayout.outlinedClassic:
+        return _todayOutlinedClassic(schedule);
+      case ScheduleCardLayout.outlinedSoft:
+        return _todayOutlinedSoft(schedule);
+      case ScheduleCardLayout.outlinedShadow:
+        return _todayOutlinedShadow(schedule);
+      case ScheduleCardLayout.outlinedAccentBar:
+        return _todayOutlinedAccentBar(schedule);
+      case ScheduleCardLayout.outlinedPill:
+        return _todayOutlinedPill(schedule);
+      case ScheduleCardLayout.outlinedDense:
+        return _todayOutlinedDense(schedule);
+      case ScheduleCardLayout.outlinedDivider:
+        return _todayOutlinedDivider(schedule);
+      case ScheduleCardLayout.outlinedMonochrome:
+        return _todayOutlinedMonochrome(schedule);
+      case ScheduleCardLayout.outlinedCompactChips:
+        return _todayOutlinedCompactChips(schedule);
+      case ScheduleCardLayout.outlinedLargeTitle:
+        return _todayOutlinedLargeTitle(schedule);
+    }
+  }
+  Widget _todayOutlinedClassic(Schedule schedule) {
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
     final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
-    
+
     // Check if dose has been taken today
     final today = DateTime.now();
-    final scheduledDateTime = DateTime(
-      today.year,
-      today.month,
-      today.day,
-      hour,
-      minute,
-    );
-    
+    final scheduledDateTime = DateTime(today.year, today.month, today.day, hour, minute);
+
     final doseLogsAsync = ref.watch(doseLogListProvider);
     final existingDoseLog = doseLogsAsync.when(
       data: (doseLogs) {
         try {
-          return doseLogs.firstWhere((log) => 
-            log.medicationId == schedule.medicationId &&
-            log.scheduledTime.year == scheduledDateTime.year &&
-            log.scheduledTime.month == scheduledDateTime.month &&
-            log.scheduledTime.day == scheduledDateTime.day &&
-            log.scheduledTime.hour == scheduledDateTime.hour &&
-            log.scheduledTime.minute == scheduledDateTime.minute
+          return doseLogs.firstWhere(
+            (log) =>
+                log.medicationId == schedule.medicationId &&
+                log.scheduledTime.year == scheduledDateTime.year &&
+                log.scheduledTime.month == scheduledDateTime.month &&
+                log.scheduledTime.day == scheduledDateTime.day &&
+                log.scheduledTime.hour == scheduledDateTime.hour &&
+                log.scheduledTime.minute == scheduledDateTime.minute,
           );
         } catch (e) {
           return null;
@@ -154,32 +192,26 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       loading: () => null,
       error: (_, __) => null,
     );
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surface.withOpacity(0.9),
-          ],
+          colors: [Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surface.withValues(alpha: 0.9)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.secondary.withOpacity(0.15),
-          width: 1.5,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.05),
             blurRadius: 40,
             offset: const Offset(0, 16),
             spreadRadius: 0,
@@ -191,84 +223,84 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withValues(alpha: 0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  medicationAsync.when(
-                    data: (medication) => Text(
-                      medication?.name ?? 'Unknown Medication',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    medicationAsync.when(
+                      data: (medication) => Text(
+                        medication?.name ?? 'Unknown Medication',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      loading: () => const Text('Loading...'),
+                      error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
                     ),
-                    loading: () => const Text('Loading...'),
-                    error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  ),
-                  Text(
-                    '${schedule.doseAmount} ${schedule.doseUnit}',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  medicationAsync.when(
-                    data: (medication) => medication != null 
-                        ? Text(
-                            medication.displayStrength,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                          )
-                        : const SizedBox.shrink(),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      '${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
+                    Text('${schedule.doseAmount} ${schedule.doseUnit}', style: TextStyle(color: Colors.grey[600])),
+                    medicationAsync.when(
+                      data: (medication) => medication != null
+                          ? Text(medication.displayStrength, style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                          : const SizedBox.shrink(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            DoseActionButtons(
-              schedule: schedule,
-              scheduledDateTime: scheduledDateTime,
-              existingDoseLog: existingDoseLog,
-              isCompact: true,
-              onActionCompleted: () {
-                // Refresh the state after action is completed
-                ref.invalidate(doseLogListProvider);
-              },
-            ),
-          ],
-        ),
+              DoseActionButtons(
+                schedule: schedule,
+                scheduledDateTime: scheduledDateTime,
+                existingDoseLog: existingDoseLog,
+                isCompact: true,
+                onActionCompleted: () {
+                  // Refresh the state after action is completed
+                  ref.invalidate(doseLogListProvider);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Delegate other variants to the classic implementation for now
+  Widget _todayOutlinedSoft(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedShadow(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedAccentBar(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedPill(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedDense(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedDivider(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedMonochrome(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedCompactChips(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedLargeTitle(Schedule schedule) => _todayOutlinedClassic(schedule);
 
   Widget _buildAllSchedulesTab(AsyncValue<List<Schedule>> schedulesAsync) {
     return schedulesAsync.when(
@@ -276,7 +308,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         if (schedules.isEmpty) {
           return _buildEmptyState('No schedules created yet');
         }
-        
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: schedules.length,
@@ -287,108 +319,136 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 
   Widget _buildFullScheduleCard(Schedule schedule) {
+    final layout = ref.watch(scheduleLayoutProvider);
+    switch (layout) {
+      case ScheduleCardLayout.outlinedClassic:
+        return _fullOutlinedClassic(schedule);
+      case ScheduleCardLayout.outlinedSoft:
+        return _fullOutlinedSoft(schedule);
+      case ScheduleCardLayout.outlinedShadow:
+        return _fullOutlinedShadow(schedule);
+      case ScheduleCardLayout.outlinedAccentBar:
+        return _fullOutlinedAccentBar(schedule);
+      case ScheduleCardLayout.outlinedPill:
+        return _fullOutlinedPill(schedule);
+      case ScheduleCardLayout.outlinedDense:
+        return _fullOutlinedDense(schedule);
+      case ScheduleCardLayout.outlinedDivider:
+        return _fullOutlinedDivider(schedule);
+      case ScheduleCardLayout.outlinedMonochrome:
+        return _fullOutlinedMonochrome(schedule);
+      case ScheduleCardLayout.outlinedCompactChips:
+        return _fullOutlinedCompactChips(schedule);
+      case ScheduleCardLayout.outlinedLargeTitle:
+        return _fullOutlinedLargeTitle(schedule);
+    }
+  }
+  Widget _fullOutlinedClassic(Schedule schedule) {
     final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
-    
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+
+    return CompactCard(
+      accentColor: Theme.of(context).colorScheme.primary,
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _showEditScheduleDialog(schedule),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2), width: 0.8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              schedule.timeOfDay,
+              style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: medicationAsync.when(
-                    data: (medication) => Text(
-                      medication?.name ?? 'Unknown Medication',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: medicationAsync.when(
+                        data: (medication) => Text(
+                          medication?.name ?? 'Unknown Medication',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        loading: () => const Text('Loading...'),
+                        error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
+                      ),
                     ),
-                    loading: () => const Text('Loading...'),
-                    error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
-                  ),
+                    LabelChip(
+                      icon: Icons.event_repeat,
+                      label: ScheduleType.fromString(schedule.scheduleType).displayName,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
                 ),
-                Chip(
-                  label: Text(
-                    ScheduleType.fromString(schedule.scheduleType).displayName,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text('Time: ${schedule.timeOfDay}'),
-                const Spacer(),
-                Icon(Icons.medication, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text('${schedule.doseAmount} ${schedule.doseUnit}'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text('From: ${DateFormat('MMM dd, yyyy').format(schedule.startDate)}'),
-                if (schedule.endDate != null) ...[
-                  const SizedBox(width: 16),
-                  Text('To: ${DateFormat('MMM dd, yyyy').format(schedule.endDate!)}'),
-                ],
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () => _showEditScheduleDialog(schedule),
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Edit'),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () => _deleteSchedule(schedule.id!),
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    LabelChip(icon: Icons.schedule, label: schedule.timeOfDay, color: Colors.blueGrey),
+                    LabelChip(
+                      icon: Icons.local_fire_department,
+                      label: '${schedule.doseAmount} ${schedule.doseUnit}',
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    LabelChip(
+                      icon: Icons.calendar_today,
+                      label:
+                          'From ${DateFormat('MMM dd, yyyy').format(schedule.startDate)}'
+                          '${schedule.endDate != null ? ' • To ${DateFormat('MMM dd, yyyy').format(schedule.endDate!)}' : ''}',
+                      color: Colors.teal,
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+        ],
       ),
     );
   }
+
+  // Delegate other variants to the classic implementation for now
+  Widget _fullOutlinedSoft(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedShadow(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedAccentBar(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedPill(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedDense(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedDivider(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedMonochrome(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedCompactChips(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedLargeTitle(Schedule schedule) => _fullOutlinedClassic(schedule);
 
   Widget _buildEmptyState(String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.schedule,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             message,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -403,74 +463,107 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
   }
 
   Widget _buildScheduleCard(Schedule schedule) {
-    // Parse time from timeOfDay string (format: "HH:mm")
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-    
-    // Get medication details
     final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
-    
-    return Card(
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor,
-          child: Text(
-            '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        title: medicationAsync.when(
-          data: (medication) => Text(
-            medication?.name ?? 'Unknown Medication',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          loading: () => const Text('Loading...'),
-          error: (_, __) => Text(
-            'Medication ID: ${schedule.medicationId}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(ScheduleType.fromString(schedule.scheduleType).displayName),
-            medicationAsync.when(
-              data: (medication) => medication != null 
-                  ? Text(
-                      medication.displayStrength,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.surface,
+            Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              onPressed: () => _showEditScheduleDialog(schedule),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          leading: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
             ),
-            IconButton(
-              icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-              onPressed: () => _markDoseAsTaken(schedule),
+            alignment: Alignment.center,
+            child: Text(
+              '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+              style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 13, fontWeight: FontWeight.w800),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _deleteSchedule(schedule.id!),
+          ),
+          title: medicationAsync.when(
+            data: (medication) => Text(
+              medication?.name ?? 'Unknown Medication',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
+            loading: () => const Text('Loading...'),
+            error: (_, __) => Text(
+              'Medication ID: ${schedule.medicationId}',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Row(
+              children: [
+                Chip(
+                  label: Text(
+                    ScheduleType.fromString(schedule.scheduleType).displayName,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                  side: BorderSide.none,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                ),
+                const SizedBox(width: 8),
+                medicationAsync.when(
+                  data: (medication) => medication != null
+                      ? Text(medication.displayStrength, style: TextStyle(color: Colors.grey[600], fontSize: 12))
+                      : const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+          trailing: Wrap(
+            spacing: 4,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed: () => _showEditScheduleDialog(schedule),
+                tooltip: 'Edit schedule',
+              ),
+              IconButton(
+                icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+                onPressed: () => _markDoseAsTaken(schedule),
+                tooltip: 'Mark today taken',
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _deleteSchedule(schedule.id!),
+                tooltip: 'Delete',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -481,31 +574,21 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       data: (schedules) {
         final todaySchedules = _getSchedulesForDay(schedules, DateTime.now());
         final upcomingSchedules = _getUpcomingSchedules(schedules);
-        
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Today',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Today', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               if (todaySchedules.isEmpty)
                 const Text('No schedules for today')
               else
                 ...todaySchedules.map((schedule) => _buildScheduleCard(schedule)),
-              
+
               const SizedBox(height: 24),
-              Text(
-                'Upcoming',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Upcoming', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               if (upcomingSchedules.isEmpty)
                 const Text('No upcoming schedules')
@@ -516,14 +599,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
-  }
-
-  Widget _buildCalendarTab(AsyncValue<List<Schedule>> schedulesAsync) {
-    return const CalendarScreen();
   }
 
   List<Schedule> _getSchedulesForDay(List<Schedule> schedules, DateTime day) {
@@ -537,10 +614,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     final now = DateTime.now();
     final tomorrow = DateTime(now.year, now.month, now.day + 1);
     final nextWeek = now.add(const Duration(days: 7));
-    
+
     return schedules.where((schedule) {
       if (!schedule.isActive) return false;
-      
+
       // Get schedules from tomorrow up to next week
       for (var day = tomorrow; day.isBefore(nextWeek); day = day.add(const Duration(days: 1))) {
         if (_getSchedulesForDay([schedule], day).isNotEmpty) {
@@ -551,20 +628,21 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     }).toList();
   }
 
-void _testNotification() async {
+  void _testNotification() async {
     final notificationService = NotificationService();
-    await notificationService.showInstantNotification(
-      title: 'Test Notification',
-      body: 'This is a test notification.',
-    );
+    await notificationService.showInstantNotification(title: 'Test Notification', body: 'This is a test notification.');
   }
 
   void _showAddScheduleDialog() {
-    context.navigateToAddSchedule();
+    showCompactFormSheet(context, title: 'Add Schedule', child: const AddScheduleScreen(compactSheetMode: true));
   }
 
   void _showEditScheduleDialog(Schedule schedule) {
-    context.navigateToEditSchedule(schedule.id.toString());
+    showCompactFormSheet(
+      context,
+      title: 'Edit Schedule',
+      child: AddScheduleScreen(scheduleId: schedule.id.toString(), compactSheetMode: true),
+    );
   }
 
   void _deleteSchedule(int id) async {
@@ -572,12 +650,11 @@ void _testNotification() async {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Schedule'),
-        content: const Text('Are you sure you want to delete this schedule? This will also remove all future planned doses.'),
+        content: const Text(
+          'Are you sure you want to delete this schedule? This will also remove all future planned doses.',
+        ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -590,30 +667,24 @@ void _testNotification() async {
       try {
         // First, clean up future dose logs for this schedule
         await _cleanupFutureDoses(id);
-        
+
         // Then delete the schedule
         await ref.read(scheduleListProvider.notifier).deleteSchedule(id);
-        
+
         // Cancel any notifications for this schedule
         final notificationService = NotificationService();
         await notificationService.cancelNotificationsForSchedule(id);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Schedule and future doses deleted!'),
-              backgroundColor: Colors.red,
-            ),
+            const SnackBar(content: Text('Schedule and future doses deleted!'), backgroundColor: Colors.red),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting schedule: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error deleting schedule: $e'), backgroundColor: Colors.red));
         }
       }
     }
@@ -627,14 +698,14 @@ void _testNotification() async {
         loading: () async => <DoseLog>[],
         error: (_, __) async => <DoseLog>[],
       );
-      
+
       final now = DateTime.now();
-      final futureDoses = doseLogs.where((log) => 
-        log.scheduleId == scheduleId && 
-        log.scheduledTime.isAfter(now) && 
-        log.status == DoseStatus.pending
-      ).toList();
-      
+      final futureDoses = doseLogs
+          .where(
+            (log) => log.scheduleId == scheduleId && log.scheduledTime.isAfter(now) && log.status == DoseStatus.pending,
+          )
+          .toList();
+
       for (final dose in futureDoses) {
         if (dose.id != null) {
           await ref.read(doseLogListProvider.notifier).deleteDoseLog(dose.id!);
@@ -673,7 +744,7 @@ void _testNotification() async {
     try {
       // Add the dose log first
       await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
-      
+
       // Get the created dose log ID to mark it as taken (which will deduct stock)
       final doseLogsAsync = ref.read(doseLogListProvider);
       final doseLogs = await doseLogsAsync.when(
@@ -681,40 +752,33 @@ void _testNotification() async {
         loading: () async => <DoseLog>[],
         error: (_, __) async => <DoseLog>[],
       );
-      
+
       final createdDoseLog = doseLogs.cast<DoseLog>().firstWhere(
-        (log) => log.medicationId == schedule.medicationId &&
-                log.scheduledTime == scheduledDateTime &&
-                log.status == DoseStatus.pending,
+        (log) =>
+            log.medicationId == schedule.medicationId &&
+            log.scheduledTime == scheduledDateTime &&
+            log.status == DoseStatus.pending,
         orElse: () => throw Exception('Created dose log not found'),
       );
-      
+
       // Mark as taken with stock deduction
-      await ref.read(doseLogListProvider.notifier).markDoseAsTaken(
-        createdDoseLog.id!,
-        takenTime: now,
-        doseAmount: schedule.doseAmount,
-      );
-      
+      await ref
+          .read(doseLogListProvider.notifier)
+          .markDoseAsTaken(createdDoseLog.id!, takenTime: now, doseAmount: schedule.doseAmount);
+
       // Refresh medication list to show updated stock
       ref.invalidate(medicationListProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Dose taken! Stock has been updated.'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('Dose taken! Stock has been updated.'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error marking dose as taken: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error marking dose as taken: $e'), backgroundColor: Colors.red));
       }
     }
   }

@@ -117,25 +117,29 @@ class Medication {
   // for tablets/capsules, this represents number of units
   final double stockQuantity;
   final StrengthUnit? stockUnit; // Unit for stock quantity (mL, IU, Units)
+  // For lyophilized vials: number of dry vials available for reconstitution
+  final double? vialsInStock;
+  // Optional: original package size / initial total for label displays
+  final double? packageSize;
   final String? lotBatchNumber;
   final DateTime? expirationDate;
-  
+
   // Alerts and Notifications
   final bool alertOnLowStock;
   final String? notificationSet;
   final double? lowStockThreshold; // Type-specific threshold
-  
+
   // Storage Information
   final String? storageInstructions;
   final bool requiresRefrigeration;
   final String? storageTemperature; // Specific temperature requirements
-  
+
   // Reconstitution Info (for lyophilized vials)
   final double? reconstitutionVolume; // mL of diluent added
   final double? finalConcentration; // units per mL after reconstitution
   final String? reconstitutionNotes;
   final String? reconstitutionFluid; // Supply item for reconstitution
-  
+
   // Additional Info
   final String? description;
   final String? instructions;
@@ -157,6 +161,8 @@ class Medication {
     this.stockUnit,
     this.lotBatchNumber,
     this.expirationDate,
+    this.vialsInStock,
+    this.packageSize,
     this.alertOnLowStock = false,
     this.notificationSet,
     this.lowStockThreshold,
@@ -187,6 +193,8 @@ class Medication {
     StrengthUnit? stockUnit,
     String? lotBatchNumber,
     DateTime? expirationDate,
+    double? vialsInStock,
+    double? packageSize,
     bool alertOnLowStock = false,
     String? notificationSet,
     String? storageInstructions,
@@ -212,6 +220,8 @@ class Medication {
       stockUnit: stockUnit,
       lotBatchNumber: lotBatchNumber,
       expirationDate: expirationDate,
+      vialsInStock: vialsInStock,
+      packageSize: packageSize,
       alertOnLowStock: alertOnLowStock,
       notificationSet: notificationSet,
       storageInstructions: storageInstructions,
@@ -239,6 +249,9 @@ class Medication {
       'strength_per_unit': strengthPerUnit,
       'strength_unit': strengthUnit.displayName,
       'stock_quantity': stockQuantity,
+      'stock_unit': stockUnit?.displayName,
+'vials_in_stock': vialsInStock,
+      'package_size': packageSize,
       'lot_batch_number': lotBatchNumber,
       'expiration_date': expirationDate?.toIso8601String(),
       'reconstitution_volume': reconstitutionVolume,
@@ -264,16 +277,15 @@ class Medication {
       strengthPerUnit: (map['strength_per_unit'] as num).toDouble(),
       strengthUnit: StrengthUnit.fromString(map['strength_unit'] as String),
       stockQuantity: (map['stock_quantity'] ?? map['number_of_units'] ?? 0).toDouble(),
+      stockUnit: map['stock_unit'] != null ? StrengthUnit.fromString(map['stock_unit'] as String) : null,
+      vialsInStock: (map['vials_in_stock'] as num?)?.toDouble(),
+      packageSize: (map['package_size'] as num?)?.toDouble(),
       lotBatchNumber: map['lot_batch_number'] as String?,
-      expirationDate: map['expiration_date'] != null 
-          ? DateTime.parse(map['expiration_date'] as String)
+      expirationDate: map['expiration_date'] != null ? DateTime.parse(map['expiration_date'] as String) : null,
+      reconstitutionVolume: map['reconstitution_volume'] != null
+          ? (map['reconstitution_volume'] as num).toDouble()
           : null,
-      reconstitutionVolume: map['reconstitution_volume'] != null 
-          ? (map['reconstitution_volume'] as num).toDouble() 
-          : null,
-      finalConcentration: map['final_concentration'] != null 
-          ? (map['final_concentration'] as num).toDouble() 
-          : null,
+      finalConcentration: map['final_concentration'] != null ? (map['final_concentration'] as num).toDouble() : null,
       reconstitutionNotes: map['reconstitution_notes'] as String?,
       description: map['description'] as String?,
       instructions: map['instructions'] as String?,
@@ -296,6 +308,8 @@ class Medication {
     double? stockQuantity,
     String? lotBatchNumber,
     DateTime? expirationDate,
+    double? vialsInStock,
+    double? packageSize,
     double? reconstitutionVolume,
     double? finalConcentration,
     String? reconstitutionNotes,
@@ -318,6 +332,8 @@ class Medication {
       stockQuantity: stockQuantity ?? this.stockQuantity,
       lotBatchNumber: lotBatchNumber ?? this.lotBatchNumber,
       expirationDate: expirationDate ?? this.expirationDate,
+      vialsInStock: vialsInStock ?? this.vialsInStock,
+      packageSize: packageSize ?? this.packageSize,
       reconstitutionVolume: reconstitutionVolume ?? this.reconstitutionVolume,
       finalConcentration: finalConcentration ?? this.finalConcentration,
       reconstitutionNotes: reconstitutionNotes ?? this.reconstitutionNotes,
@@ -333,8 +349,9 @@ class Medication {
   }
 
   // Helper getters
-  String get displayStrength => '${strengthPerUnit.toStringAsFixed(strengthPerUnit.truncateToDouble() == strengthPerUnit ? 0 : 2)} ${strengthUnit.displayName}';
-  
+  String get displayStrength =>
+      '${strengthPerUnit.toStringAsFixed(strengthPerUnit.truncateToDouble() == strengthPerUnit ? 0 : 2)} ${strengthUnit.displayName}';
+
   String get stockDisplay {
     switch (type) {
       case MedicationType.tablet:
@@ -345,12 +362,46 @@ class Medication {
         return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} syringes';
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        return '${stockQuantity.toStringAsFixed(1)} mL per vial';
+        final vials = vialsInStock ?? 0;
+        return '${stockQuantity.toStringAsFixed(1)} mL available • ${vials.toStringAsFixed(0)} vials dry';
       case MedicationType.liquid:
         return '${stockQuantity.toStringAsFixed(1)} mL';
       default:
         return '${stockQuantity.toStringAsFixed(stockQuantity.truncateToDouble() == stockQuantity ? 0 : 1)} units';
     }
+  }
+
+  /// Optional label like "28/40 capsules" or "120/200 mL" if packageSize is present
+  String? get stockProgressLabel {
+    if (packageSize == null) return null;
+    final current = stockQuantity;
+    final total = packageSize!;
+    String unitLabel;
+    switch (type) {
+      case MedicationType.tablet:
+        unitLabel = 'tablets';
+        break;
+      case MedicationType.capsule:
+        unitLabel = 'capsules';
+        break;
+      case MedicationType.liquid:
+      case MedicationType.readyMadeVial:
+      case MedicationType.lyophilizedVial:
+        unitLabel = 'mL';
+        break;
+      case MedicationType.preFilledSyringe:
+        unitLabel = 'syringes';
+        break;
+      default:
+        unitLabel = stockUnit?.displayName.toLowerCase() ?? 'units';
+    }
+    final currentStr = (type == MedicationType.liquid || type == MedicationType.readyMadeVial || type == MedicationType.lyophilizedVial)
+        ? current.toStringAsFixed(1)
+        : (current.truncateToDouble() == current ? current.toStringAsFixed(0) : current.toStringAsFixed(1));
+    final totalStr = (type == MedicationType.liquid || type == MedicationType.readyMadeVial || type == MedicationType.lyophilizedVial)
+        ? total.toStringAsFixed(1)
+        : (total.truncateToDouble() == total ? total.toStringAsFixed(0) : total.toStringAsFixed(1));
+    return '$currentStr/$totalStr $unitLabel';
   }
 
   bool get isExpired {
@@ -452,24 +503,24 @@ class Medication {
           return doseAmount / concentrationMgPerMl;
         }
         return doseAmount / strengthPerUnit;
-      
+
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
         // For injectables: volume = dose_units / concentration
         return doseAmount / strengthPerUnit;
-      
+
       case MedicationType.lyophilizedVial:
         // For reconstituted vials: volume = dose_units / final_concentration
         if (finalConcentration != null && finalConcentration! > 0) {
           return doseAmount / finalConcentration!;
         }
         return 0.0;
-      
+
       case MedicationType.tablet:
       case MedicationType.capsule:
         // For solid dosage forms: return number of units needed
         return doseAmount / strengthPerUnit;
-      
+
       default:
         return doseAmount;
     }
@@ -521,13 +572,13 @@ class Medication {
     if (fromUnit == 'mL' && toUnit == 'tbsp') return amount / 15.0;
     if (fromUnit == 'L' && toUnit == 'mL') return amount * 1000.0;
     if (fromUnit == 'mL' && toUnit == 'L') return amount / 1000.0;
-    
+
     // Weight conversions
     if (fromUnit == 'g' && toUnit == 'mg') return amount * 1000.0;
     if (fromUnit == 'mg' && toUnit == 'g') return amount / 1000.0;
     if (fromUnit == 'mg' && toUnit == 'mcg') return amount * 1000.0;
     if (fromUnit == 'mcg' && toUnit == 'mg') return amount / 1000.0;
-    
+
     // Drop conversions (approximate)
     if (type == MedicationType.drops) {
       if (fromUnit == 'drops' && toUnit == 'mL') {
@@ -537,7 +588,7 @@ class Medication {
         return amount * 20.0;
       }
     }
-    
+
     // No conversion needed or unsupported
     return amount;
   }
@@ -555,11 +606,12 @@ class Medication {
       case MedicationType.capsule:
         // Allow full, half, or quarter units (n, n.5, n.25)
         final remainder = unitsPerDose % 0.25;
-        if (remainder < 0.001) { // Allow for floating point precision
+        if (remainder < 0.001) {
+          // Allow for floating point precision
           return ValidationResult.valid();
         }
         return ValidationResult.invalid('${type.displayName} must be in increments of 0.25 (quarter units)');
-        
+
       case MedicationType.preFilledSyringe:
       case MedicationType.singleUsePen:
       case MedicationType.patch:
@@ -572,7 +624,7 @@ class Medication {
           return ValidationResult.valid();
         }
         return ValidationResult.invalid('${type.displayName} must use whole units only');
-        
+
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
       case MedicationType.liquid:
@@ -581,14 +633,14 @@ class Medication {
       case MedicationType.ointment:
         // Allow arbitrary decimals
         return ValidationResult.valid();
-        
+
       case MedicationType.multiUsePen:
         // Must be integers (doses per cartridge)
         if (unitsPerDose == unitsPerDose.roundToDouble()) {
           return ValidationResult.valid();
         }
         return ValidationResult.invalid('Multi-use pen doses must be whole numbers');
-        
+
       case MedicationType.other:
         // Default validation - allow arbitrary amounts
         return ValidationResult.valid();
@@ -598,11 +650,11 @@ class Medication {
   /// Convert strength per dose to units per dose
   double convertStrengthToUnits(String strengthPerDose) {
     final doseValue = _parseStrengthValue(strengthPerDose);
-    
+
     if (doseValue == null || strengthPerUnit == 0) {
       return 0.0;
     }
-    
+
     return doseValue / strengthPerUnit;
   }
 
@@ -611,9 +663,9 @@ class Medication {
     if (strengthPerUnit == 0) {
       return '0${strengthUnit.displayName}';
     }
-    
+
     final totalStrength = unitsPerDose * strengthPerUnit;
-    
+
     return '${totalStrength.toStringAsFixed(totalStrength.truncateToDouble() == totalStrength ? 0 : 2)}${strengthUnit.displayName}';
   }
 
@@ -641,79 +693,104 @@ class Medication {
 
   /// Update stock quantity and return new medication instance
   Medication updateStockQuantity(double changeAmount) {
-    return copyWith(
-      stockQuantity: stockQuantity + changeAmount,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(stockQuantity: stockQuantity + changeAmount, updatedAt: DateTime.now());
   }
 
   @override
   int get hashCode => id.hashCode;
 
   // Stock logging methods
-  Future<void> logStockChange({
-    required double changeAmount,
-    required String reason,
-    String? notes,
-  }) async {
+  Future<StockUpdateResult> logStockChange({required double changeAmount, required String reason, String? notes}) async {
     if (id == null) {
       throw Exception('Cannot log stock change for unsaved medication');
     }
-    
+
     final db = await DatabaseService.database;
     final now = DateTime.now().toIso8601String();
-    
+
+    final proposedTotal = stockQuantity + changeAmount;
+    if (proposedTotal < 0) {
+      return StockUpdateResult.failure(
+        code: StockUpdateFailureCode.insufficientStock,
+        message: 'Insufficient stock for ${name}. Requested change ${changeAmount.toStringAsFixed(2)} would result in negative stock.',
+      );
+    }
+
     await db.insert('medication_stock_logs', {
       'medication_id': id,
       'timestamp': now,
       'change_amount': changeAmount,
-      'new_total': stockQuantity + changeAmount,
+      'new_total': proposedTotal,
       'reason': reason,
       'notes': notes,
       'created_at': now,
     });
-    
+
     // Update the stock quantity in the database
     await db.update(
       'medications',
-      {
-        'stock_quantity': stockQuantity + changeAmount,
-        'updated_at': now,
-      },
+      {'stock_quantity': proposedTotal, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    return StockUpdateResult.success(newTotal: proposedTotal);
   }
-  
+
   Future<List<StockLogEntry>> getStockHistory([int? limit]) async {
     if (id == null) return [];
-    
+
     final db = await DatabaseService.database;
-    
-    final query = '''
+
+    final query =
+        '''
       SELECT * FROM medication_stock_logs 
       WHERE medication_id = ?
       ORDER BY timestamp DESC
       ${limit != null ? 'LIMIT $limit' : ''}
     ''';
-    
+
     final results = await db.rawQuery(query, [id]);
     return results.map((map) => StockLogEntry.fromMap(map)).toList();
   }
-  
+
   Future<double> getStockChangesSince(DateTime since) async {
     if (id == null) return 0.0;
-    
+
     final db = await DatabaseService.database;
-    
-    final results = await db.rawQuery('''
+
+    final results = await db.rawQuery(
+      '''
       SELECT SUM(change_amount) as total_change
       FROM medication_stock_logs
       WHERE medication_id = ? AND timestamp >= ?
-    ''', [id, since.toIso8601String()]);
-    
+    ''',
+      [id, since.toIso8601String()],
+    );
+
     return (results.first['total_change'] as double?) ?? 0.0;
   }
+}
+
+/// Structured result for stock updates
+class StockUpdateResult {
+  final bool ok;
+  final double? newTotal;
+  final String? message;
+  final StockUpdateFailureCode? code;
+
+  const StockUpdateResult._({required this.ok, this.newTotal, this.message, this.code});
+
+  factory StockUpdateResult.success({required double newTotal}) =>
+      StockUpdateResult._(ok: true, newTotal: newTotal);
+
+  factory StockUpdateResult.failure({required StockUpdateFailureCode code, String? message}) =>
+      StockUpdateResult._(ok: false, code: code, message: message);
+}
+
+enum StockUpdateFailureCode {
+  insufficientStock,
+  invalidOperation,
 }
 
 /// Validation result for dose constraints
@@ -780,7 +857,7 @@ class StockLogEntry {
 
   bool get isAddition => changeAmount > 0;
   bool get isSubtraction => changeAmount < 0;
-  
+
   String get displayAmount {
     final amount = changeAmount.abs();
     final sign = isAddition ? '+' : '-';
