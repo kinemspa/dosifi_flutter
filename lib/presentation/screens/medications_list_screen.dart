@@ -60,14 +60,11 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                         InfoSheet.show(
                           context,
                           title: 'Medications',
-                          message: 'Search: tap the magnifier to show the search bar and type to filter by name or brand. Sort: tap the sort button to flip A–Z/Z–A; long-press it to choose the sort field (Name, Stock, Type, Expiry). Tap a medication card for details.'
+                          message: 'Search\n\nTap the magnifier to show the search bar. Type to filter by medication name or brand.\n\nSort\n\nTap the sort button to flip A–Z and Z–A. Long-press the sort button to choose the sort field (Name, Stock, Type, Expiry).\n\nTips\n\nTap a medication card for full details.',
                         );
                       },
                       icon: const Icon(Icons.info_outline),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.grey.shade100,
-                        padding: const EdgeInsets.all(10),
-                      ),
+                      style: Theme.of(context).iconButtonTheme.style,
                     ),
                     const SizedBox(width: 6),
                     // Search button next
@@ -80,10 +77,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                         _onUserInteracted();
                       },
                       icon: Icon(_showSearchField ? Icons.close : Icons.search),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.grey.shade100,
-                        padding: const EdgeInsets.all(10),
-                      ),
+                      style: Theme.of(context).iconButtonTheme.style,
                     ),
                     const Spacer(),
                     // Sort button on the right
@@ -424,7 +418,6 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     }
   }
 
-  String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now).inDays;
 
@@ -440,7 +433,6 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
       return '${date.day}/${date.month}/${date.year}';
     }
   }
-  void _showInfoSheet(BuildContext context, {required String title, required String message}) {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,

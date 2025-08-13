@@ -19,7 +19,6 @@ class AppTheme {
   static const _darkSurfaceVariant = Color(0xFF2D2D2D);
 
   // App bar
-  static const _appBarColor = Color(0xFF135663);
   static const _appBarTextColor = Color(0xFFFFFFFF);
 
   static ThemeData lightTheme() {
@@ -61,7 +60,7 @@ class AppTheme {
       appBarTheme: const AppBarTheme(
         elevation: 2,
         centerTitle: true,
-        backgroundColor: _appBarColor,
+        backgroundColor: _primaryColor,
         foregroundColor: _appBarTextColor,
         titleTextStyle: TextStyle(color: _appBarTextColor, fontSize: 20, fontWeight: FontWeight.w600),
         iconTheme: IconThemeData(color: _appBarTextColor),
@@ -81,10 +80,19 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-foregroundColor: scheme.onSurface.withValues(alpha: 0.85),
-side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.25)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          foregroundColor: scheme.onSurface.withValues(alpha: 0.85),
+          side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.25)),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          backgroundColor: scheme.surface,
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          backgroundColor: scheme.surface,
+          foregroundColor: scheme.onSurface.withValues(alpha: 0.8),
+          padding: const EdgeInsets.all(10),
+          shape: const StadiumBorder(),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -124,8 +132,8 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
         backgroundColor: scheme.surface,
         selectedColor: scheme.primary,
         disabledColor: const Color(0xFFECEFF3),
-        labelStyle: GoogleFonts.inter(fontSize: 14, color: scheme.onSurface),
-        secondaryLabelStyle: GoogleFonts.inter(fontSize: 14, color: scheme.onPrimary),
+        labelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onSurface),
+        secondaryLabelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onPrimary),
         deleteIconColor: scheme.onSurface,
         selectedShadowColor: Colors.transparent,
         showCheckmark: false,
@@ -174,7 +182,7 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       appBarTheme: const AppBarTheme(
         elevation: 2,
         centerTitle: true,
-        backgroundColor: _appBarColor,
+        backgroundColor: _primaryColor,
         foregroundColor: _appBarTextColor,
         titleTextStyle: TextStyle(color: _appBarTextColor, fontSize: 20, fontWeight: FontWeight.w600),
         iconTheme: IconThemeData(color: _appBarTextColor),
@@ -195,10 +203,19 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-foregroundColor: scheme.onSurface.withValues(alpha: 0.9),
+          foregroundColor: scheme.onSurface.withValues(alpha: 0.9),
           side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.35)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          backgroundColor: scheme.surface,
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          backgroundColor: scheme.surface,
+          foregroundColor: scheme.onSurface.withValues(alpha: 0.85),
+          padding: const EdgeInsets.all(10),
+          shape: const StadiumBorder(),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -239,8 +256,8 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
         backgroundColor: scheme.surface,
         selectedColor: scheme.primary,
         disabledColor: _darkSurfaceVariant,
-        labelStyle: GoogleFonts.inter(fontSize: 14, color: scheme.onSurface),
-        secondaryLabelStyle: GoogleFonts.inter(fontSize: 14, color: scheme.onPrimary),
+        labelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onSurface),
+        secondaryLabelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onPrimary),
         deleteIconColor: scheme.onSurface,
         selectedShadowColor: Colors.transparent,
         showCheckmark: false,
@@ -268,7 +285,7 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
 
   // Convenience getters (optional)
   static Color get accentColor => _accentColor;
-  static Color get appBarColor => _appBarColor;
+  static Color get appBarColor => _primaryColor;
   static Color get appBarTextColor => _appBarTextColor;
   static Color get lightSurface => _lightSurface;
   static Color get lightBackground => _lightBackground;

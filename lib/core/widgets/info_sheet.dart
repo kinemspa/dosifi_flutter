@@ -30,7 +30,7 @@ class InfoSheet {
         ),
         content: Text(
           message,
-          style: theme.textTheme.bodyMedium,
+          style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
         ),
         actions: [
           TextButton(
