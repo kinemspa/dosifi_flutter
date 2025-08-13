@@ -344,12 +344,12 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
       ),
     );
   }
-
+  
   // Filter dialog removed per simplified UI
   void _showFilterDialog() {
     // Intentionally left blank / deprecated
   }
-
+  
   Color _getMedicationTypeColor(MedicationType type) {
     switch (type) {
       case MedicationType.tablet:
@@ -385,7 +385,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
         return Colors.grey;
     }
   }
-
+  
   IconData _getMedicationTypeIcon(MedicationType type) {
     switch (type) {
       case MedicationType.tablet:
@@ -416,40 +416,6 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
       case MedicationType.other:
         return Icons.medical_information;
     }
-  }
-
-    final now = DateTime.now();
-    final difference = date.difference(now).inDays;
-
-    if (difference < 0) {
-      return '${(-difference)} days ago';
-    } else if (difference == 0) {
-      return 'Today';
-    } else if (difference == 1) {
-      return 'Tomorrow';
-    } else if (difference < 30) {
-      return 'In $difference days';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [const Icon(Icons.info_outline), const SizedBox(width: 8), Text(title, style: Theme.of(context).textTheme.titleMedium)]),
-            const SizedBox(height: 12),
-            Text(message),
-          ],
-        ),
-      ),
-    );
   }
 }
 

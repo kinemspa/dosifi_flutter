@@ -844,7 +844,7 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
               IconButton(
                 onPressed: () => context.go('/supplies/edit/${supply.id}'),
                 icon: const Icon(Icons.edit),
-                style: IconButton.styleFrom(backgroundColor: Colors.blue[50], foregroundColor: Colors.blue[700]),
+                style: Theme.of(context).iconButtonTheme.style,
               ),
             ],
           ),
