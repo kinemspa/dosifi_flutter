@@ -7,6 +7,9 @@ import 'package:dosifi_flutter/presentation/providers/medication_layout_provider
 import 'package:dosifi_flutter/presentation/widgets/medication_card.dart';
 import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
+// Global key to control MedicationsListScreen from the AppBar actions
+final GlobalKey<_MedicationsListScreenState> medsListScreenKey = GlobalKey<_MedicationsListScreenState>();
+
 class MedicationsListScreen extends ConsumerStatefulWidget {
   const MedicationsListScreen({super.key});
 
@@ -15,6 +18,16 @@ class MedicationsListScreen extends ConsumerStatefulWidget {
 }
 
 class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
+  // Exposed triggers for AppBar actions
+  void triggerFilter() => _showFilterDialog();
+  void triggerInfo() {
+    InfoSheet.show(
+      context,
+      title: 'Medications',
+      message:
+          'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',
+    );
+  }
   String _searchQuery = '';
   MedicationType? _selectedType;
   bool _showLowStockOnly = false;
@@ -28,36 +41,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Action Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Screen info
-                IconButton(
-                  tooltip: 'About this screen',
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () {
-                    InfoSheet.show(
-                      context,
-                      title: 'Medications',
-                      message: 'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',
-                    );
-                  },
-                  style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100, padding: const EdgeInsets.all(12)),
-                ),
-                const SizedBox(width: 8),
-                // Filter Button only (search and layout selector removed)
-                IconButton(
-                  icon: const Icon(Icons.filter_list),
-                  onPressed: _showFilterDialog,
-                  style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100, padding: const EdgeInsets.all(12)),
-                ),
-              ],
-            ),
-          ),
-          // Search UI removed
+          // Top actions moved to AppBar menu; no extra header space here
 
           // Filter Chips
           if (_selectedType != null || _showLowStockOnly || _showExpiringSoon)

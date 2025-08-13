@@ -50,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'medications',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsListScreen()),
+child: MainShellScreen(currentPath: state.fullPath, child: MedicationsListScreen(key: medsListScreenKey)),
         ),
       ),
       GoRoute(

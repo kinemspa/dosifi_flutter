@@ -65,30 +65,24 @@ class MainShellScreen extends StatelessWidget {
               },
               tooltip: 'Notifications',
             ),
-          if (currentPath != '/medications')
-            IconButton(
-              icon: const Icon(Icons.info_outline),
-              tooltip: 'About this screen',
-              onPressed: () {
-                final title = _getScreenTitle();
-                showModalBottomSheet(
-                  context: context,
-                  showDragHandle: true,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-                  builder: (ctx) => Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [const Icon(Icons.info_outline), const SizedBox(width: 8), Text(title, style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold))]),
-                        const SizedBox(height: 12),
-                        Text(_infoForPath(currentPath ?? '/'), style: Theme.of(ctx).textTheme.bodyMedium),
-                      ],
-                    ),
-                  ),
-                );
+          // Compact overflow menu for Medications actions; no global Info button on any screen
+          if (currentPath == '/medications')
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'filter':
+                    // call into MedicationsListScreen to open filter dialog
+                    medsListScreenKey.currentState?.triggerFilter();
+                    break;
+                  case 'info':
+                    medsListScreenKey.currentState?.triggerInfo();
+                    break;
+                }
               },
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'filter', child: ListTile(leading: Icon(Icons.filter_list), title: Text('Filter'))),
+                PopupMenuItem(value: 'info', child: ListTile(leading: Icon(Icons.info_outline), title: Text('Info'))),
+              ],
             ),
         ],
       ),
