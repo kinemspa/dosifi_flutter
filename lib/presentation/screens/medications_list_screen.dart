@@ -7,9 +7,6 @@ import 'package:dosifi_flutter/presentation/providers/medication_layout_provider
 import 'package:dosifi_flutter/presentation/widgets/medication_card.dart';
 import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
-// Global key to control MedicationsListScreen from the AppBar actions
-final GlobalKey<_MedicationsListScreenState> medsListScreenKey = GlobalKey<_MedicationsListScreenState>();
-
 class MedicationsListScreen extends ConsumerStatefulWidget {
   const MedicationsListScreen({super.key});
 
@@ -18,16 +15,6 @@ class MedicationsListScreen extends ConsumerStatefulWidget {
 }
 
 class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
-  // Exposed triggers for AppBar actions
-  void triggerFilter() => _showFilterDialog();
-  void triggerInfo() {
-    InfoSheet.show(
-      context,
-      title: 'Medications',
-      message:
-          'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',
-    );
-  }
   String _searchQuery = '';
   MedicationType? _selectedType;
   bool _showLowStockOnly = false;
@@ -39,11 +26,12 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     final medicationsAsync = ref.watch(medicationListProvider);
 
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          // Top actions moved to AppBar menu; no extra header space here
-
-          // Filter Chips
+          // Main content column
+          Column(
+            children: [
+              // Filter Chips
           if (_selectedType != null || _showLowStockOnly || _showExpiringSoon)
             Container(
               height: 50,
@@ -92,9 +80,9 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
               ),
             ),
 
-          // Medications List
-          Expanded(
-            child: medicationsAsync.when(
+              // Medications List
+              Expanded(
+                child: medicationsAsync.when(
               data: (medications) {
                 final filteredMedications = _filterMedications(medications);
 
@@ -135,7 +123,13 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
+          // Floating compact actions overlay (top-right)
+          Positioned(
+            right: 8,
+            top: MediaQuery.of(context).padding.top + 8,
+            child: _buildFloatingActions(context),
           ),
         ],
       ),
@@ -216,6 +210,51 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
             label: const Text('Add Medication'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingActions(BuildContext context) {
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+      color: Colors.white,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Filter',
+              icon: const Icon(Icons.filter_list, size: 18),
+              onPressed: _showFilterDialog,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.all(6),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              tooltip: 'About this screen',
+              icon: const Icon(Icons.info_outline, size: 18),
+              onPressed: () {
+                InfoSheet.show(
+                  context,
+                  title: 'Medications',
+                  message:
+                      'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',
+                );
+              },
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.all(6),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            ),
+          ],
+        ),
       ),
     );
   }

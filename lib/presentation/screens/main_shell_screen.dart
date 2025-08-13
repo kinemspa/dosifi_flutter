@@ -65,25 +65,7 @@ class MainShellScreen extends StatelessWidget {
               },
               tooltip: 'Notifications',
             ),
-          // Compact overflow menu for Medications actions; no global Info button on any screen
-          if (currentPath == '/medications')
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'filter':
-                    // call into MedicationsListScreen to open filter dialog
-                    medsListScreenKey.currentState?.triggerFilter();
-                    break;
-                  case 'info':
-                    medsListScreenKey.currentState?.triggerInfo();
-                    break;
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'filter', child: ListTile(leading: Icon(Icons.filter_list), title: Text('Filter'))),
-                PopupMenuItem(value: 'info', child: ListTile(leading: Icon(Icons.info_outline), title: Text('Info'))),
-              ],
-            ),
+          // No global Info button on any screen
         ],
       ),
       drawer: _buildNavigationDrawer(context),
