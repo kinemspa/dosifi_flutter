@@ -3,7 +3,6 @@ import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/utils/medication_type_utils.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
-import 'package:dosifi_flutter/core/widgets/helper_block.dart';
 
 class StrengthSection extends StatelessWidget {
   final MedicationFormController controller;
@@ -26,9 +25,11 @@ class StrengthSection extends StatelessWidget {
         strengthLabel = 'Concentration *';
         break;
       case MedicationType.preFilledSyringe:
+        strengthLabel = 'Strength per Syringe *';
+        break;
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        strengthLabel = 'Strength per Vial/Syringe *';
+        strengthLabel = 'Strength per Vial *';
         break;
       default:
         strengthLabel = 'Strength Per Unit *';
@@ -144,6 +145,29 @@ class StrengthSection extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          if (controller.selectedType == MedicationType.preFilledSyringe && controller.selectedStrengthUnit == StrengthUnit.percent)
+            TextFormField(
+              controller: controller.volumeController,
+              decoration: InputDecoration(
+                labelText: 'Syringe volume (mL) *',
+                hintText: 'e.g., 1.0',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.grey[50],
+                prefixIcon: const Icon(Icons.local_hospital),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              validator: (value) {
+                if (!(controller.selectedType == MedicationType.preFilledSyringe && controller.selectedStrengthUnit == StrengthUnit.percent)) {
+                  return null;
+                }
+                if (value == null || value.trim().isEmpty) return 'Enter syringe volume';
+                final v = double.tryParse(value);
+                if (v == null || v <= 0) return 'Enter a valid volume';
+                return null;
+              },
+            ),
           const SizedBox(height: 4),
         ],
       ),

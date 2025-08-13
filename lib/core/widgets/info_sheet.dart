@@ -7,23 +7,37 @@ class InfoSheet {
     required String message,
     IconData icon = Icons.info_outline,
   }) async {
-    await showModalBottomSheet(
+    final theme = Theme.of(context);
+    // Centralized Info dialog style
+    await showDialog<void>(
       context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+        actionsPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        title: Row(
           children: [
-            Row(children: [Icon(icon), const SizedBox(width: 8), Text(title, style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))]),
-            const SizedBox(height: 12),
-            Text(message, style: Theme.of(ctx).textTheme.bodyMedium),
+            Icon(icon, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
           ],
         ),
+        content: Text(
+          message,
+          style: theme.textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          )
+        ],
       ),
     );
   }

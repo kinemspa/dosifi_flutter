@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,118 +22,131 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
   bool _showExpiringSoon = false;
   bool _showSearchField = false;
 
+  // Sorting (default: Name)
+  SortOption _sortOption = SortOption.name;
+  bool _sortAsc = true;
+
+  // No auto-hide controls
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _onUserInteracted() {}
+
   @override
   Widget build(BuildContext context) {
     final medicationsAsync = ref.watch(medicationListProvider);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Main content column
-          Column(
+      body: Column(
             children: [
-              // Filter Chips
-          if (_selectedType != null || _showLowStockOnly || _showExpiringSoon)
-            Container(
-              height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  if (_selectedType != null)
-                    FilterChip(
-                      label: Text(_selectedType!.displayName),
-                      selected: true,
-                      onSelected: (selected) {},
-                      onDeleted: () {
-                        setState(() {
-                          _selectedType = null;
-                        });
+              // Top controls: Sort + Filter + Info
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                child: Row(
+                  children: [
+                    // Info on the left
+                    IconButton(
+                      tooltip: 'About this screen',
+                      onPressed: () {
+                        _onUserInteracted();
+                        InfoSheet.show(
+                          context,
+                          title: 'Medications',
+                          message: 'Search: tap the magnifier to show the search bar and type to filter by name or brand. Sort: tap the sort button to flip A–Z/Z–A; long-press it to choose the sort field (Name, Stock, Type, Expiry). Tap a medication card for details.'
+                        );
                       },
+                      icon: const Icon(Icons.info_outline),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey.shade100,
+                        padding: const EdgeInsets.all(10),
+                      ),
                     ),
-                  if (_showLowStockOnly) ...[
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('Low Stock'),
-                      selected: true,
-                      onSelected: (selected) {},
-                      onDeleted: () {
+                    const SizedBox(width: 6),
+                    // Search button next
+                    IconButton(
+                      tooltip: _showSearchField ? 'Hide search' : 'Show search',
+                      onPressed: () {
                         setState(() {
-                          _showLowStockOnly = false;
+                          _showSearchField = !_showSearchField;
                         });
+                        _onUserInteracted();
                       },
+                      icon: Icon(_showSearchField ? Icons.close : Icons.search),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey.shade100,
+                        padding: const EdgeInsets.all(10),
+                      ),
                     ),
+                    const Spacer(),
+                    // Sort button on the right
+                    _buildSortButton(context),
                   ],
-                  if (_showExpiringSoon) ...[
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('Expiring Soon'),
-                      selected: true,
-                      onSelected: (selected) {},
-                      onDeleted: () {
-                        setState(() {
-                          _showExpiringSoon = false;
-                        });
-                      },
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
+
+              // Optional inline search bar
+              if (_showSearchField)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                  child: _buildSearchField(context),
+                ),
 
               // Medications List
               Expanded(
                 child: medicationsAsync.when(
-              data: (medications) {
-                final filteredMedications = _filterMedications(medications);
+                  data: (medications) {
+                    List<Medication> filteredMedications = _filterMedications(medications);
+                    filteredMedications = _applySort(filteredMedications);
 
-                if (filteredMedications.isEmpty) {
-                  return _buildEmptyState();
-                }
+                    if (filteredMedications.isEmpty) {
+                      return _buildEmptyState();
+                    }
 
-                final layout = ref.watch(medicationLayoutProvider);
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  itemCount: filteredMedications.length,
-                  itemBuilder: (context, index) {
-                    final medication = filteredMedications[index];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        MedicationCard(
-                          medication: medication,
-                          forceLayout: layout,
-                          onTap: () => context.push('/medications/${medication.id}'),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
+                    final layout = ref.watch(medicationLayoutProvider);
+                    return ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      itemCount: filteredMedications.length,
+                      itemBuilder: (context, index) {
+                        final medication = filteredMedications[index];
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            MedicationCard(
+                              medication: medication,
+                              forceLayout: layout,
+                              onTap: () => context.push('/medications/${medication.id}'),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        );
+                      },
                     );
                   },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text('Error: $error'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(onPressed: () => ref.refresh(medicationListProvider), child: const Text('Retry')),
-                  ],
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text('Error: $error'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(onPressed: () => ref.refresh(medicationListProvider), child: const Text('Retry')),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          // Floating compact actions overlay (top-right)
-          Positioned(
-            right: 8,
-            top: MediaQuery.of(context).padding.top + 8,
-            child: _buildFloatingActions(context),
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/medications/add'),
         child: const Icon(Icons.add),
@@ -214,129 +228,132 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     );
   }
 
-  Widget _buildFloatingActions(BuildContext context) {
-    return Material(
-      elevation: 2,
-      borderRadius: BorderRadius.circular(12),
-      color: Colors.white,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: 'Filter',
-              icon: const Icon(Icons.filter_list, size: 18),
-              onPressed: _showFilterDialog,
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.all(6),
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              tooltip: 'About this screen',
-              icon: const Icon(Icons.info_outline, size: 18),
-              onPressed: () {
-                InfoSheet.show(
-                  context,
-                  title: 'Medications',
-                  message:
-                      'Browse and filter your medications. Use the filter to narrow by type, low stock, and expiring soon. Tap a card to view details.',
-                );
-              },
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.all(6),
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            ),
+  // Search field
+  Widget _buildSearchField(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Search medications...',
+        prefixIcon: const Icon(Icons.search),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onTap: _onUserInteracted,
+      onChanged: (val) {
+        _onUserInteracted();
+        setState(() => _searchQuery = val.trim());
+      },
+    );
+  }
+
+  // Sorting helpers and UI
+  List<Medication> _applySort(List<Medication> meds) {
+    switch (_sortOption) {
+      case SortOption.name:
+        meds.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case SortOption.stock:
+        meds.sort((a, b) => b.stockQuantity.compareTo(a.stockQuantity));
+        break;
+      case SortOption.type:
+        meds.sort((a, b) => a.type.displayName.compareTo(b.type.displayName));
+        break;
+      case SortOption.expiry:
+        meds.sort((a, b) {
+          final aDate = a.expirationDate ?? DateTime(9999);
+          final bDate = b.expirationDate ?? DateTime(9999);
+          return aDate.compareTo(bDate);
+        });
+        break;
+    }
+    if (!_sortAsc) {
+      meds = meds.reversed.toList();
+    }
+    return meds;
+  }
+
+  String _currentSortLabel() {
+    String field;
+    switch (_sortOption) {
+      case SortOption.name:
+        field = 'Name';
+        break;
+      case SortOption.stock:
+        field = 'Stock';
+        break;
+      case SortOption.type:
+        field = 'Type';
+        break;
+      case SortOption.expiry:
+        field = 'Expiry';
+        break;
+    }
+    final dir = _sortAsc ? 'A–Z' : 'Z–A';
+    return '$field $dir';
+  }
+
+  Widget _buildSortButton(BuildContext context) {
+    return GestureDetector(
+      onLongPressStart: (details) async {
+        final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+        final position = RelativeRect.fromLTRB(
+          details.globalPosition.dx,
+          details.globalPosition.dy,
+          overlay.size.width - details.globalPosition.dx,
+          overlay.size.height - details.globalPosition.dy,
+        );
+        final selected = await showMenu<SortOption>(
+          context: context,
+          position: position,
+          items: const [
+            PopupMenuItem(value: SortOption.name, child: Text('Name')),
+            PopupMenuItem(value: SortOption.stock, child: Text('Stock')),
+            PopupMenuItem(value: SortOption.type, child: Text('Type')),
+            PopupMenuItem(value: SortOption.expiry, child: Text('Expiry')),
           ],
+        );
+        if (selected != null) {
+          setState(() {
+            if (selected == _sortOption) {
+              _sortAsc = !_sortAsc; // same field toggles direction
+            } else {
+              _sortOption = selected;
+              _sortAsc = true; // reset to asc when changing field
+            }
+          });
+        }
+      },
+      child: OutlinedButton.icon(
+        onPressed: () {
+          // Toggle sort direction on tap
+          setState(() {
+            _sortAsc = !_sortAsc;
+          });
+        },
+        icon: Icon(
+          _sortAsc ? Icons.arrow_upward : Icons.arrow_downward,
+          size: 16,
+          color: Colors.grey.shade700,
+        ),
+        label: Text(
+          _currentSortLabel(),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade800),
+        ),
+        style: OutlinedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          backgroundColor: Colors.grey.shade50,
+          foregroundColor: Colors.grey.shade800,
+          side: BorderSide(color: Colors.grey.shade300),
+          shape: const StadiumBorder(),
         ),
       ),
     );
   }
 
+  // Filter dialog removed per simplified UI
   void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Filter Medications'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Type', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<MedicationType?>(
-                value: _selectedType,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                items: [
-                  const DropdownMenuItem<MedicationType?>(value: null, child: Text('All Types')),
-                  ...MedicationType.values.map((type) => DropdownMenuItem(value: type, child: Text(type.displayName))),
-                ],
-                onChanged: (value) {
-                  setDialogState(() {
-                    _selectedType = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              CheckboxListTile(
-                title: const Text('Show Low Stock Only'),
-                value: _showLowStockOnly,
-                onChanged: (value) {
-                  setDialogState(() {
-                    _showLowStockOnly = value ?? false;
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              CheckboxListTile(
-                title: const Text('Show Expiring Soon Only'),
-                value: _showExpiringSoon,
-                onChanged: (value) {
-                  setDialogState(() {
-                    _showExpiringSoon = value ?? false;
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setDialogState(() {
-                  _selectedType = null;
-                  _showLowStockOnly = false;
-                  _showExpiringSoon = false;
-                });
-              },
-              child: const Text('Clear'),
-            ),
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  // Filters are already set in dialog state
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Apply'),
-            ),
-          ],
-        ),
-      ),
-    );
+    // Intentionally left blank / deprecated
   }
 
   Color _getMedicationTypeColor(MedicationType type) {
@@ -443,3 +460,5 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     );
   }
 }
+
+enum SortOption { name, stock, type, expiry }

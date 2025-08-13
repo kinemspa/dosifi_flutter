@@ -46,7 +46,7 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
               );
             },
           ),
-PopupMenuButton<SupplyCardLayout>(
+          PopupMenuButton<SupplyCardLayout>(
             tooltip: 'Card style',
             icon: const Icon(Icons.view_agenda),
             onSelected: (layout) => ref.read(supplyLayoutProvider.notifier).setLayout(layout),
@@ -66,6 +66,7 @@ PopupMenuButton<SupplyCardLayout>(
                 .toList(),
           ),
           IconButton(
+            tooltip: 'Search',
             icon: Icon(_isSearchExpanded ? Icons.search_off : Icons.search),
             onPressed: () {
               setState(() {
@@ -720,10 +721,10 @@ PopupMenuButton<SupplyCardLayout>(
           const SizedBox(height: 16),
           Text(
             'No supplies found',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[600]),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          Text('Try adjusting your search or filters', style: TextStyle(color: Colors.grey[500])),
+          Text('Try adjusting your search or filters', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[500])),
         ],
       ),
     );
@@ -953,8 +954,7 @@ PopupMenuButton<SupplyCardLayout>(
                     ),
                     child: Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -979,10 +979,10 @@ PopupMenuButton<SupplyCardLayout>(
         children: [
           SizedBox(
             width: 120,
-            child: Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            child: Text(value, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500)),
           ),
         ],
       ),

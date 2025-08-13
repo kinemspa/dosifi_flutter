@@ -130,7 +130,7 @@ class MedicationUtils {
         MedicationType.readyMadeVial,
         MedicationType.lyophilizedVial,
       ],
-      'Topical Medications': [MedicationType.cream, MedicationType.ointment, MedicationType.patch],
+      'Topical Medications': [MedicationType.patch],
       'Other Forms': [MedicationType.drops, MedicationType.inhaler, MedicationType.suppository, MedicationType.other],
     };
   }

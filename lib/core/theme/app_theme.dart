@@ -196,7 +196,7 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
 foregroundColor: scheme.onSurface.withValues(alpha: 0.9),
-          side: BorderSide(color: scheme.onSurface.withOpacity(0.35)),
+          side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.35)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),

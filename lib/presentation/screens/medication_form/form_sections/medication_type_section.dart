@@ -40,7 +40,9 @@ class MedicationTypeSection extends StatelessWidget {
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.medical_services),
             ),
-            items: MedicationType.values.map((type) {
+            items: MedicationType.values
+                .where((t) => t != MedicationType.cream && t != MedicationType.ointment && t != MedicationType.spray && t != MedicationType.gel)
+                .map((type) {
               return DropdownMenuItem(
                 value: type,
                 child: Row(

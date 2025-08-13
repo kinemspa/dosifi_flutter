@@ -35,6 +35,7 @@ class MedicationFormController extends ChangeNotifier {
   String? _selectedStockUnit;
   DateTime? _expirationDate;
   bool _requiresRefrigeration = false;
+  bool _alertOnLowStock = false;
   bool _isActive = true;
   bool _isLoading = false;
 
@@ -48,6 +49,7 @@ class MedicationFormController extends ChangeNotifier {
   String? get selectedStockUnit => _selectedStockUnit;
   DateTime? get expirationDate => _expirationDate;
   bool get requiresRefrigeration => _requiresRefrigeration;
+  bool get alertOnLowStock => _alertOnLowStock;
   bool get isActive => _isActive;
   bool get isLoading => _isLoading;
   bool get isEditMode => medicationId != null;
@@ -83,6 +85,11 @@ class MedicationFormController extends ChangeNotifier {
     if (_requiresRefrigeration) {
       storageTemperatureController.text = '2–8 °C';
     }
+    notifyListeners();
+  }
+
+  void setAlertOnLowStock(bool value) {
+    _alertOnLowStock = value;
     notifyListeners();
   }
 
@@ -130,6 +137,7 @@ class MedicationFormController extends ChangeNotifier {
     _selectedStockUnit = medication.stockUnit?.displayName ?? MedicationTypeUtils.getStockUnit(medication.type);
     _expirationDate = medication.expirationDate;
     _requiresRefrigeration = medication.requiresRefrigeration;
+    _alertOnLowStock = medication.alertOnLowStock;
     _isActive = medication.isActive;
 
     notifyListeners();
@@ -174,6 +182,7 @@ class MedicationFormController extends ChangeNotifier {
     _selectedStockUnit = null;
     _expirationDate = null;
     _requiresRefrigeration = false;
+    _alertOnLowStock = false;
     _isActive = true;
     notifyListeners();
   }
@@ -201,12 +210,22 @@ class MedicationFormController extends ChangeNotifier {
 
   // Create new medication
   Future<void> createMedication() async {
+    // Normalize percent for pre-filled syringe: convert % to mg/mL using 1% = 10 mg/mL
+    StrengthUnit? normalizedUnit = _selectedStrengthUnit;
+    double parsedStrength = double.parse(strengthController.text);
+    if (_selectedType == MedicationType.preFilledSyringe && _selectedStrengthUnit == StrengthUnit.percent) {
+      // Convert to mg/mL
+      final concMgPerMl = parsedStrength * 10.0;
+      normalizedUnit = StrengthUnit.mg;
+      parsedStrength = concMgPerMl;
+    }
+
     final medication = Medication.create(
       name: nameController.text.trim(),
       type: _selectedType!,
       brandManufacturer: brandController.text.trim().isNotEmpty ? brandController.text.trim() : null,
-      strengthPerUnit: double.parse(strengthController.text),
-      strengthUnit: _selectedStrengthUnit!,
+      strengthPerUnit: parsedStrength,
+      strengthUnit: normalizedUnit!,
       stockQuantity: double.parse(stockController.text),
       stockUnit: _mapStockUnitToEnum(_selectedStockUnit),
       lotBatchNumber: lotBatchController.text.trim().isNotEmpty ? lotBatchController.text.trim() : null,
@@ -231,6 +250,9 @@ class MedicationFormController extends ChangeNotifier {
       instructions: instructionsController.text.trim().isNotEmpty ? instructionsController.text.trim() : null,
       notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
       barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
+      alertOnLowStock: _alertOnLowStock,
+      packageSize: null,
+      vialsInStock: null,
     );
 
     await ref.read(medicationListProvider.notifier).addMedication(medication);
@@ -244,12 +266,21 @@ class MedicationFormController extends ChangeNotifier {
       throw Exception('Medication not found');
     }
 
+    // Normalize percent for pre-filled syringe
+    StrengthUnit? normalizedUnit = _selectedStrengthUnit;
+    double parsedStrength = double.parse(strengthController.text);
+    if (_selectedType == MedicationType.preFilledSyringe && _selectedStrengthUnit == StrengthUnit.percent) {
+      final concMgPerMl = parsedStrength * 10.0;
+      normalizedUnit = StrengthUnit.mg;
+      parsedStrength = concMgPerMl;
+    }
+
     final updatedMedication = existingMedication.copyWith(
       name: nameController.text.trim(),
       type: _selectedType!,
       brandManufacturer: brandController.text.trim().isNotEmpty ? brandController.text.trim() : null,
-      strengthPerUnit: double.parse(strengthController.text),
-      strengthUnit: _selectedStrengthUnit!,
+      strengthPerUnit: parsedStrength,
+      strengthUnit: normalizedUnit!,
       stockQuantity: double.parse(stockController.text),
       lotBatchNumber: lotBatchController.text.trim().isNotEmpty ? lotBatchController.text.trim() : null,
       expirationDate: _expirationDate,

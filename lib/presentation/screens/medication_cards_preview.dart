@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class MedicationCardsPreviewScreen extends StatelessWidget {
   const MedicationCardsPreviewScreen({super.key});
@@ -40,6 +41,20 @@ class MedicationCardsPreviewScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Medication Cards Preview'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'About this screen',
+            onPressed: () {
+              InfoSheet.show(
+                context,
+                title: 'Cards Preview',
+                message:
+                    'This screen showcases various medication card styles for experimentation. The app uses a unified signature card by default, but these previews help evaluate alternative layouts.',
+              );
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),

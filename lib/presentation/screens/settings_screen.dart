@@ -6,6 +6,7 @@ import 'package:dosifi_flutter/services/notification_service.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -412,7 +413,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Icon(icon, color: Theme.of(context).primaryColor, size: 16),
               ),
               const SizedBox(width: 10),
-              Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Expanded(
+                child: Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline, size: 18),
+                tooltip: 'About',
+                onPressed: () {
+                  final message = () {
+                    switch (title) {
+                      case 'Notifications':
+                        return 'Manage notification permissions, sounds, and reminder behavior.';
+                      case 'App Preferences':
+                        return 'Configure appearance and language preferences for the app.';
+                      case 'Data & Privacy':
+                        return 'Backup or restore your data and review privacy options.';
+                      case 'Diagnostics':
+                        return 'Tools to test and troubleshoot notification delivery on your device.';
+                      case 'About':
+                        return 'App version and helpful links.';
+                      default:
+                        return title;
+                  }
+                  }();
+                  InfoSheet.show(context, title: title, message: message);
+                },
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -593,9 +619,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         const SizedBox(height: 8),
         if (_pendingNotifications.isEmpty)
-          const Text(
+          Text(
             'No pending notifications',
-            style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey, fontStyle: FontStyle.italic),
           )
         else
           Container(
@@ -619,7 +645,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         child: Text(
                           notification.id.toString(),
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.blue),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.blue),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -629,13 +655,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           children: [
                             Text(
                               notification.title ?? 'No title',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             Text(
                               notification.body ?? 'No body',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
                             ),
                           ],
                         ),
@@ -686,7 +712,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: SingleChildScrollView(
             child: Text(
               _testResults.isEmpty ? 'No test results yet...' : _testResults,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: Colors.greenAccent),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontFamily: 'monospace', fontSize: 10, color: Colors.greenAccent),
             ),
           ),
         ),

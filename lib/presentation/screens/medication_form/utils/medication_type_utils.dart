@@ -110,7 +110,9 @@ class MedicationTypeUtils {
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g];
       case MedicationType.liquid:
       case MedicationType.drops:
+        return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.percent];
       case MedicationType.preFilledSyringe:
+        return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.percent, StrengthUnit.iu, StrengthUnit.units];
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
       case MedicationType.singleUsePen:

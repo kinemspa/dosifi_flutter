@@ -114,6 +114,44 @@ class StockInformationSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Notify when low on stock'),
+                  value: controller.alertOnLowStock,
+                  onChanged: (v) => controller.setAlertOnLowStock(v),
+                ),
+              ),
+              const SizedBox(width: 10),
+              if (controller.alertOnLowStock)
+                SizedBox(
+                  width: 160,
+                  child: TextFormField(
+                    controller: controller.lowStockThresholdController,
+                    decoration: InputDecoration(
+                      labelText: 'Threshold',
+                      hintText: MedicationTypeUtils.isStockInteger(controller.selectedType) ? 'e.g., 3' : 'e.g., 30.0',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                    ),
+                    keyboardType: MedicationTypeUtils.isStockInteger(controller.selectedType)
+                        ? TextInputType.number
+                        : const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      if (!controller.alertOnLowStock) return null;
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter threshold';
+                      }
+                      return double.tryParse(value) != null ? null : 'Enter a number';
+                    },
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
           HelperBlock.info(
             MedicationTypeUtils.getStockHelperText(controller.selectedType),
             icon: Icons.help_outline,

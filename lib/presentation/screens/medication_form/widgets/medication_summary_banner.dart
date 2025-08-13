@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
+import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/label_chip.dart';
 
@@ -16,6 +17,7 @@ class MedicationSummaryBanner extends StatelessWidget {
     final type = controller.selectedType?.displayName ?? '—';
     final strength = controller.strengthController.text.trim();
     final strengthUnit = controller.selectedStrengthUnit?.displayName ?? '';
+    final syringeVolume = controller.volumeController.text.trim();
     final stockQty = controller.stockController.text.trim();
     final stockUnit = controller.selectedStockUnit ?? '';
     final refrigerated = controller.requiresRefrigeration;
@@ -67,6 +69,11 @@ class MedicationSummaryBanner extends StatelessWidget {
             children: [
               if (strength.isNotEmpty || strengthUnit.isNotEmpty)
                 LabelChip(icon: Icons.straighten, label: 'Strength: ${strength.isEmpty ? '—' : strength} ${strengthUnit.isEmpty ? '' : strengthUnit}'),
+              if (controller.selectedType == MedicationType.preFilledSyringe && controller.selectedStrengthUnit == StrengthUnit.percent && syringeVolume.isNotEmpty)
+                LabelChip(
+                  icon: Icons.local_hospital,
+                  label: 'Approx. ${((double.tryParse(strength) ?? 0) * 10).toStringAsFixed(2)} mg/mL • Vol: ${syringeVolume} mL',
+                ),
               if (stockQty.isNotEmpty || stockUnit.isNotEmpty)
                 LabelChip(icon: Icons.inventory_2, label: 'Stock: ${stockQty.isEmpty ? '—' : stockQty} ${stockUnit.isEmpty ? '' : stockUnit}'),
               if (refrigerated) LabelChip(icon: Icons.ac_unit, label: 'Refrigerated'),

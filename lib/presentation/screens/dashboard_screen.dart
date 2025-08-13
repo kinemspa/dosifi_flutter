@@ -238,37 +238,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildAlerts(BuildContext context) {
     return CompactCard(
       accentColor: Theme.of(context).colorScheme.error,
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.warning, color: Theme.of(context).colorScheme.error, size: 18),
             ),
-            child: Icon(Icons.warning, color: Theme.of(context).colorScheme.error, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Alerts',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.error,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Alerts',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text('No missed doses today!', style: Theme.of(context).textTheme.bodySmall),
-              ],
+                  const SizedBox(height: 2),
+                  Text('No missed doses today!', style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+            IconButton(
+              icon: const Icon(Icons.info_outline, size: 18),
+              tooltip: 'About alerts',
+              onPressed: () {
+                InfoSheet.show(
+                  context,
+                  title: 'Alerts',
+                  message: 'Summary of important items like missed doses. Detailed stock/expiry alerts are available in Supplies.',
+                );
+              },
+            ),
+          ],
+        ),
     );
   }
 
@@ -356,9 +367,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: Icon(Icons.today, color: Theme.of(context).colorScheme.primary, size: 18),
               ),
               const SizedBox(width: 10),
-              Text(
-                'Today\'s Medications',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              Expanded(
+                child: Text(
+                  'Today\'s Medications',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline, size: 18),
+                tooltip: 'About this section',
+                onPressed: () {
+                  InfoSheet.show(
+                    context,
+                    title: "Today's Medications",
+                    message: 'Shows all doses scheduled for today. Tap Take/Snooze to update your log.',
+                  );
+                },
               ),
             ],
           ),
@@ -367,7 +391,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             data: (schedules) {
               final todaysSchedules = _getTodaysSchedules(schedules);
               if (todaysSchedules.isEmpty) {
-                return const Text('No medications scheduled for today', style: TextStyle(color: Colors.grey));
+                return Text(
+                  'No medications scheduled for today',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                );
               }
 
               return Column(
@@ -772,13 +799,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           backgroundColor: iconColor.withValues(alpha: 0.1),
           child: Icon(icon, color: iconColor, size: 20),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message),
+            Text(message, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 4),
-            Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            Text(time, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
           ],
         ),
         isThreeLine: true,

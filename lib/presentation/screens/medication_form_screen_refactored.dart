@@ -177,7 +177,7 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
     final type = controller.selectedType!;
     final baseColor = MedicationTypeUtils.getMedicationTypeColor(type);
     final icon = MedicationTypeUtils.getMedicationTypeIcon(type);
-    final name = controller.nameController.text.trim().isEmpty ? 'New medication' : controller.nameController.text.trim();
+    final name = controller.nameController.text.trim();
     final brand = controller.brandController.text.trim();
     final strength = controller.strengthController.text.trim();
     final strengthUnit = controller.selectedStrengthUnit?.displayName ?? '';
@@ -227,11 +227,12 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        labelValue('Name', name),
+                        if (name.isNotEmpty) labelValue('Name', name),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: labelValue('Brand/Manufacturer', brand)),
+                            if (brand.isNotEmpty)
+                              Expanded(child: labelValue('Brand/Manufacturer', brand)),
                             if (showTypeChip)
                               Container(
                                 margin: const EdgeInsets.only(left: 8, top: 6),
@@ -252,20 +253,24 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
                               ),
                           ],
                         ),
-                        labelValue('Description', description),
-                        labelValue(
-                          type == MedicationType.tablet ? 'Strength per Tablet' :
-                          type == MedicationType.capsule ? 'Strength per Capsule' :
-                          'Strength',
-                          (strength.isEmpty ? '' : strength) + (strengthUnit.isEmpty ? '' : ' ' + strengthUnit),
-                        ),
-                        labelValue(
-                          'Number of ${type.displayName}s in Stock',
-                          (stock.isEmpty ? '' : stock) + (stockUnit.isEmpty ? '' : ' ' + stockUnit),
-                        ),
+                        if (description.isNotEmpty) labelValue('Description', description),
+                        if (strength.isNotEmpty || strengthUnit.isNotEmpty)
+                          labelValue(
+                            type == MedicationType.tablet
+                                ? 'Strength per Tablet'
+                                : type == MedicationType.capsule
+                                    ? 'Strength per Capsule'
+                                    : 'Strength',
+                            (strength.isEmpty ? '' : strength) + (strengthUnit.isEmpty ? '' : ' ' + strengthUnit),
+                          ),
+                        if (stock.isNotEmpty)
+                          labelValue(
+                            'Number of ${type.displayName}s in Stock',
+                            (stock.isEmpty ? '' : stock) + (stockUnit.isEmpty ? '' : ' ' + stockUnit),
+                          ),
                         if (refrigerated) labelValue('Refrigeration', 'Required'),
-                        labelValue('Instructions', instructions),
-                        labelValue('Notes', notes),
+                        if (instructions.isNotEmpty) labelValue('Instructions', instructions),
+                        if (notes.isNotEmpty) labelValue('Notes', notes),
                       ],
                     ),
                   ),

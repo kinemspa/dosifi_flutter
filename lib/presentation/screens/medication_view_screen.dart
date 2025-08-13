@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/core/services/medication_calculation_service.dart';
-import 'package:dosifi_flutter/config/app_router.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/label_chip.dart';
 import 'package:dosifi_flutter/core/services/stock_management_service.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class MedicationViewScreen extends ConsumerWidget {
   final String medicationId;
@@ -260,19 +260,19 @@ class MedicationViewScreen extends ConsumerWidget {
                 tooltip: 'About: ' + title,
                 icon: const Icon(Icons.info_outline, size: 18),
                 onPressed: () {
-                  _showInfoSheet(context, title: title, message: _infoMessageForSection(title));
+                  InfoSheet.show(context, title: title, message: _infoMessageForSection(title));
                 },
               ),
             ],
           ),
           const SizedBox(height: 8),
-          ...items.map((item) => _buildInfoRow(item.label, item.value)),
+          ...items.map((item) => _buildInfoRow(context, item.label, item.value)),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -282,12 +282,12 @@ class MedicationViewScreen extends ConsumerWidget {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(value, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -305,13 +305,13 @@ class MedicationViewScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          _buildInfoRow('Current Stock', medication.stockDisplay),
+          _buildInfoRow(context, 'Current Stock', medication.stockDisplay),
           if (medication.stockProgressLabel != null)
-            _buildInfoRow('Current/Total', medication.stockProgressLabel!),
-          if (medication.stockUnit != null) _buildInfoRow('Stock Unit', medication.stockUnit!.displayName),
+            _buildInfoRow(context, 'Current/Total', medication.stockProgressLabel!),
+          if (medication.stockUnit != null) _buildInfoRow(context, 'Stock Unit', medication.stockUnit!.displayName),
           if (medication.lowStockThreshold != null)
-            _buildInfoRow('Low Stock Threshold', '${medication.lowStockThreshold}'),
-          if (medication.lotBatchNumber != null) _buildInfoRow('Lot/Batch Number', medication.lotBatchNumber!),
+            _buildInfoRow(context, 'Low Stock Threshold', '${medication.lowStockThreshold}'),
+          if (medication.lotBatchNumber != null) _buildInfoRow(context, 'Lot/Batch Number', medication.lotBatchNumber!),
 
           // Stock level indicator
           const SizedBox(height: 12),
@@ -385,8 +385,9 @@ class MedicationViewScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          _buildInfoRow('Expiration Date', _formatFullDate(expirationDate)),
+          _buildInfoRow(context, 'Expiration Date', _formatFullDate(expirationDate)),
           _buildInfoRow(
+            context,
             'Days Until Expiration',
             daysUntilExpiration > 0
                 ? '$daysUntilExpiration days'
@@ -468,6 +469,7 @@ class MedicationViewScreen extends ConsumerWidget {
 
             // Storage Instructions
             _buildStorageInfoRow(
+              context,
               'Instructions',
               medication.storageInstructions ?? 'No specific instructions',
               Icons.description,
@@ -476,6 +478,7 @@ class MedicationViewScreen extends ConsumerWidget {
 
             // Refrigeration Requirements
             _buildStorageInfoRow(
+              context,
               'Refrigeration',
               medication.requiresRefrigeration ? 'Required' : 'Not required',
               medication.requiresRefrigeration ? Icons.ac_unit : Icons.thermostat_outlined,
@@ -484,12 +487,12 @@ class MedicationViewScreen extends ConsumerWidget {
             const SizedBox(height: 8),
 
             // Storage Temperature
-            _buildStorageInfoRow('Temperature', medication.storageTemperature ?? 'Room temperature', Icons.thermostat),
+            _buildStorageInfoRow(context, 'Temperature', medication.storageTemperature ?? 'Room temperature', Icons.thermostat),
             const SizedBox(height: 8),
 
             // Additional Info
             if (medication.barcode != null) ...[
-              _buildStorageInfoRow('Barcode', medication.barcode!, Icons.qr_code),
+              _buildStorageInfoRow(context, 'Barcode', medication.barcode!, Icons.qr_code),
               const SizedBox(height: 8),
             ],
 
@@ -528,7 +531,7 @@ class MedicationViewScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStorageInfoRow(String label, String value, IconData icon, {Color? color}) {
+  Widget _buildStorageInfoRow(BuildContext context, String label, String value, IconData icon, {Color? color}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -538,12 +541,12 @@ class MedicationViewScreen extends ConsumerWidget {
           width: 100,
           child: Text(
             label,
-            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey.shade600, fontSize: 13),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          child: Text(value, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -627,7 +630,7 @@ class MedicationViewScreen extends ConsumerWidget {
           if (items.isEmpty)
             const Text('No reconstitution details provided')
           else
-            ...items.map((item) => _buildInfoRow(item.label, item.value)),
+            ...items.map((item) => _buildInfoRow(context, item.label, item.value)),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerLeft,
@@ -693,39 +696,19 @@ class MedicationViewScreen extends ConsumerWidget {
           children: [
             Text('Calculations', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            _buildInfoRow('Dose Precision', '${medication.dosePrecision}'),
+            _buildInfoRow(context, 'Dose Precision', '${medication.dosePrecision}'),
             _buildInfoRow(
+              context,
               'Total Active Ingredient',
               '${MedicationCalculationService.calculateTotalActiveIngredient(medication).toStringAsFixed(2)} ${medication.strengthUnit.displayName}',
             ),
-            _buildInfoRow('Allowed Dose Units', medication.allowedDoseUnits.join(', ')),
+            _buildInfoRow(context, 'Allowed Dose Units', medication.allowedDoseUnits.join(', ')),
           ],
         ),
       ),
     );
   }
 
-  void _showInfoSheet(BuildContext context, {required String title, required String message}) {
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [const Icon(Icons.info_outline), const SizedBox(width: 8), Text(title)]),
-            const SizedBox(height: 12),
-            Text(message),
-          ],
-        ),
-      ),
-    );
-  }
 
   String _infoMessageForSection(String title) {
     switch (title) {

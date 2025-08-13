@@ -14,6 +14,7 @@ import 'package:dosifi_flutter/data/models/schedule_override.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/label_chip.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 /// Reusable calendar widget for Dosifi. Extracted from the previous CalendarScreen
 /// so it can be embedded anywhere (e.g., full screen on navbar, or compact embeds).
@@ -75,6 +76,18 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
               const Spacer(),
               _activeFilterSummaryChip(),
               const SizedBox(width: 6),
+              IconButton(
+                tooltip: 'Calendar help',
+                icon: const Icon(Icons.info_outline),
+                onPressed: () {
+                  InfoSheet.show(
+                    context,
+                    title: 'Calendar',
+                    message:
+                        'View your upcoming doses by month, week, or day. Tap a cell to see and act on doses for that date. Use filters to limit medications or statuses.',
+                  );
+                },
+              ),
               _filtersButtonWithBadge(context),
             ],
           ),
@@ -377,7 +390,7 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                         medicationAsync.when(
                           data: (medication) => Text(
                             medication?.name ?? 'Unknown Medication',
-                            style: TextStyle(
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               decoration: isCompleted ? TextDecoration.lineThrough : null,
                             ),
@@ -388,7 +401,7 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                         const SizedBox(height: 4),
                         Text(
                           '$displayTimeStr - $displayDoseAmount $displayDoseUnit',
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey[600],
                             decoration: isCancelled ? TextDecoration.lineThrough : null,
                           ),
@@ -396,7 +409,7 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                         if (event.doseLog?.takenTime != null)
                           Text(
                             'Taken at ${DateFormat('HH:mm').format(event.doseLog!.takenTime!)}',
-                            style: const TextStyle(color: Colors.green, fontSize: 12),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green),
                           ),
                       ],
                     ),
@@ -686,7 +699,7 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Quick actions', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Quick actions', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           DoseActionButtons(
                             schedule: first.schedule,

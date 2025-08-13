@@ -9,6 +9,7 @@ import 'package:dosifi_flutter/config/app_router.dart';
 import 'package:dosifi_flutter/core/widgets/section_header.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/helper_block.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class AddScheduleScreen extends ConsumerStatefulWidget {
   final String? scheduleId;
@@ -106,7 +107,21 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
       appBar: AppBar(
         title: Text(isEditMode ? 'Edit Schedule' : 'Add Schedule'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.navigateBackSmart()),
-        actions: [if (isEditMode) IconButton(icon: const Icon(Icons.delete), onPressed: _showDeleteDialog)],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'About scheduling',
+            onPressed: () {
+              InfoSheet.show(
+                context,
+                title: isEditMode ? 'Edit Schedule' : 'Add Schedule',
+                message:
+                    'Create or update a medication schedule. Choose a medication, set how often it should be taken, pick a time, and optionally define a date range or weekly/cycling options.',
+              );
+            },
+          ),
+          if (isEditMode) IconButton(icon: const Icon(Icons.delete), onPressed: _showDeleteDialog),
+        ],
       ),
       body: formBody,
     );
@@ -128,13 +143,19 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
             child: const Icon(Icons.schedule, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Medication Schedule', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                SizedBox(height: 4),
-                Text('Set up when and how to take your medication', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  'Medication Schedule',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Set up when and how to take your medication',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                ),
               ],
             ),
           ),
@@ -167,7 +188,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                         ),
                         isExpanded: true,
                         items: medications.map((medication) {
-                          return DropdownMenuItem(
+                      return DropdownMenuItem(
                             value: medication.id,
                             child: Row(
                               children: [
@@ -177,10 +198,13 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(medication.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                      Text(
+                                        medication.name,
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                      ),
                                       Text(
                                         '${medication.strengthPerUnit} ${medication.strengthUnit.displayName}',
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
                                       ),
                                     ],
                                   ),
@@ -464,7 +488,10 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
           children: [
             const SectionHeader(title: 'Weekly Schedule Options'),
 
-            const Text('Select the days of the week:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            Text(
+              'Select the days of the week:',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+            ),
             const SizedBox(height: 12),
 
             Wrap(
@@ -588,7 +615,7 @@ class _AddScheduleScreenState extends ConsumerState<AddScheduleScreen> {
             : Icon(isEditMode ? Icons.update : Icons.add),
         label: Text(
           isEditMode ? 'Update Schedule' : 'Add Schedule',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
     );
