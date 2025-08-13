@@ -30,8 +30,9 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
         children: [
           // Action Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 // Screen info
                 IconButton(
@@ -119,7 +120,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
 
                 final layout = ref.watch(medicationLayoutProvider);
                 return ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemCount: filteredMedications.length,
                   itemBuilder: (context, index) {
                     final medication = filteredMedications[index];
@@ -131,7 +132,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                           forceLayout: layout,
                           onTap: () => context.push('/medications/${medication.id}'),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                       ],
                     );
                   },

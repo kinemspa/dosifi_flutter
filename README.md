@@ -4,6 +4,10 @@ Dosifi is a comprehensive medication management Flutter application designed to 
 
 ## Features
 
+Recent UI updates (2025-08-13)
+- Medications screen header actions (Info, Filter) are right-aligned and spacing tightened.
+- Global AppBar Info is hidden when on Medications to avoid duplication.
+
 ### Core Features
 1. **Medication Management**
    - Add, edit, and delete medications with comprehensive forms

@@ -65,6 +65,31 @@ class MainShellScreen extends StatelessWidget {
               },
               tooltip: 'Notifications',
             ),
+          if (currentPath != '/medications')
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              tooltip: 'About this screen',
+              onPressed: () {
+                final title = _getScreenTitle();
+                showModalBottomSheet(
+                  context: context,
+                  showDragHandle: true,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+                  builder: (ctx) => Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [const Icon(Icons.info_outline), const SizedBox(width: 8), Text(title, style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold))]),
+                        const SizedBox(height: 12),
+                        Text(_infoForPath(currentPath ?? '/'), style: Theme.of(ctx).textTheme.bodyMedium),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
       drawer: _buildNavigationDrawer(context),
@@ -124,6 +149,25 @@ class MainShellScreen extends StatelessWidget {
         return 'Settings';
       default:
         return 'Dosifi';
+    }
+  }
+
+  String _infoForPath(String path) {
+    switch (path) {
+      case '/':
+        return 'Home shows your dashboard with upcoming doses, alerts, and quick actions.';
+      case '/medications':
+        return 'Browse and manage medications. Tap a card for details or actions.';
+      case '/supplies':
+        return 'Manage medical supplies inventory and details.';
+      case '/schedule':
+        return 'View and manage medication schedules and add new ones.';
+      case '/calendar':
+        return 'See scheduled doses on a calendar and take quick actions.';
+      case '/settings':
+        return 'App preferences, diagnostics, and about information.';
+      default:
+        return 'Navigate the app using the bottom bar or the drawer.';
     }
   }
 
@@ -219,13 +263,13 @@ class MainShellScreen extends StatelessWidget {
           backgroundColor: iconColor.withValues(alpha: 0.1),
           child: Icon(icon, color: iconColor, size: 20),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message),
+            Text(message, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 4),
-            Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            Text(time, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
           ],
         ),
         isThreeLine: true,
@@ -338,7 +382,7 @@ class MainShellScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
       ),
     );
   }
@@ -352,8 +396,8 @@ class MainShellScreen extends StatelessWidget {
   }) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title),
-      subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+      title: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
