@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class BasicInformationSection extends StatelessWidget {
   final MedicationFormController controller;
@@ -17,8 +18,8 @@ class BasicInformationSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.info, color: Colors.green[700], size: 18),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                child: Icon(Icons.info, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
@@ -27,27 +28,13 @@ class BasicInformationSection extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.info_outline, size: 18, color: Colors.green[700]),
+                icon: const Icon(Icons.info_outline, size: 18),
                 tooltip: 'About basic information',
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    builder: (ctx) => Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Row(children: [Icon(Icons.info_outline), SizedBox(width: 8), Text('Basic info help')]),
-                          SizedBox(height: 12),
-                          Text('Enter the medication name and optional brand/manufacturer.'),
-                        ],
-                      ),
-                    ),
+              InfoSheet.show(
+                    context,
+                    title: 'Basic Information',
+                    message: 'Enter the medication name and optional brand/manufacturer. You can also add notes/instructions here.',
                   );
                 },
               ),
@@ -82,6 +69,32 @@ class BasicInformationSection extends StatelessWidget {
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.business),
             ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: controller.instructionsController,
+            decoration: InputDecoration(
+              labelText: 'Instructions',
+              hintText: 'Dosage instructions or usage guidelines',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.grey[50],
+              prefixIcon: const Icon(Icons.list_alt),
+            ),
+            maxLines: 2,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: controller.notesController,
+            decoration: InputDecoration(
+              labelText: 'Notes',
+              hintText: 'Additional notes or comments',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.grey[50],
+              prefixIcon: const Icon(Icons.note),
+            ),
+            maxLines: 3,
           ),
         ],
       ),

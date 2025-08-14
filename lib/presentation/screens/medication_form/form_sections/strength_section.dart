@@ -3,6 +3,7 @@ import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/utils/medication_type_utils.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class StrengthSection extends StatelessWidget {
   final MedicationFormController controller;
@@ -43,8 +44,8 @@ class StrengthSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.scale, color: Colors.orange[700], size: 18),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                child: Icon(Icons.scale, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
@@ -53,41 +54,14 @@ class StrengthSection extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.info_outline, size: 18, color: Colors.orange[700]),
+                icon: const Icon(Icons.info_outline, size: 18),
                 tooltip: 'How strength works',
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    builder: (ctx) => Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.info_outline),
-                              const SizedBox(width: 8),
-                              Text('Strength help', style: Theme.of(context).textTheme.titleMedium),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Enter how strong each unit is. For tablets/capsules use mg or mcg per unit. '
-                            'For liquids/drops use concentration (e.g., mg per mL). '
-                            'For vials/syringes, specify per vial/syringe.',
-                          ),
-                          const SizedBox(height: 8),
-                          const Text('Examples:', style: TextStyle(fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 4),
-                          const Text('• Tablet: 500 mg per tablet\n• Liquid: 100 mg/mL\n• Vial: 10 mg per vial'),
-                        ],
-                      ),
-                    ),
+                  InfoSheet.show(
+                    context,
+                    title: 'Strength',
+                    message:
+                        'Enter how strong each unit is. For tablets/capsules use mg or mcg per unit. For liquids/drops use concentration (e.g., mg per mL). For vials/syringes, specify per vial/syringe.\n\nExamples:\n• Tablet: 500 mg per tablet\n• Liquid: 100 mg/mL\n• Vial: 10 mg per vial',
                   );
                 },
               ),

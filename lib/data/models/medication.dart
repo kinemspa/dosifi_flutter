@@ -150,6 +150,9 @@ class Medication {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Theme customization
+  final String? themeColor; // Color in hex format for user-customizable medication theme
+
   const Medication({
     this.id,
     required this.name,
@@ -181,6 +184,7 @@ class Medication {
     this.isActive = true,
     required this.createdAt,
     required this.updatedAt,
+    this.themeColor,
   });
 
   factory Medication.create({
@@ -250,7 +254,7 @@ class Medication {
       'strength_unit': strengthUnit.displayName,
       'stock_quantity': stockQuantity,
       'stock_unit': stockUnit?.displayName,
-'vials_in_stock': vialsInStock,
+      'vials_in_stock': vialsInStock,
       'package_size': packageSize,
       'lot_batch_number': lotBatchNumber,
       'expiration_date': expirationDate?.toIso8601String(),
@@ -265,6 +269,7 @@ class Medication {
       'is_active': isActive ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'theme_color': themeColor,
     };
   }
 
@@ -295,6 +300,7 @@ class Medication {
       isActive: (map['is_active'] as int) == 1,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
+      themeColor: map['theme_color'] as String?,
     );
   }
 
@@ -321,6 +327,7 @@ class Medication {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? themeColor,
   }) {
     return Medication(
       id: id ?? this.id,
@@ -345,6 +352,7 @@ class Medication {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
+      themeColor: themeColor ?? this.themeColor,
     );
   }
 

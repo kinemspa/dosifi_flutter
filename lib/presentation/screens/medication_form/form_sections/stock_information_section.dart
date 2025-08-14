@@ -3,6 +3,7 @@ import 'package:dosifi_flutter/presentation/screens/medication_form/utils/medica
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/helper_block.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class StockInformationSection extends StatelessWidget {
   final MedicationFormController controller;
@@ -19,8 +20,8 @@ class StockInformationSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.purple[100], borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.inventory, color: Colors.purple[700], size: 18),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                child: Icon(Icons.inventory, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
@@ -34,27 +35,13 @@ class StockInformationSection extends StatelessWidget {
             children: [
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.info_outline, size: 18, color: Colors.purple[700]),
+                icon: const Icon(Icons.info_outline, size: 18),
                 tooltip: 'Stock field help',
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    builder: (ctx) => const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [Icon(Icons.inventory), SizedBox(width: 8), Text('Stock help')]),
-                          SizedBox(height: 12),
-                          Text('Enter how many units you currently have. Choose the correct unit if applicable.'),
-                        ],
-                      ),
-                    ),
+                  InfoSheet.show(
+                    context,
+                    title: 'Stock Information',
+                    message: 'Enter how many units you currently have. Choose the correct unit if applicable. You can set alerts for low stock and specify a threshold.',
                   );
                 },
               ),

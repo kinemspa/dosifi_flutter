@@ -39,6 +39,9 @@ class MedicationFormController extends ChangeNotifier {
   bool _isActive = true;
   bool _isLoading = false;
 
+  // Theme color state (hex string like #FF6F61)
+  String? _selectedThemeColor;
+
   MedicationFormController(this.ref, this.medicationId) {
     _wireTextListeners();
   }
@@ -53,6 +56,23 @@ class MedicationFormController extends ChangeNotifier {
   bool get isActive => _isActive;
   bool get isLoading => _isLoading;
   bool get isEditMode => medicationId != null;
+  String? get selectedThemeColor => _selectedThemeColor;
+
+  // Provide a curated palette
+  List<String> get colorOptions => const [
+        '#6C5CE7', // indigo
+        '#00B894', // teal
+        '#0984E3', // blue
+        '#E17055', // orange
+        '#E84393', // pink
+        '#636E72', // gray
+      ];
+
+  Color colorFromHex(String hex) {
+    final cleaned = hex.replaceAll('#', '');
+    final intVal = int.parse('FF$cleaned', radix: 16);
+    return Color(intVal);
+  }
 
   // Setters
   void setSelectedType(MedicationType? type) {
@@ -60,6 +80,8 @@ class MedicationFormController extends ChangeNotifier {
     if (type != null) {
       _selectedStrengthUnit = MedicationTypeUtils.getDefaultStrengthUnit(type);
       _selectedStockUnit = MedicationTypeUtils.getStockUnit(type);
+      // Default theme color based on type if not explicitly chosen
+      _selectedThemeColor ??= _defaultColorForType(type);
     }
     notifyListeners();
   }
@@ -103,6 +125,29 @@ class MedicationFormController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedThemeColor(String? hex) {
+    _selectedThemeColor = hex;
+    notifyListeners();
+  }
+
+  String _defaultColorForType(MedicationType type) {
+    switch (type) {
+      case MedicationType.tablet:
+        return '#0984E3';
+      case MedicationType.capsule:
+        return '#00B894';
+      case MedicationType.liquid:
+        return '#6C5CE7';
+      case MedicationType.preFilledSyringe:
+      case MedicationType.readyMadeVial:
+        return '#E84393';
+      case MedicationType.lyophilizedVial:
+        return '#636E72';
+      default:
+        return '#6C5CE7';
+    }
+  }
+
   // Load medication data for editing
   Future<void> loadMedicationData() async {
     if (!isEditMode) return;
@@ -128,6 +173,7 @@ class MedicationFormController extends ChangeNotifier {
     reconstitutionNotesController.text = medication.reconstitutionNotes ?? '';
     reconstitutionFluidController.text = medication.reconstitutionFluid ?? '';
     descriptionController.text = medication.description ?? '';
+    _selectedThemeColor = medication.themeColor;
     instructionsController.text = medication.instructions ?? '';
     notesController.text = medication.notes ?? '';
     barcodeController.text = medication.barcode ?? '';
@@ -176,6 +222,7 @@ class MedicationFormController extends ChangeNotifier {
     descriptionController.clear();
     instructionsController.clear();
     notesController.clear();
+    _selectedThemeColor = null;
     barcodeController.clear();
     _selectedType = null;
     _selectedStrengthUnit = null;
@@ -250,12 +297,16 @@ class MedicationFormController extends ChangeNotifier {
       instructions: instructionsController.text.trim().isNotEmpty ? instructionsController.text.trim() : null,
       notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
       barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
+      // theme color
+      // themeColor stored later via repository update if needed
       alertOnLowStock: _alertOnLowStock,
       packageSize: null,
       vialsInStock: null,
     );
 
-    await ref.read(medicationListProvider.notifier).addMedication(medication);
+    // Attach themeColor if chosen by setting it on the created object before insert
+    final medWithColor = medication.copyWith(themeColor: _selectedThemeColor);
+    await ref.read(medicationListProvider.notifier).addMedication(medWithColor);
   }
 
   // Update existing medication
@@ -298,6 +349,7 @@ class MedicationFormController extends ChangeNotifier {
       notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
       barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
       isActive: _isActive,
+      themeColor: _selectedThemeColor,
     );
 
     await ref.read(medicationListProvider.notifier).updateMedication(updatedMedication);

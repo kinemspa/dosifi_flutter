@@ -9,7 +9,7 @@ import 'dart:convert';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 12;
+  static const int _databaseVersion = 13;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -83,6 +83,7 @@ class DatabaseService {
         notes TEXT,
         barcode TEXT,
         photo_path TEXT,
+        theme_color TEXT,
         is_active INTEGER DEFAULT 1,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
@@ -667,6 +668,19 @@ class DatabaseService {
         }
       } catch (e) {
         debugPrint('Migration v12 (package_size) failed: $e');
+      }
+    }
+
+    if (oldVersion < 13) {
+      // Migration to version 13: add theme_color to medications
+      try {
+        final cols = await db.rawQuery('PRAGMA table_info(medications)');
+        final hasThemeColor = cols.any((c) => c['name'] == 'theme_color');
+        if (!hasThemeColor) {
+          await db.execute('ALTER TABLE medications ADD COLUMN theme_color TEXT');
+        }
+      } catch (e) {
+        debugPrint('Migration v13 (theme_color) failed: $e');
       }
     }
   }

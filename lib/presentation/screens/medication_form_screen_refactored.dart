@@ -394,64 +394,19 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          child: Material(
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [baseColor, baseColor.withValues(alpha: 0.88)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('Confirm details', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  summaryBuilder(showTypeChip: true),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            side: BorderSide(color: Colors.white.withValues(alpha: 0.6)),
-                          ),
-                          child: const Text('Cancel'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.of(ctx).pop();
-                            await _saveMedication(context, controller);
-                          },
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: baseColor),
-                          child: Text(controller.isEditMode ? 'Save Changes' : 'Save Medication'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+        return AlertDialog(
+          title: const Text('Save Medication'),
+          content: SingleChildScrollView(child: summaryBuilder(showTypeChip: true)),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _saveMedication(context, controller);
+              },
+              child: Text(controller.isEditMode ? 'Save Changes' : 'Save Medication'),
             ),
-          ),
+          ],
         );
       },
     );
@@ -514,7 +469,7 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
               try {
                 await controller.deleteMedication();
                 if (mounted) {
-                  context.pop();
+                  context.go('/medications');
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Medication deleted successfully'), backgroundColor: Colors.red),
                   );

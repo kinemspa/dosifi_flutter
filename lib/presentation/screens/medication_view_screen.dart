@@ -86,17 +86,19 @@ class MedicationViewScreen extends ConsumerWidget {
           _buildStatusSection(context, medication),
           const SizedBox(height: 16),
 
-          // Basic Information
+          // Stock Information (moved above Basic Information)
+          _buildStockSection(context, medication),
+          const SizedBox(height: 16),
+
+          // Basic Information (now also includes notes/instructions if present)
           _buildInfoSection(context, 'Basic Information', [
             _InfoItem('Name', medication.name),
             if (medication.brandManufacturer != null) _InfoItem('Brand/Manufacturer', medication.brandManufacturer!),
             _InfoItem('Type', medication.type.displayName),
             _InfoItem('Strength', medication.displayStrength),
+            if (medication.instructions != null) _InfoItem('Instructions', medication.instructions!),
+            if (medication.notes != null) _InfoItem('Notes', medication.notes!),
           ]),
-          const SizedBox(height: 16),
-
-          // Stock Information
-          _buildStockSection(context, medication),
           const SizedBox(height: 16),
 
           // Expiration Information
@@ -119,11 +121,8 @@ class MedicationViewScreen extends ConsumerWidget {
           _buildCalculationsSection(context, medication),
           const SizedBox(height: 16),
 
-          // Notes
-          if (medication.notes != null || medication.instructions != null || medication.description != null) ...[
-            _buildNotesSection(context, medication),
-            const SizedBox(height: 16),
-          ],
+          // Notes section removed; notes and instructions are now inside Basic Information card.
+          if (false) const SizedBox.shrink(),
 
           // Action Buttons
           _buildActionButtons(context, ref, medication),
@@ -134,6 +133,7 @@ class MedicationViewScreen extends ConsumerWidget {
   }
 
   Widget _buildHeaderCard(BuildContext context, Medication medication) {
+    final base = _getMedicationBaseColor(medication);
     return Card(
       elevation: 4,
       child: Container(
@@ -143,8 +143,8 @@ class MedicationViewScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             colors: [
-              _getMedicationTypeColor(medication.type),
-              _getMedicationTypeColor(medication.type).withValues(alpha: 0.8),
+              base,
+              base.withValues(alpha: 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -814,7 +814,7 @@ class MedicationViewScreen extends ConsumerWidget {
               Navigator.of(context).pop();
               await ref.read(medicationListProvider.notifier).deleteMedication(medication.id!);
               if (context.mounted) {
-                context.pop();
+                context.go('/medications');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('${medication.name} deleted successfully'), backgroundColor: Colors.red),
                 );
@@ -826,6 +826,17 @@ class MedicationViewScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Color _getMedicationBaseColor(Medication medication) {
+    if (medication.themeColor != null && medication.themeColor!.isNotEmpty) {
+      final hex = medication.themeColor!.replaceAll('#', '');
+      try {
+        final value = int.parse('FF$hex', radix: 16);
+        return Color(value);
+      } catch (_) {}
+    }
+    return _getMedicationTypeColor(medication.type);
   }
 
   bool _hasAdvancedInfo(Medication medication) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
 import 'package:dosifi_flutter/core/widgets/helper_block.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class AdditionalInfoSection extends StatelessWidget {
   final MedicationFormController controller;
@@ -18,8 +19,8 @@ class AdditionalInfoSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.indigo[100], borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.description, color: Colors.indigo[700], size: 18),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                child: Icon(Icons.description, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
@@ -28,27 +29,13 @@ class AdditionalInfoSection extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.info_outline, size: 18, color: Colors.indigo[700]),
+                icon: const Icon(Icons.info_outline, size: 18),
                 tooltip: 'More fields help',
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    builder: (ctx) => const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [Icon(Icons.info_outline), SizedBox(width: 8), Text('Additional information help')]),
-                          SizedBox(height: 12),
-                          Text('Description, instructions, notes, and barcode are optional but useful for context.'),
-                        ],
-                      ),
-                    ),
+                  InfoSheet.show(
+                    context,
+                    title: 'Additional Information',
+                    message: 'Description and barcode are optional but useful for context.',
                   );
                 },
               ),
@@ -66,32 +53,6 @@ class AdditionalInfoSection extends StatelessWidget {
               prefixIcon: const Icon(Icons.description),
             ),
             maxLines: 2,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: controller.instructionsController,
-            decoration: InputDecoration(
-              labelText: 'Instructions',
-              hintText: 'Dosage instructions or usage guidelines',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              filled: true,
-              fillColor: Colors.grey[50],
-              prefixIcon: const Icon(Icons.list_alt),
-            ),
-            maxLines: 3,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: controller.notesController,
-            decoration: InputDecoration(
-              labelText: 'Notes',
-              hintText: 'Additional notes or comments',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              filled: true,
-              fillColor: Colors.grey[50],
-              prefixIcon: const Icon(Icons.note),
-            ),
-            maxLines: 3,
           ),
           const SizedBox(height: 12),
           TextFormField(

@@ -82,6 +82,7 @@ class TestMedicationFake extends Medication {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? themeColor,
   }) {
     // Mutate this fake to reflect changes and return itself
     mutableStock = stockQuantity ?? mutableStock;

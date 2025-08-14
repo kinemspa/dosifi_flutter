@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dosifi_flutter/presentation/screens/medication_form/controllers/medication_form_controller.dart';
 import 'package:dosifi_flutter/core/widgets/compact_card.dart';
+import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
 
 class StorageSection extends StatelessWidget {
   final MedicationFormController controller;
@@ -17,8 +18,8 @@ class StorageSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.teal[100], borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.storage, color: Colors.teal[700], size: 18),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                child: Icon(Icons.storage, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
@@ -27,27 +28,13 @@ class StorageSection extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.info_outline, size: 18, color: Colors.teal[700]),
+                icon: const Icon(Icons.info_outline, size: 18),
                 tooltip: 'Storage help',
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    builder: (ctx) => const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [Icon(Icons.thermostat), SizedBox(width: 8), Text('Storage help')]),
-                          SizedBox(height: 12),
-                          Text('Provide storage instructions and temperature. Toggle refrigeration if required.'),
-                        ],
-                      ),
-                    ),
+                  InfoSheet.show(
+                    context,
+                    title: 'Storage',
+                    message: 'Provide storage instructions and temperature. Toggle refrigeration if required. When refrigeration is on, temperature is set to 2–8 °C.',
                   );
                 },
               ),

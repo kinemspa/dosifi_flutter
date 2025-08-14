@@ -90,11 +90,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildWelcomeCard(context),
+              _buildWelcomeAndTodayCard(context),
               const SizedBox(height: 12),
               _buildNextDoseBanner(context),
-              const SizedBox(height: 16),
-              _buildTodaysMedications(context),
               const SizedBox(height: 16),
               _buildAlertsSummary(context),
               const SizedBox(height: 16),
@@ -292,129 +290,113 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildWelcomeCard(BuildContext context) {
-    final schedulesAsync = ref.watch(scheduleListProvider);
-
+  Widget _buildWelcomeAndTodayCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: AppTheme.primaryGradient),
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.waving_hand, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _getGreeting(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                tooltip: 'About Dashboard',
-                icon: const Icon(Icons.info_outline, color: Colors.white, size: 18),
-                onPressed: () {
-                  InfoSheet.show(
-                    context,
-                    title: 'Dashboard',
-                    message: 'Overview of your medication activity: upcoming doses, quick stats, recent activities, and alerts. Use quick actions to jump into common tasks.',
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          schedulesAsync.when(
-            data: (schedules) {
-              final todaysSchedules = _getTodaysSchedules(schedules);
-              return Text(
-                'You have ${todaysSchedules.length} ${todaysSchedules.length == 1 ? 'medication' : 'medications'} scheduled for today',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
-              );
-            },
-            loading: () => Text(
-              'Loading your schedule...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
-            ),
-            error: (_, __) => Text(
-              'Unable to load today\'s schedule',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
-            ),
-          ),
-        ],
-      ),
+      child: const _WelcomeAndTodayContent(),
     );
   }
 
-  Widget _buildTodaysMedications(BuildContext context) {
+}
+
+class _WelcomeAndTodayContent extends ConsumerWidget {
+  const _WelcomeAndTodayContent();
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning!';
+    if (hour < 17) return 'Good Afternoon!';
+    return 'Good Evening!';
+  }
+
+  List<Schedule> _getTodaysSchedules(List<Schedule> schedules) {
+    final today = DateTime.now();
+    return schedules.where((s) => s.isActiveOnDate(today)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(scheduleListProvider);
 
-    return CompactCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(Icons.today, color: Theme.of(context).colorScheme.primary, size: 18),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
+              child: const Icon(Icons.waving_hand, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _getGreeting(),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Today\'s Medications',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.info_outline, size: 18),
-                tooltip: 'About this section',
-                onPressed: () {
-                  InfoSheet.show(
-                    context,
-                    title: "Today's Medications",
-                    message: 'Shows all doses scheduled for today. Tap Take/Snooze to update your log.',
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          schedulesAsync.when(
+            ),
+            IconButton(
+              tooltip: 'About Dashboard',
+              icon: const Icon(Icons.info_outline, size: 18, color: Colors.white),
+              onPressed: () {
+                InfoSheet.show(
+                  context,
+                  title: 'Dashboard',
+                  message: 'Overview of your medication activity and today\'s doses. Tap Take/Snooze to update your log.',
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        schedulesAsync.when(
+          data: (schedules) {
+            final todays = _getTodaysSchedules(schedules);
+            return Text(
+              'You have ${todays.length} ${todays.length == 1 ? 'medication' : 'medications'} scheduled for today',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+            );
+          },
+          loading: () => Text('Loading your schedule...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
+          error: (_, __) => Text('Unable to load today\'s schedule', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
+        ),
+        const SizedBox(height: 12),
+        Text("Today's Medications", style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        // List section on a light surface for readability
+        Container(
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.all(12),
+          child: schedulesAsync.when(
             data: (schedules) {
-              final todaysSchedules = _getTodaysSchedules(schedules);
-              if (todaysSchedules.isEmpty) {
+              final todays = _getTodaysSchedules(schedules);
+              if (todays.isEmpty) {
                 return Text(
                   'No medications scheduled for today',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontStyle: FontStyle.italic),
                 );
               }
-
-              return Column(
-                children: todaysSchedules.map((schedule) {
-                  return _buildMedicationItemWithSchedule(context, schedule);
-                }).toList(),
-              );
+              return Column(children: [
+                for (final schedule in todays) _MedicationRow(schedule: schedule),
+              ]);
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Text('Error: $error'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildMedicationItemWithSchedule(BuildContext context, Schedule schedule) {
+class _MedicationRow extends ConsumerWidget {
+  final Schedule schedule;
+  const _MedicationRow({required this.schedule});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
-
-    // Check if dose has been taken today
     final today = DateTime.now();
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
@@ -425,16 +407,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final existingDoseLog = doseLogsAsync.when(
       data: (doseLogs) {
         try {
-          return doseLogs.firstWhere(
-            (log) =>
-                log.medicationId == schedule.medicationId &&
-                log.scheduledTime.year == scheduledDateTime.year &&
-                log.scheduledTime.month == scheduledDateTime.month &&
-                log.scheduledTime.day == scheduledDateTime.day &&
-                log.scheduledTime.hour == scheduledDateTime.hour &&
-                log.scheduledTime.minute == scheduledDateTime.minute,
-          );
-        } catch (e) {
+          return doseLogs.firstWhere((log) =>
+              log.medicationId == schedule.medicationId &&
+              log.scheduledTime.year == scheduledDateTime.year &&
+              log.scheduledTime.month == scheduledDateTime.month &&
+              log.scheduledTime.day == scheduledDateTime.day &&
+              log.scheduledTime.hour == scheduledDateTime.hour &&
+              log.scheduledTime.minute == scheduledDateTime.minute);
+        } catch (_) {
           return null;
         }
       },
@@ -448,9 +428,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           Icon(
             existingDoseLog?.status.name == 'taken' ? Icons.check_circle : Icons.schedule,
-            color: existingDoseLog?.status.name == 'taken'
-                ? AppTheme.successColor
-                : Theme.of(context).colorScheme.primary,
+            color: existingDoseLog?.status.name == 'taken' ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -458,29 +436,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 medicationAsync.when(
-                  data: (medication) =>
-                      Text(medication?.name ?? 'Unknown Medication', style: Theme.of(context).textTheme.bodyLarge),
+                  data: (medication) => Text(medication?.name ?? 'Unknown Medication', style: Theme.of(context).textTheme.bodyLarge),
                   loading: () => const Text('Loading...'),
                   error: (_, __) => const Text('Error loading medication'),
                 ),
-                Row(
-                  children: [
-                    Text(schedule.timeOfDay, style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(width: 8),
-                    Text(
-                      '• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(
-                      '${schedule.doseAmount} ${schedule.doseUnit}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
+                Row(children: [
+                  Text(schedule.timeOfDay, style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(width: 8),
+                  Text('• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                ]),
+                Row(children: [
+                  Text('${schedule.doseAmount} ${schedule.doseUnit}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                ]),
               ],
             ),
           ),
@@ -490,7 +457,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             existingDoseLog: existingDoseLog,
             isCompact: true,
             onActionCompleted: () {
-              // Refresh the state after action is completed
               ref.invalidate(doseLogListProvider);
             },
           ),
@@ -498,89 +464,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     );
   }
+}
 
-  Widget _buildMedicationItemWithId(BuildContext context, int medicationId, String time, String dose, bool taken) {
-    final medicationAsync = ref.watch(medicationByIdProvider(medicationId));
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Icon(
-            taken ? Icons.check_circle : Icons.schedule,
-            color: taken ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                medicationAsync.when(
-                  data: (medication) =>
-                      Text(medication?.name ?? 'Unknown Medication', style: Theme.of(context).textTheme.bodyLarge),
-                  loading: () => const Text('Loading...'),
-                  error: (_, __) => const Text('Error loading medication'),
-                ),
-                Row(
-                  children: [
-                    Text(time, style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(width: 8),
-                    Text('• $dose', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (!taken) ...[
-            TextButton(
-              onPressed: () {
-                // TODO: Mark as taken
-              },
-              child: const Text('Take'),
-            ),
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: () {
-                // TODO: Snooze dose
-              },
-              child: const Text('Snooze'),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMedicationItem(BuildContext context, String name, String time, bool taken) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Icon(
-            taken ? Icons.check_circle : Icons.schedule,
-            color: taken ? AppTheme.successColor : Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: Theme.of(context).textTheme.bodyLarge),
-                Text(time, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          if (!taken)
-            TextButton(
-              onPressed: () {
-                // TODO: Mark as taken
-              },
-              child: const Text('Take'),
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildAlertsSummary(BuildContext context) {
     return FutureBuilder<StockStatus>(
@@ -755,6 +640,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   _buildNotificationItem(
+                    context,
                     'Medication Reminder',
                     'Time to take your Vitamin D - 1000 IU',
                     '2 minutes ago',
@@ -762,6 +648,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Colors.blue,
                   ),
                   _buildNotificationItem(
+                    context,
                     'Low Stock Alert',
                     'Omega-3 capsules running low (3 remaining)',
                     '1 hour ago',
@@ -769,6 +656,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Colors.orange,
                   ),
                   _buildNotificationItem(
+                    context,
                     'Expiration Warning',
                     'Multivitamin expires in 5 days',
                     '1 day ago',
@@ -776,6 +664,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Colors.red,
                   ),
                   _buildNotificationItem(
+                    context,
                     'Dose Taken',
                     'Morning dose of Vitamin D marked as taken',
                     '2 days ago',
@@ -791,7 +680,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildNotificationItem(String title, String message, String time, IconData icon, Color iconColor) {
+  Widget _buildNotificationItem(BuildContext context, String title, String message, String time, IconData icon, Color iconColor) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(

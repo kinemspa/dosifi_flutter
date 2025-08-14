@@ -89,7 +89,8 @@ class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          backgroundColor: scheme.surface,
+          // Transparent by default so icons work on colored surfaces (no white circles)
+          backgroundColor: Colors.transparent,
           foregroundColor: scheme.onSurface.withValues(alpha: 0.8),
           padding: const EdgeInsets.all(10),
           shape: const StadiumBorder(),
@@ -212,7 +213,8 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          backgroundColor: scheme.surface,
+          // Transparent by default in dark as well
+          backgroundColor: Colors.transparent,
           foregroundColor: scheme.onSurface.withValues(alpha: 0.85),
           padding: const EdgeInsets.all(10),
           shape: const StadiumBorder(),
