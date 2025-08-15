@@ -201,6 +201,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Agent Operations (Warp)
 For terminal agents working in this repo, see WARP.md at the repository root for build/lint/test commands, architecture, and gotchas.
 
+CI/tooling note (2025-08-15): CI runs Flutter 3.32.8 stable. Ensure local Flutter matches for parity.
+
 ---
 
 2025-08-08 Review Addendum (Code-Verified Notes)
