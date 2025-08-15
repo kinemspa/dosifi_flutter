@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 
 class MainShellScreen extends StatelessWidget {
   final Widget child;
@@ -8,43 +9,35 @@ class MainShellScreen extends StatelessWidget {
   const MainShellScreen({super.key, required this.child, this.currentPath});
 
   int _currentIndexFromPath(String? path) {
-    switch (path) {
-      case '/':
-        return 0;
-      case '/medications':
-        return 1;
-      case '/schedule':
-        return 2;
-      case '/calendar':
-        return 3;
-      case '/supplies':
-        return 4;
-      case '/settings':
-        return 5;
-      default:
-        return 0;
-    }
+    final p = (path ?? '/').split('?').first;
+    if (p == RoutePaths.home) return 0;
+    if (p.startsWith(RoutePaths.medications)) return 1;
+    if (p.startsWith(RoutePaths.schedule)) return 2;
+    if (p.startsWith(RoutePaths.calendar)) return 3;
+    if (p.startsWith(RoutePaths.supplies)) return 4;
+    if (p.startsWith(RoutePaths.settings)) return 5;
+    return 0;
   }
 
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go('/');
+        context.go(RoutePaths.home);
         break;
       case 1:
-        context.go('/medications');
+        context.go(RoutePaths.medications);
         break;
       case 2:
-        context.go('/schedule');
+        context.go(RoutePaths.schedule);
         break;
       case 3:
-        context.go('/calendar');
+        context.go(RoutePaths.calendar);
         break;
       case 4:
-        context.go('/supplies');
+        context.go(RoutePaths.supplies);
         break;
       case 5:
-        context.go('/settings');
+        context.go(RoutePaths.settings);
         break;
     }
   }
@@ -108,44 +101,17 @@ class MainShellScreen extends StatelessWidget {
   }
 
   String _getScreenTitle() {
-    switch (currentPath) {
-      case '/':
-        return 'Home';
-      case '/medications':
-        return 'Medications';
-      case '/supplies':
-        return 'Supplies';
-      case '/schedule':
-        return 'Schedule';
-      case '/calendar':
-        return 'Calendar';
-      case '/test/notifications':
-        return 'Notification Testing';
-      case '/settings':
-        return 'Settings';
-      default:
-        return 'Dosifi';
-    }
+    final p = (currentPath ?? '/').split('?').first;
+    if (p == RoutePaths.home) return 'Home';
+    if (p.startsWith(RoutePaths.medications)) return 'Medications';
+    if (p.startsWith(RoutePaths.supplies)) return 'Supplies';
+    if (p.startsWith(RoutePaths.schedule)) return 'Schedule';
+    if (p.startsWith(RoutePaths.calendar)) return 'Calendar';
+    if (p.startsWith(RoutePaths.notificationTest)) return 'Notification Testing';
+    if (p.startsWith(RoutePaths.settings)) return 'Settings';
+    return 'Dosifi';
   }
 
-  String _infoForPath(String path) {
-    switch (path) {
-      case '/':
-        return 'Home shows your dashboard with upcoming doses, alerts, and quick actions.';
-      case '/medications':
-        return 'Browse and manage medications. Tap a card for details or actions.';
-      case '/supplies':
-        return 'Manage medical supplies inventory and details.';
-      case '/schedule':
-        return 'View and manage medication schedules and add new ones.';
-      case '/calendar':
-        return 'See scheduled doses on a calendar and take quick actions.';
-      case '/settings':
-        return 'App preferences, diagnostics, and about information.';
-      default:
-        return 'Navigate the app using the bottom bar or the drawer.';
-    }
-  }
 
   void _showNotificationsBottomSheet(BuildContext context) {
     showModalBottomSheet(
@@ -270,7 +236,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'Dashboard overview',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/');
+                    context.go(RoutePaths.home);
                   },
                 ),
                 _buildDrawerItem(
@@ -280,7 +246,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'Manage medications',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/medications');
+                    context.go(RoutePaths.medications);
                   },
                 ),
                 _buildDrawerItem(
@@ -290,7 +256,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'Manage supplies',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/supplies');
+                    context.go(RoutePaths.supplies);
                   },
                 ),
                 _buildDrawerItem(
@@ -300,7 +266,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'Medication schedules',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/schedule');
+                    context.go(RoutePaths.schedule);
                   },
                 ),
                 _buildDrawerItem(
@@ -310,7 +276,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'Calendar view',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/calendar');
+                    context.go(RoutePaths.calendar);
                   },
                 ),
                 _buildDrawerItem(
@@ -320,7 +286,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'App preferences & diagnostics',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/settings');
+                    context.go(RoutePaths.settings);
                   },
                 ),
                 const Divider(),
@@ -332,7 +298,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'Test notification system',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/test/notifications');
+                    context.go(RoutePaths.notificationTest);
                   },
                 ),
                 _buildDrawerItem(
@@ -342,7 +308,7 @@ class MainShellScreen extends StatelessWidget {
                   subtitle: 'See all card styles/examples',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/dev/medication-cards');
+                    context.go(RoutePaths.devMedicationCards);
                   },
                 ),
               ],
@@ -379,30 +345,4 @@ class MainShellScreen extends StatelessWidget {
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('About Dosifi'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Dosifi - Medication Management App'),
-            SizedBox(height: 8),
-            Text('Version: 1.0.0'),
-            SizedBox(height: 8),
-            Text('A comprehensive medication tracking and management solution.'),
-            SizedBox(height: 16),
-            Text('Features:'),
-            Text('• Medication inventory management'),
-            Text('• Dosing schedules and reminders'),
-            Text('• Reconstitution calculator'),
-            Text('• Usage analytics and reports'),
-          ],
-        ),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
-      ),
-    );
-  }
 }

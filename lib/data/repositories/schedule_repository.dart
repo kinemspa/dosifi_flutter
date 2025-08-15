@@ -1,6 +1,7 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:dosifi_flutter/core/services/database_service.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/repositories/dose_activity_archive_repository.dart';
 
 class ScheduleRepository {
   Future<Database> get _db async => await DatabaseService.database;
@@ -72,10 +73,35 @@ class ScheduleRepository {
     );
   }
 
-  // Delete
+  // Delete (with cascade dose logs in a transaction)
   Future<int> deleteSchedule(int id) async {
     final db = await _db;
-    return await db.delete('schedules', where: 'id = ?', whereArgs: [id]);
+    return await db.transaction((txn) async {
+      // Snapshot schedule
+      final schedMaps = await txn.query('schedules', where: 'id = ?', whereArgs: [id]);
+      final schedSnapshot = schedMaps.isNotEmpty ? schedMaps.first : null;
+
+      // Archive delete event for schedule before cascading
+      try {
+        final archiveRepo = DoseActivityArchiveRepository();
+        await archiveRepo.insertRaw(
+          eventType: 'deleted_schedule',
+          occurredAt: DateTime.now(),
+          scheduleId: id,
+          medicationId: schedSnapshot != null ? schedSnapshot['medication_id'] as int? : null,
+          scheduleSnapshot: schedSnapshot,
+          userContext: {'action': 'deleteSchedule'},
+          notes: 'Cascade delete schedule',
+          actor: 'user',
+        );
+      } catch (_) {}
+
+      // Remove all dose logs for this schedule first
+      await txn.delete('dose_logs', where: 'schedule_id = ?', whereArgs: [id]);
+      // Then delete the schedule
+      final result = await txn.delete('schedules', where: 'id = ?', whereArgs: [id]);
+      return result;
+    });
   }
 
   // Additional methods for schedule provider

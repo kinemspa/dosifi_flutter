@@ -2,6 +2,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:dosifi_flutter/core/services/database_service.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';
+import 'package:dosifi_flutter/data/repositories/dose_activity_archive_repository.dart';
 
 class MedicationRepository {
   Future<Database> get _db async => await DatabaseService.database;
@@ -97,10 +98,48 @@ class MedicationRepository {
     );
   }
 
-  // Delete
+  // Delete (with cascade schedules and dose logs in a transaction)
   Future<int> deleteMedication(int id) async {
     final db = await _db;
-    return await db.delete('medications', where: 'id = ?', whereArgs: [id]);
+    return await db.transaction((txn) async {
+      // Snapshot medication
+      final medMaps = await txn.query('medications', where: 'id = ?', whereArgs: [id]);
+      final medSnapshot = medMaps.isNotEmpty ? medMaps.first : null;
+
+      // Snapshot schedules
+      final scheduleMaps = await txn.query('schedules', where: 'medication_id = ?', whereArgs: [id]);
+
+      // Archive delete event before cascading
+      try {
+        final archiveRepo = DoseActivityArchiveRepository();
+        await archiveRepo.insertRaw(
+          eventType: 'deleted_medication',
+          occurredAt: DateTime.now(),
+          medicationId: id,
+          medicationSnapshot: medSnapshot,
+          scheduleSnapshot: {'schedules': scheduleMaps},
+          userContext: {'action': 'deleteMedication'},
+          notes: 'Cascade delete initiated',
+          actor: 'user',
+        );
+      } catch (_) {}
+
+      // Find schedules for this medication
+      final scheduleIds = scheduleMaps.map((m) => m['id'] as int).toList();
+
+      // Delete dose logs for those schedules
+      if (scheduleIds.isNotEmpty) {
+        final idsCsv = List.filled(scheduleIds.length, '?').join(',');
+        await txn.delete('dose_logs', where: 'schedule_id IN ($idsCsv)', whereArgs: scheduleIds);
+      }
+
+      // Delete schedules for this medication
+      await txn.delete('schedules', where: 'medication_id = ?', whereArgs: [id]);
+
+      // Finally delete the medication
+      final result = await txn.delete('medications', where: 'id = ?', whereArgs: [id]);
+      return result;
+    });
   }
 
   // Get medication with related data

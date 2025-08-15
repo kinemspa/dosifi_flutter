@@ -3,6 +3,7 @@ import 'package:dosifi_flutter/data/models/dose_log.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/core/services/database_service.dart';
 import 'package:dosifi_flutter/core/services/medication_calculation_service.dart';
+import 'package:dosifi_flutter/data/repositories/dose_activity_archive_repository.dart';
 
 class DoseLogRepository {
   Future<Database> get _db async => await DatabaseService.database;
@@ -10,7 +11,23 @@ class DoseLogRepository {
   // Create
   Future<int> insertDoseLog(DoseLog doseLog) async {
     final db = await _db;
-    return await db.insert('dose_logs', doseLog.toMap());
+    final id = await db.insert('dose_logs', doseLog.toMap());
+
+    // Archive the creation/pending event (optional)
+    try {
+      final archiveRepo = DoseActivityArchiveRepository();
+      await archiveRepo.insertRaw(
+        eventType: doseLog.status.name,
+        occurredAt: DateTime.now(),
+        scheduleId: doseLog.scheduleId,
+        medicationId: doseLog.medicationId,
+        notes: doseLog.notes,
+        userContext: {'source': 'insertDoseLog'},
+        // No heavy snapshots here to keep it light; analytics can join if needed
+      );
+    } catch (_) {}
+
+    return id;
   }
 
   // Read
@@ -170,6 +187,21 @@ class DoseLogRepository {
         whereArgs: [id],
       );
 
+      // Archive the taken event with snapshots
+      try {
+        final archiveRepo = DoseActivityArchiveRepository();
+        await archiveRepo.insertRaw(
+          eventType: 'taken',
+          occurredAt: DateTime.now(),
+          scheduleId: doseLog.scheduleId,
+          medicationId: doseLog.medicationId,
+          notes: notes,
+          userContext: {'action': 'markDoseAsTaken'},
+          medicationSnapshot: medication.toMap(),
+          scheduleSnapshot: null,
+        );
+      } catch (_) {}
+
       // Calculate new stock quantity with safety bounds
       final currentStock = medication.stockQuantity;
       final newStockQuantity = (currentStock - stockDeduction).clamp(0.0, double.infinity);
@@ -188,17 +220,52 @@ class DoseLogRepository {
 
   Future<int> markDoseAsSkipped(int id, {String? notes}) async {
     final db = await _db;
-    return await db.update(
+    final result = await db.update(
       'dose_logs',
       {'status': DoseStatus.skipped.name, if (notes != null) 'notes': notes},
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    // Archive skipped event (lightweight, without heavy snapshots)
+    try {
+      final dose = await getDoseLogById(id);
+      if (dose != null) {
+        final archiveRepo = DoseActivityArchiveRepository();
+        await archiveRepo.insertRaw(
+          eventType: 'skipped',
+          occurredAt: DateTime.now(),
+          scheduleId: dose.scheduleId,
+          medicationId: dose.medicationId,
+          notes: notes,
+          userContext: {'action': 'markDoseAsSkipped'},
+        );
+      }
+    } catch (_) {}
+
+    return result;
   }
 
   Future<int> markDoseAsMissed(int id) async {
     final db = await _db;
-    return await db.update('dose_logs', {'status': DoseStatus.missed.name}, where: 'id = ?', whereArgs: [id]);
+    final result = await db.update('dose_logs', {'status': DoseStatus.missed.name}, where: 'id = ?', whereArgs: [id]);
+
+    // Archive missed event
+    try {
+      final dose = await getDoseLogById(id);
+      if (dose != null) {
+        final archiveRepo = DoseActivityArchiveRepository();
+        await archiveRepo.insertRaw(
+          eventType: 'missed',
+          occurredAt: DateTime.now(),
+          scheduleId: dose.scheduleId,
+          medicationId: dose.medicationId,
+          userContext: {'action': 'markDoseAsMissed'},
+        );
+      }
+    } catch (_) {}
+
+    return result;
   }
 
   // Delete

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 import 'package:dosifi_flutter/core/theme/app_theme.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
@@ -103,6 +104,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               _buildAlerts(context),
               const SizedBox(height: 16),
               _buildQuickActions(context),
+              const SizedBox(height: 16),
+              _buildToolsSection(context),
             ],
           ),
         ),
@@ -235,19 +238,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildAlerts(BuildContext context) {
     return CompactCard(
-      accentColor: Theme.of(context).colorScheme.error,
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.warning, color: Theme.of(context).colorScheme.error, size: 18),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(Icons.warning, color: Theme.of(context).colorScheme.error, size: 18),
+          ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -281,14 +283,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  String _getMedicationName(int medicationId) {
-    final medicationAsync = ref.watch(medicationByIdProvider(medicationId));
-    return medicationAsync.when(
-      data: (medication) => medication?.name ?? 'Unknown Medication',
-      loading: () => 'Loading...',
-      error: (_, __) => 'Error',
-    );
-  }
 
   Widget _buildWelcomeAndTodayCard(BuildContext context) {
     return Container(
@@ -364,25 +358,75 @@ class _WelcomeAndTodayContent extends ConsumerWidget {
         const SizedBox(height: 12),
         Text("Today's Medications", style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        // List section on a light surface for readability
-        Container(
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.all(12),
+        DefaultTextStyle.merge(
+          style: const TextStyle(color: Colors.white),
           child: schedulesAsync.when(
             data: (schedules) {
-              final todays = _getTodaysSchedules(schedules);
-              if (todays.isEmpty) {
-                return Text(
-                  'No medications scheduled for today',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontStyle: FontStyle.italic),
+              final now = DateTime.now();
+              // Only show upcoming today (after now), limit to 2, sorted by time
+              final todays = _getTodaysSchedules(schedules)
+                  .where((s) {
+                    final t = s.timeOfDay.split(':');
+                    final h = int.tryParse(t[0]) ?? 0;
+                    final m = t.length > 1 ? int.tryParse(t[1]) ?? 0 : 0;
+                    final dt = DateTime(now.year, now.month, now.day, h, m);
+                    return dt.isAfter(now);
+                  })
+                  .toList()
+                ..sort((a, b) {
+                  final ta = a.timeOfDay.split(':');
+                  final tb = b.timeOfDay.split(':');
+                  final ha = int.tryParse(ta[0]) ?? 0;
+                  final ma = ta.length > 1 ? int.tryParse(ta[1]) ?? 0 : 0;
+                  final hb = int.tryParse(tb[0]) ?? 0;
+                  final mb = tb.length > 1 ? int.tryParse(tb[1]) ?? 0 : 0;
+                  final dta = DateTime(now.year, now.month, now.day, ha, ma);
+                  final dtb = DateTime(now.year, now.month, now.day, hb, mb);
+                  return dta.compareTo(dtb);
+                });
+
+              final list = todays.take(2).toList();
+              if (list.isEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'No upcoming doses for the rest of today',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70, fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        FilledButton.tonal(
+                          onPressed: () {
+                            context.go(RoutePaths.addSchedule);
+                          },
+                          child: const Text('Add Schedule'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () {
+                            context.go(RoutePaths.addMedication);
+                          },
+                          child: const Text('Add Medication'),
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               }
-              return Column(children: [
-                for (final schedule in todays) _MedicationRow(schedule: schedule),
-              ]);
+              return Column(
+                children: [
+                  for (int i = 0; i < list.length; i++) ...[
+                    _MedicationRow(schedule: list[i]),
+                    if (i != list.length - 1)
+                      Divider(height: 10, thickness: 0.6, color: Colors.white.withValues(alpha: 0.18)),
+                  ],
+                ],
+              );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('Error: $error'),
+            loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            error: (error, _) => Text('Error: $error', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
           ),
         ),
       ],
@@ -443,10 +487,10 @@ class _MedicationRow extends ConsumerWidget {
                 Row(children: [
                   Text(schedule.timeOfDay, style: Theme.of(context).textTheme.bodySmall),
                   const SizedBox(width: 8),
-                  Text('• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                  Text('• ${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
                 ]),
                 Row(children: [
-                  Text('${schedule.doseAmount} ${schedule.doseUnit}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                  Text('${schedule.doseAmount} ${schedule.doseUnit}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
                 ]),
               ],
             ),
@@ -483,8 +527,41 @@ class _MedicationRow extends ConsumerWidget {
           );
         }
         final status = snapshot.data!;
+        final allClear = status.lowStockCount == 0 && status.expiredCount == 0 && status.expiringSoonCount == 0;
+        if (allClear) {
+          return CompactCard(
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('All clear', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text('No low stock or expiry alerts right now.', style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: () => context.go(RoutePaths.addSupply),
+                  child: const Text('Add Supply'),
+                ),
+              ],
+            ),
+          );
+        }
         return CompactCard(
-          accentColor: Theme.of(context).colorScheme.error,
           child: Row(
             children: [
               Container(
@@ -564,16 +641,16 @@ class _MedicationRow extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildActionButton(context, Icons.medication, 'Medications', () {
-                  context.go('/medications');
+                  context.go(RoutePaths.medications);
                 }),
-                _buildActionButton(context, Icons.inventory_2, 'Supplies', () {
-                  context.go('/supplies');
+                _buildActionButton(context, Icons.add_circle, 'New\nMedication', () {
+                  context.go(RoutePaths.addMedication);
                 }),
-                _buildActionButton(context, Icons.schedule, 'Schedule', () {
-                  context.go('/schedule');
+                _buildActionButton(context, Icons.playlist_add_check, 'Log\nDose', () {
+                  context.go(RoutePaths.schedule);
                 }),
-                _buildActionButton(context, Icons.calendar_month, 'Calendar', () {
-                  context.go('/calendar');
+                _buildActionButton(context, Icons.inventory_2, 'Add\nSupply', () {
+                  context.go(RoutePaths.addSupply);
                 }),
               ],
             ),
@@ -583,122 +660,65 @@ class _MedicationRow extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
+  Widget _buildToolsSection(BuildContext context) {
+    return CompactCard(
+      accentColor: Theme.of(context).colorScheme.primary,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          Row(
+            children: [
+              Icon(Icons.build, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text('Tools', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              _buildActionButton(context, Icons.science, 'Reconstitution\nCalculator', () {
+                context.go(RoutePaths.calculator);
+              }),
+              _buildActionButton(context, Icons.medication, 'New\nMedication', () {
+                context.go(RoutePaths.addMedication);
+              }),
+              _buildActionButton(context, Icons.playlist_add_check, 'Log\nDose', () {
+                context.go(RoutePaths.schedule);
+              }),
+              _buildActionButton(context, Icons.inventory_2, 'Add\nSupply', () {
+                context.go(RoutePaths.addSupply);
+              }),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  void _showNotificationsBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        minChildSize: 0.3,
-        expand: false,
-        builder: (context, scrollController) => Column(
+  Widget _buildActionButton(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    final semanticsLabel = label.replaceAll('\n', ' ');
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.notifications, color: Theme.of(context).primaryColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Notifications',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ],
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
             ),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _buildNotificationItem(
-                    context,
-                    'Medication Reminder',
-                    'Time to take your Vitamin D - 1000 IU',
-                    '2 minutes ago',
-                    Icons.medication,
-                    Colors.blue,
-                  ),
-                  _buildNotificationItem(
-                    context,
-                    'Low Stock Alert',
-                    'Omega-3 capsules running low (3 remaining)',
-                    '1 hour ago',
-                    Icons.warning,
-                    Colors.orange,
-                  ),
-                  _buildNotificationItem(
-                    context,
-                    'Expiration Warning',
-                    'Multivitamin expires in 5 days',
-                    '1 day ago',
-                    Icons.schedule,
-                    Colors.red,
-                  ),
-                  _buildNotificationItem(
-                    context,
-                    'Dose Taken',
-                    'Morning dose of Vitamin D marked as taken',
-                    '2 days ago',
-                    Icons.check_circle,
-                    Colors.green,
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 8),
+            Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNotificationItem(BuildContext context, String title, String message, String time, IconData icon, Color iconColor) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: iconColor.withValues(alpha: 0.1),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        title: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(message, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 4),
-            Text(time, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
-          ],
-        ),
-        isThreeLine: true,
-      ),
-    );
-  }
-}

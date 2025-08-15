@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';
 import 'package:dosifi_flutter/data/models/dose_log.dart';
 import 'package:dosifi_flutter/presentation/providers/dose_log_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/medication_provider.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_provider.dart';
 import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 
 class ParsedNotificationAction {
   final String action; // take|snooze|cancel|schedule|tap
@@ -119,10 +121,11 @@ class NotificationActionHandler {
         case 'schedule':
         case 'tap':
         default:
-          // Default notification tap - could open the app to the schedule screen
+          // Default notification tap - open the app to the schedule screen for the day
           if (kDebugMode) {
             print('NotificationActionHandler: Default notification tap for schedule $scheduleId');
           }
+          _navigateToScheduleForDate(scheduledDateTime);
           break;
       }
     } catch (e) {
@@ -303,5 +306,16 @@ class NotificationActionHandler {
   int _generateNotificationId(int scheduleId, DateTime date) {
     final dateString = '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
     return int.parse('$scheduleId$dateString') % 2147483647;
+  }
+
+  void _navigateToScheduleForDate(DateTime date) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null) return;
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    final uri = '${RoutePaths.schedule}?date=$y-$m-$d';
+    if (kDebugMode) print('NotificationActionHandler: Navigating to $uri');
+    ctx.go(uri);
   }
 }
