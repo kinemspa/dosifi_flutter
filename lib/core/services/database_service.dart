@@ -9,7 +9,7 @@ import 'dart:convert';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 13;
+  static const int _databaseVersion = 14;
   static const _secureStorage = FlutterSecureStorage();
   static const String _dbPasswordKey = 'dosifi_db_password';
 
@@ -243,11 +243,29 @@ class DatabaseService {
       )
     ''');
 
+    // Create dose_activity_archive table (immutable, append-only)
+    await db.execute('''
+      CREATE TABLE dose_activity_archive (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT NOT NULL,
+        occurred_at TEXT NOT NULL,
+        schedule_id INTEGER,
+        medication_id INTEGER,
+        medication_snapshot TEXT,
+        schedule_snapshot TEXT,
+        user_context TEXT,
+        notes TEXT,
+        actor TEXT NOT NULL DEFAULT 'system'
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_medications_name ON medications(name)');
     await db.execute('CREATE INDEX idx_schedules_medication ON schedules(medication_id)');
     await db.execute('CREATE INDEX idx_dose_logs_medication ON dose_logs(medication_id)');
     await db.execute('CREATE INDEX idx_dose_logs_date ON dose_logs(scheduled_time)');
+    await db.execute('CREATE INDEX idx_archive_event_type ON dose_activity_archive(event_type)');
+    await db.execute('CREATE INDEX idx_archive_occurred_at ON dose_activity_archive(occurred_at)');
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -397,6 +415,26 @@ class DatabaseService {
 
       // Drop the backup table
       await db.execute('DROP TABLE medications_backup');
+    }
+
+    // Migration to add dose_activity_archive
+    if (oldVersion < 14) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS dose_activity_archive (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          event_type TEXT NOT NULL,
+          occurred_at TEXT NOT NULL,
+          schedule_id INTEGER,
+          medication_id INTEGER,
+          medication_snapshot TEXT,
+          schedule_snapshot TEXT,
+          user_context TEXT,
+          notes TEXT,
+          actor TEXT NOT NULL DEFAULT 'system'
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_archive_event_type ON dose_activity_archive(event_type)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_archive_occurred_at ON dose_activity_archive(occurred_at)');
     }
 
     if (oldVersion < 6) {
