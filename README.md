@@ -115,6 +115,12 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 - **Performance Optimization**: Reduced unnecessary rebuilds and improved app responsiveness
 - **Clean Architecture**: Better separation of concerns and code organization
 
+### Security Hardening (2025-08-15)
+- SQLCipher key is now a securely generated 256-bit value stored in FlutterSecureStorage
+- Database foreign keys enforced via PRAGMA foreign_keys=ON
+- Backup routine copies the encrypted file (dosifi_encrypted.db)
+- Removed plain sqflite direct dependency to prevent accidental plaintext DB creation
+
 ## Technical Stack
 
 - **Framework**: Flutter (Dart)
