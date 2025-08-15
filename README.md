@@ -198,6 +198,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
+## Agent Operations (Warp)
+For terminal agents working in this repo, see WARP.md at the repository root for build/lint/test commands, architecture, and gotchas.
+
+---
+
 2025-08-08 Review Addendum (Code-Verified Notes)
 
 - Notifications: Implemented scheduling with actions; need to wire onDidReceiveNotificationResponse to NotificationActionHandler and standardize payloads (recommend JSON). Use device local timezone instead of hard-coded AU.
