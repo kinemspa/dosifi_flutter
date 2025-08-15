@@ -51,7 +51,7 @@ Recent UI updates (2025-08-13)
    - Export capabilities for healthcare providers
 
 ### Planned/Partial Features
-- **Notifications action handling (Partial)**: Notifications are scheduled; action routing and deep-link navigation to app screens to be finalized
+- **Notifications action handling (Updated 2025-08-15)**: Notifications now standardize JSON payloads and wire taps/actions to NotificationActionHandler; deep-link routing to in-app screens can be added next
 - **Analytics (Partial)**: Adherence and usage visualization present; needs real data population and more reports
 - **Settings**: Expand preferences, including configurable snooze durations and privacy settings
 
