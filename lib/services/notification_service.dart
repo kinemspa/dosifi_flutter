@@ -440,6 +440,7 @@ class NotificationService {
           category: AndroidNotificationCategory.reminder,
           actions: [
             AndroidNotificationAction(
+              // Keep legacy actionId format for backwards compat, but also embed JSON in payload
               'take_${schedule.id}_${scheduledDate.millisecondsSinceEpoch}',
               '✅ Take',
               titleColor: const Color(0xFF4CAF50),
