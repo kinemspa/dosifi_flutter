@@ -28,7 +28,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -40,63 +40,75 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final schedulesAsync = ref.watch(scheduleListProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       body: Column(
         children: [
-          Material(
-            color: Theme.of(context).primaryColor,
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                Expanded(
-                  child: TabBar(
-                    controller: _tabController,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white70,
-                    indicatorColor: Colors.white,
-                    tabs: const [
-                      Tab(text: 'Today', icon: Icon(Icons.today)),
-                      Tab(text: 'All Schedules', icon: Icon(Icons.schedule)),
-                    ],
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment<int>(
+                      value: 0,
+                      label: Text('Today'),
+                      icon: Icon(Icons.today, size: 18),
+                    ),
+                    ButtonSegment<int>(
+                      value: 1,
+                      label: Text('Calendar'),
+                      icon: Icon(Icons.calendar_month, size: 18),
+                    ),
+                    ButtonSegment<int>(
+                      value: 2,
+                      label: Text('Schedules'),
+                      icon: Icon(Icons.schedule, size: 18),
+                    ),
+                  ],
+                  selected: {_tabController.index},
+                  onSelectionChanged: (Set<int> newSelection) {
+                    setState(() {
+                      _tabController.animateTo(newSelection.first);
+                    });
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                      (states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return theme.colorScheme.primaryContainer;
+                        }
+                        return theme.colorScheme.surface;
+                      },
+                    ),
                   ),
                 ),
+                const Spacer(),
                 IconButton(
                   tooltip: 'About Schedule',
-                  icon: const Icon(Icons.info_outline, color: Colors.white),
+                  icon: Icon(Icons.info_outline, color: theme.colorScheme.primary),
                   onPressed: () {
                     InfoSheet.show(
                       context,
                       title: 'Schedule',
-                      message: 'View today\'s doses or all schedules. Use the menu to change card style. Tap a dose card to take, skip, or snooze.',
+                      message: 'View your medication schedules in three ways:\n\n• Today: See and manage today\'s doses\n• Calendar: View doses on a calendar\n• Schedules: Manage all medication schedules',
                     );
                   },
-                ),
-                PopupMenuButton<ScheduleCardLayout>(
-                  tooltip: 'Card style',
-                  icon: const Icon(Icons.view_agenda, color: Colors.white),
-                  onSelected: (layout) => ref.read(scheduleLayoutProvider.notifier).setLayout(layout),
-                  itemBuilder: (context) => ScheduleCardLayout.values
-                      .map(
-                        (l) => PopupMenuItem(
-                          value: l,
-                          child: Row(
-mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(l.displayName),
-                              Text(l.description, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [_buildTodayTab(schedulesAsync), _buildAllSchedulesTab(schedulesAsync)],
+              children: [
+                _buildTodayTab(schedulesAsync),
+                _buildCalendarTab(schedulesAsync),
+                _buildSchedulesTab(schedulesAsync),
+              ],
             ),
           ),
         ],
@@ -314,7 +326,18 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
   Widget _todayOutlinedCompactChips(Schedule schedule) => _todayOutlinedClassic(schedule);
   Widget _todayOutlinedLargeTitle(Schedule schedule) => _todayOutlinedClassic(schedule);
 
-  Widget _buildAllSchedulesTab(AsyncValue<List<Schedule>> schedulesAsync) {
+  Widget _buildCalendarTab(AsyncValue<List<Schedule>> schedulesAsync) {
+    return schedulesAsync.when(
+      data: (schedules) {
+        // TODO: Implement calendar view using DosifiCalendar widget
+        return const Center(child: Text('Calendar view coming soon'));
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error')),
+    );
+  }
+
+  Widget _buildSchedulesTab(AsyncValue<List<Schedule>> schedulesAsync) {
     return schedulesAsync.when(
       data: (schedules) {
         if (schedules.isEmpty) {
