@@ -106,6 +106,7 @@ class MedicationLayoutNotifier extends StateNotifier<MedicationCardLayout> {
   }
 }
 
-final medicationLayoutProvider = StateNotifierProvider<MedicationLayoutNotifier, MedicationCardLayout>(
-  (ref) => MedicationLayoutNotifier(),
-);
+final medicationLayoutProvider =
+    StateNotifierProvider<MedicationLayoutNotifier, MedicationCardLayout>(
+      (ref) => MedicationLayoutNotifier(),
+    );

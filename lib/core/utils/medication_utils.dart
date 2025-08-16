@@ -12,15 +12,32 @@ class MedicationUtils {
       case MedicationType.preFilledSyringe:
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        return [StrengthUnit.mcg, StrengthUnit.mg, StrengthUnit.g, StrengthUnit.iu, StrengthUnit.units];
+        return [
+          StrengthUnit.mcg,
+          StrengthUnit.mg,
+          StrengthUnit.g,
+          StrengthUnit.iu,
+          StrengthUnit.units,
+        ];
 
       case MedicationType.liquid:
       case MedicationType.drops:
-        return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g, StrengthUnit.ml, StrengthUnit.percent];
+        return [
+          StrengthUnit.mg,
+          StrengthUnit.mcg,
+          StrengthUnit.g,
+          StrengthUnit.ml,
+          StrengthUnit.percent,
+        ];
 
       case MedicationType.cream:
       case MedicationType.ointment:
-        return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.g, StrengthUnit.percent];
+        return [
+          StrengthUnit.mg,
+          StrengthUnit.mcg,
+          StrengthUnit.g,
+          StrengthUnit.percent,
+        ];
 
       case MedicationType.patch:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.iu];
@@ -33,7 +50,13 @@ class MedicationUtils {
 
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
-        return [StrengthUnit.mcg, StrengthUnit.mg, StrengthUnit.g, StrengthUnit.iu, StrengthUnit.units];
+        return [
+          StrengthUnit.mcg,
+          StrengthUnit.mg,
+          StrengthUnit.g,
+          StrengthUnit.iu,
+          StrengthUnit.units,
+        ];
 
       case MedicationType.spray:
       case MedicationType.gel:
@@ -124,14 +147,23 @@ class MedicationUtils {
   /// Get professional medication categories for better organization
   static Map<String, List<MedicationType>> getMedicationCategories() {
     return {
-      'Oral Medications': [MedicationType.tablet, MedicationType.capsule, MedicationType.liquid],
+      'Oral Medications': [
+        MedicationType.tablet,
+        MedicationType.capsule,
+        MedicationType.liquid,
+      ],
       'Injectable Medications': [
         MedicationType.preFilledSyringe,
         MedicationType.readyMadeVial,
         MedicationType.lyophilizedVial,
       ],
       'Topical Medications': [MedicationType.patch],
-      'Other Forms': [MedicationType.drops, MedicationType.inhaler, MedicationType.suppository, MedicationType.other],
+      'Other Forms': [
+        MedicationType.drops,
+        MedicationType.inhaler,
+        MedicationType.suppository,
+        MedicationType.other,
+      ],
     };
   }
 
@@ -139,9 +171,20 @@ class MedicationUtils {
   static List<String> getCommonDosageForms(MedicationType type) {
     switch (type) {
       case MedicationType.tablet:
-        return ['Standard Tablet', 'Extended-Release', 'Chewable', 'Sublingual', 'Orally Disintegrating'];
+        return [
+          'Standard Tablet',
+          'Extended-Release',
+          'Chewable',
+          'Sublingual',
+          'Orally Disintegrating',
+        ];
       case MedicationType.capsule:
-        return ['Hard Capsule', 'Soft Capsule', 'Extended-Release', 'Enteric-Coated'];
+        return [
+          'Hard Capsule',
+          'Soft Capsule',
+          'Extended-Release',
+          'Enteric-Coated',
+        ];
       case MedicationType.liquid:
         return ['Solution', 'Suspension', 'Syrup', 'Elixir'];
       case MedicationType.preFilledSyringe:
@@ -175,7 +218,11 @@ class MedicationUtils {
   }
 
   /// Validate strength value based on medication type
-  static String? validateStrength(MedicationType type, double? strength, StrengthUnit unit) {
+  static String? validateStrength(
+    MedicationType type,
+    double? strength,
+    StrengthUnit unit,
+  ) {
     if (strength == null || strength <= 0) {
       return 'Please enter a valid strength';
     }

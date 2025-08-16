@@ -15,95 +15,108 @@ final doseLogListProvider = FutureProvider<List<DoseLog>>((ref) async {
 });
 
 // Provider for dose logs in a date range
-final doseLogsInRangeProvider = FutureProvider.family<List<DoseLog>, DateRange>((ref, dateRange) async {
-  final repository = ref.read(doseLogRepositoryProvider);
-  return repository.getDoseLogsInRange(dateRange.start, dateRange.end);
-});
+final doseLogsInRangeProvider = FutureProvider.family<List<DoseLog>, DateRange>(
+  (ref, dateRange) async {
+    final repository = ref.read(doseLogRepositoryProvider);
+    return repository.getDoseLogsInRange(dateRange.start, dateRange.end);
+  },
+);
 
 // Provider for adherence statistics
-final adherenceStatsProvider = FutureProvider.family<AdherenceStats, DateRange>((ref, dateRange) async {
-  final repository = ref.read(doseLogRepositoryProvider);
-  final doseLogs = await repository.getDoseLogsInRange(dateRange.start, dateRange.end);
+final adherenceStatsProvider = FutureProvider.family<AdherenceStats, DateRange>(
+  (ref, dateRange) async {
+    final repository = ref.read(doseLogRepositoryProvider);
+    final doseLogs = await repository.getDoseLogsInRange(
+      dateRange.start,
+      dateRange.end,
+    );
 
-  int taken = 0;
-  int missed = 0;
-  int skipped = 0;
-  int pending = 0;
+    int taken = 0;
+    int missed = 0;
+    int skipped = 0;
+    int pending = 0;
 
-  for (final log in doseLogs) {
-    switch (log.status) {
-      case DoseStatus.taken:
-        taken++;
-        break;
-      case DoseStatus.missed:
-        missed++;
-        break;
-      case DoseStatus.skipped:
-        skipped++;
-        break;
-      case DoseStatus.pending:
-        pending++;
-        break;
+    for (final log in doseLogs) {
+      switch (log.status) {
+        case DoseStatus.taken:
+          taken++;
+          break;
+        case DoseStatus.missed:
+          missed++;
+          break;
+        case DoseStatus.skipped:
+          skipped++;
+          break;
+        case DoseStatus.pending:
+          pending++;
+          break;
+      }
     }
-  }
 
-  final total = taken + missed + skipped + pending;
-  final adherenceRate = total > 0 ? (taken / total * 100) : 0.0;
+    final total = taken + missed + skipped + pending;
+    final adherenceRate = total > 0 ? (taken / total * 100) : 0.0;
 
-  return AdherenceStats(
-    taken: taken,
-    missed: missed,
-    skipped: skipped,
-    pending: pending,
-    total: total,
-    adherenceRate: adherenceRate,
-  );
-});
+    return AdherenceStats(
+      taken: taken,
+      missed: missed,
+      skipped: skipped,
+      pending: pending,
+      total: total,
+      adherenceRate: adherenceRate,
+    );
+  },
+);
 
 // Provider for medication-specific adherence
 // Note: This should use a medication repository instead of dose log list
 // For now, returning empty list to prevent compilation error
-final medicationAdherenceProvider = FutureProvider.family<List<MedicationAdherence>, DateRange>((ref, dateRange) async {
-  // TODO: Replace with actual medication repository when available
-  return <MedicationAdherence>[];
+final medicationAdherenceProvider =
+    FutureProvider.family<List<MedicationAdherence>, DateRange>((
+      ref,
+      dateRange,
+    ) async {
+      // TODO: Replace with actual medication repository when available
+      return <MedicationAdherence>[];
 
-  // final repository = ref.read(doseLogRepositoryProvider);
-  // final medications = await ref.read(medicationListProvider.future); // Need medication provider
-  //
-  // final adherenceList = <MedicationAdherence>[];
-  //
-  // for (final medication in medications) {
-  //   if (medication.id != null) {
-  //     final stats = await repository.getDoseComplianceStats(
-  //       medication.id!,
-  //       dateRange.start,
-  //       dateRange.end,
-  //     );
-  //
-  //     final taken = stats['taken'] ?? 0;
-  //     final missed = stats['missed'] ?? 0;
-  //     final skipped = stats['skipped'] ?? 0;
-  //     final pending = stats['pending'] ?? 0;
-  //     final total = taken + missed + skipped + pending;
-  //     final adherenceRate = total > 0 ? (taken / total * 100) : 0.0;
-  //
-  //     adherenceList.add(MedicationAdherence(
-  //       medication: medication,
-  //       taken: taken,
-  //       missed: missed,
-  //       skipped: skipped,
-  //       pending: pending,
-  //       total: total,
-  //       adherenceRate: adherenceRate,
-  //     ));
-  //   }
-  // }
-  //
-  // return adherenceList;
-});
+      // final repository = ref.read(doseLogRepositoryProvider);
+      // final medications = await ref.read(medicationListProvider.future); // Need medication provider
+      //
+      // final adherenceList = <MedicationAdherence>[];
+      //
+      // for (final medication in medications) {
+      //   if (medication.id != null) {
+      //     final stats = await repository.getDoseComplianceStats(
+      //       medication.id!,
+      //       dateRange.start,
+      //       dateRange.end,
+      //     );
+      //
+      //     final taken = stats['taken'] ?? 0;
+      //     final missed = stats['missed'] ?? 0;
+      //     final skipped = stats['skipped'] ?? 0;
+      //     final pending = stats['pending'] ?? 0;
+      //     final total = taken + missed + skipped + pending;
+      //     final adherenceRate = total > 0 ? (taken / total * 100) : 0.0;
+      //
+      //     adherenceList.add(MedicationAdherence(
+      //       medication: medication,
+      //       taken: taken,
+      //       missed: missed,
+      //       skipped: skipped,
+      //       pending: pending,
+      //       total: total,
+      //       adherenceRate: adherenceRate,
+      //     ));
+      //   }
+      // }
+      //
+      // return adherenceList;
+    });
 
 // Provider for weekly adherence trend
-final weeklyAdherenceTrendProvider = FutureProvider<List<WeeklyAdherence>>((ref) async {
+final weeklyAdherenceTrendProvider = FutureProvider<List<WeeklyAdherence>>((
+  ref,
+) async {
   final repository = ref.read(doseLogRepositoryProvider);
   final weeks = <WeeklyAdherence>[];
 
@@ -126,7 +139,13 @@ final weeklyAdherenceTrendProvider = FutureProvider<List<WeeklyAdherence>>((ref)
     final adherenceRate = total > 0 ? (taken / total * 100) : 0.0;
 
     weeks.add(
-      WeeklyAdherence(weekStart: weekStart, weekEnd: weekEnd, taken: taken, total: total, adherenceRate: adherenceRate),
+      WeeklyAdherence(
+        weekStart: weekStart,
+        weekEnd: weekEnd,
+        taken: taken,
+        total: total,
+        adherenceRate: adherenceRate,
+      ),
     );
   }
 

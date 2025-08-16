@@ -31,7 +31,8 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   CalendarView _currentView = CalendarView.month;
-  final EventController<_CalendarEvent> _controller = EventController<_CalendarEvent>();
+  final EventController<_CalendarEvent> _controller =
+      EventController<_CalendarEvent>();
   List<CalendarEventData<_CalendarEvent>> _addedEvents = [];
 
   // Cached for debounced rebuilds
@@ -106,15 +107,33 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
               itemBuilder: (context) => const [
                 PopupMenuItem(
                   value: CalendarView.month,
-                  child: Row(children: [Icon(Icons.calendar_view_month), SizedBox(width: 8), Text('Month')]),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_view_month),
+                      SizedBox(width: 8),
+                      Text('Month'),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: CalendarView.week,
-                  child: Row(children: [Icon(Icons.calendar_view_week), SizedBox(width: 8), Text('Week')]),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_view_week),
+                      SizedBox(width: 8),
+                      Text('Week'),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: CalendarView.day,
-                  child: Row(children: [Icon(Icons.calendar_today), SizedBox(width: 8), Text('Day')]),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today),
+                      SizedBox(width: 8),
+                      Text('Day'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -130,8 +149,14 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
               child: _buildCalendarView(),
             );
           },
-          loading: () => const SizedBox(height: 300, child: Center(child: CircularProgressIndicator())),
-          error: (error, stack) => SizedBox(height: 300, child: Center(child: Text('Error: $error'))),
+          loading: () => const SizedBox(
+            height: 300,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => SizedBox(
+            height: 300,
+            child: Center(child: Text('Error: $error')),
+          ),
         ),
         Expanded(child: _buildEventsList()),
       ],
@@ -211,7 +236,7 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     // Use up to ~40% of screen height for calendar view, bounded by fallback
     final target = h * 0.4;
     // Clamp between 280 and fallback
-    return target.clamp(280.0, fallback) as double;
+    return target.clamp(280.0, fallback);
   }
 
   void _rebuildEvents(List<Schedule> schedules, List<DoseLog> doseLogs) {
@@ -225,10 +250,22 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     final List<CalendarEventData<_CalendarEvent>> data = [];
 
     // We’ll generate events for a reasonable window around the focused month/week/day
-    final start = DateTime(_focusedDay.year, _focusedDay.month, 1).subtract(const Duration(days: 7));
-    final end = DateTime(_focusedDay.year, _focusedDay.month + 1, 0).add(const Duration(days: 7));
+    final start = DateTime(
+      _focusedDay.year,
+      _focusedDay.month,
+      1,
+    ).subtract(const Duration(days: 7));
+    final end = DateTime(
+      _focusedDay.year,
+      _focusedDay.month + 1,
+      0,
+    ).add(const Duration(days: 7));
 
-    for (DateTime day = start; !day.isAfter(end); day = day.add(const Duration(days: 1))) {
+    for (
+      DateTime day = start;
+      !day.isAfter(end);
+      day = day.add(const Duration(days: 1))
+    ) {
       for (final schedule in schedules) {
         if (schedule.isActiveOnDate(day)) {
           final timeParts = schedule.timeOfDay.split(':');
@@ -262,14 +299,17 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
           );
           if (!_passesFilter(meta)) continue;
           final color = _eventColor(meta);
-          final medName = _medicationNameMap()[schedule.medicationId] ?? 'Medication ${schedule.medicationId}';
+          final medName =
+              _medicationNameMap()[schedule.medicationId] ??
+              'Medication ${schedule.medicationId}';
           data.add(
             CalendarEventData<_CalendarEvent>(
               date: DateTime(day.year, day.month, day.day),
               startTime: startDt,
               endTime: endDt,
               title: medName,
-              description: '${schedule.doseAmount} ${schedule.doseUnit} • ${schedule.timeOfDay}',
+              description:
+                  '${schedule.doseAmount} ${schedule.doseUnit} • ${schedule.timeOfDay}',
               color: color,
               event: meta,
             ),
@@ -289,7 +329,11 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     return schedulesAsync.when(
       data: (schedules) {
         final doseLogs = doseLogsAsync.value ?? [];
-        final events = _computeEventsForDate(_selectedDay, schedules, doseLogs).where(_passesFilter).toList();
+        final events = _computeEventsForDate(
+          _selectedDay,
+          schedules,
+          doseLogs,
+        ).where(_passesFilter).toList();
 
         if (events.isEmpty) {
           return Center(
@@ -300,7 +344,9 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                 const SizedBox(height: 16),
                 Text(
                   'No doses scheduled for ${DateFormat('MMMM d, yyyy').format(_selectedDay)}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -323,25 +369,37 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
   }
 
   Widget _buildEventCard(_CalendarEvent event) {
-    final medicationAsync = ref.watch(medicationByIdProvider(event.schedule.medicationId));
+    final medicationAsync = ref.watch(
+      medicationByIdProvider(event.schedule.medicationId),
+    );
     final isCompleted = event.doseLog?.status == DoseStatus.taken;
     final isMissed = event.doseLog?.status == DoseStatus.missed;
     final isCancelledByLog = event.doseLog?.status == DoseStatus.skipped;
-    final isOverdue = !isCompleted && !isMissed && !isCancelledByLog && event.scheduledTime.isBefore(DateTime.now());
+    final isOverdue =
+        !isCompleted &&
+        !isMissed &&
+        !isCancelledByLog &&
+        event.scheduledTime.isBefore(DateTime.now());
 
     final overrideRepo = ScheduleOverrideRepository();
 
     return FutureBuilder<ScheduleOverride?>(
       future: event.schedule.id == null
           ? Future.value(null)
-          : overrideRepo.getOverrideForDate(event.schedule.id!, event.scheduledTime),
+          : overrideRepo.getOverrideForDate(
+              event.schedule.id!,
+              event.scheduledTime,
+            ),
       builder: (context, snapshot) {
         final override = snapshot.data;
-        final isCancelled = isCancelledByLog || (override?.isCancelled ?? false);
-        final displayTimeStr = (override?.timeOfDay != null && (override!.timeOfDay!.isNotEmpty))
+        final isCancelled =
+            isCancelledByLog || (override?.isCancelled ?? false);
+        final displayTimeStr =
+            (override?.timeOfDay != null && (override!.timeOfDay!.isNotEmpty))
             ? override.timeOfDay!
             : DateFormat('HH:mm').format(event.scheduledTime);
-        final displayDoseAmount = override?.doseAmount ?? event.schedule.doseAmount;
+        final displayDoseAmount =
+            override?.doseAmount ?? event.schedule.doseAmount;
         final displayDoseUnit = override?.doseUnit ?? event.schedule.doseUnit;
         final hasEdits =
             override != null &&
@@ -390,26 +448,35 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                         medicationAsync.when(
                           data: (medication) => Text(
                             medication?.name ?? 'Unknown Medication',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              decoration: isCompleted ? TextDecoration.lineThrough : null,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
                           ),
                           loading: () => const Text('Loading...'),
-                          error: (_, __) => Text('Medication ID: ${event.schedule.medicationId}'),
+                          error: (_, __) => Text(
+                            'Medication ID: ${event.schedule.medicationId}',
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '$displayTimeStr - $displayDoseAmount $displayDoseUnit',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                            decoration: isCancelled ? TextDecoration.lineThrough : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.grey[600],
+                                decoration: isCancelled
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
                         ),
                         if (event.doseLog?.takenTime != null)
                           Text(
                             'Taken at ${DateFormat('HH:mm').format(event.doseLog!.takenTime!)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.green),
                           ),
                       ],
                     ),
@@ -422,12 +489,20 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                   if (isCancelled)
                     const Padding(
                       padding: EdgeInsets.only(right: 8.0),
-                      child: LabelChip(label: 'Cancelled (override)', icon: Icons.cancel, color: Colors.grey),
+                      child: LabelChip(
+                        label: 'Cancelled (override)',
+                        icon: Icons.cancel,
+                        color: Colors.grey,
+                      ),
                     )
                   else if (hasEdits)
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
-                      child: LabelChip(label: 'Edited', icon: Icons.edit, color: Colors.amber),
+                      child: LabelChip(
+                        label: 'Edited',
+                        icon: Icons.edit,
+                        color: Colors.amber,
+                      ),
                     ),
                 ],
               ),
@@ -435,7 +510,8 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
               if (!isCompleted &&
                   !isMissed &&
                   !isCancelled &&
-                  (_isSameDay(event.scheduledTime, DateTime.now()) || event.scheduledTime.isAfter(DateTime.now())))
+                  (_isSameDay(event.scheduledTime, DateTime.now()) ||
+                      event.scheduledTime.isAfter(DateTime.now())))
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -455,7 +531,11 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                       icon: const Icon(Icons.edit_calendar, size: 18),
                       label: const Text('Edit this day'),
                       onPressed: () {
-                        _showEditDayDialog(context, event.schedule, event.scheduledTime);
+                        _showEditDayDialog(
+                          context,
+                          event.schedule,
+                          event.scheduledTime,
+                        );
                       },
                     ),
                   ],
@@ -467,9 +547,17 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     );
   }
 
-  void _showEditDayDialog(BuildContext context, Schedule schedule, DateTime day) {
-    final timeController = TextEditingController(text: DateFormat('HH:mm').format(day));
-    final doseController = TextEditingController(text: schedule.doseAmount.toString());
+  void _showEditDayDialog(
+    BuildContext context,
+    Schedule schedule,
+    DateTime day,
+  ) {
+    final timeController = TextEditingController(
+      text: DateFormat('HH:mm').format(day),
+    );
+    final doseController = TextEditingController(
+      text: schedule.doseAmount.toString(),
+    );
     String unit = schedule.doseUnit;
     bool cancel = false;
 
@@ -500,23 +588,30 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                 Expanded(
                   child: TextField(
                     controller: doseController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(hintText: 'Amount'),
                   ),
                 ),
                 const SizedBox(width: 8),
                 DropdownButton<String>(
                   value: unit,
-                  items: <String>[
-                    'mg',
-                    'mcg',
-                    'g',
-                    'mL',
-                    'units',
-                    'tablet',
-                    'capsule',
-                    'drops',
-                  ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  items:
+                      <String>[
+                            'mg',
+                            'mcg',
+                            'g',
+                            'mL',
+                            'units',
+                            'tablet',
+                            'capsule',
+                            'drops',
+                          ]
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
                   onChanged: (v) {
                     if (v != null) {
                       setState(() {
@@ -545,7 +640,10 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
           ElevatedButton.icon(
             icon: const Icon(Icons.save),
             label: const Text('Save'),
@@ -556,7 +654,9 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
               await notifier.setDayOverride(
                 scheduleId: schedule.id!,
                 date: day,
-                timeOfDay: cancel ? null : (time.isNotEmpty ? time : schedule.timeOfDay),
+                timeOfDay: cancel
+                    ? null
+                    : (time.isNotEmpty ? time : schedule.timeOfDay),
                 doseAmount: cancel ? null : dose,
                 doseUnit: cancel ? null : unit,
                 isCancelled: cancel,
@@ -569,14 +669,24 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     );
   }
 
-  List<_CalendarEvent> _computeEventsForDate(DateTime day, List<Schedule> schedules, List<DoseLog> doseLogs) {
+  List<_CalendarEvent> _computeEventsForDate(
+    DateTime day,
+    List<Schedule> schedules,
+    List<DoseLog> doseLogs,
+  ) {
     final events = <_CalendarEvent>[];
     for (final schedule in schedules) {
       if (schedule.isActiveOnDate(day)) {
         final timeParts = schedule.timeOfDay.split(':');
         final hour = int.parse(timeParts[0]);
         final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-        final scheduledDateTime = DateTime(day.year, day.month, day.day, hour, minute);
+        final scheduledDateTime = DateTime(
+          day.year,
+          day.month,
+          day.day,
+          hour,
+          minute,
+        );
         final match = doseLogs.firstWhere(
           (log) =>
               log.medicationId == schedule.medicationId &&
@@ -613,7 +723,9 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
   // Filters UI
 
   bool _passesFilter(_CalendarEvent e) {
-    final medsOk = _selectedMedicationIds.isEmpty || _selectedMedicationIds.contains(e.schedule.medicationId);
+    final medsOk =
+        _selectedMedicationIds.isEmpty ||
+        _selectedMedicationIds.contains(e.schedule.medicationId);
     final status = _deriveStatus(e);
     final statusOk = _selectedStatuses.contains(status);
     return medsOk && statusOk;
@@ -652,8 +764,12 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     if (e.doseLog?.status == DoseStatus.missed) return Colors.red.shade600;
     if (e.doseLog?.status == DoseStatus.skipped) return Colors.grey;
     // Overdue pending -> orange, else medication color
-    final overdue = e.scheduledTime.isBefore(DateTime.now()) && !_isSameDay(e.scheduledTime, DateTime.now());
-    return overdue ? Colors.orange.shade700 : _colorForMedication(e.schedule.medicationId);
+    final overdue =
+        e.scheduledTime.isBefore(DateTime.now()) &&
+        !_isSameDay(e.scheduledTime, DateTime.now());
+    return overdue
+        ? Colors.orange.shade700
+        : _colorForMedication(e.schedule.medicationId);
   }
 
   Color _colorForMedication(int medicationId) {
@@ -678,7 +794,9 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) {
         return DraggableScrollableSheet(
           expand: false,
@@ -686,7 +804,9 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
           minChildSize: 0.4,
           maxChildSize: 0.9,
           builder: (context, controller) {
-            final first = events.isNotEmpty ? events.first.event as _CalendarEvent? : null;
+            final first = events.isNotEmpty
+                ? events.first.event as _CalendarEvent?
+                : null;
             return ListView(
               controller: controller,
               padding: const EdgeInsets.all(16),
@@ -699,7 +819,11 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Quick actions', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                          Text(
+                            'Quick actions',
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 8),
                           DoseActionButtons(
                             schedule: first.schedule,
@@ -717,7 +841,10 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                 ...List.generate(events.length, (index) {
                   final ev = events[index].event as _CalendarEvent?;
                   if (ev == null) return const SizedBox.shrink();
-                  return Padding(padding: const EdgeInsets.only(bottom: 8.0), child: _buildEventCard(ev));
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: _buildEventCard(ev),
+                  );
                 }),
               ],
             );
@@ -746,8 +873,14 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
 
   Future<void> _saveFilterPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('calendar_filter_meds', _selectedMedicationIds.map((e) => e.toString()).toList());
-    await prefs.setStringList('calendar_filter_status', _selectedStatuses.map(_statusKey).toList());
+    await prefs.setStringList(
+      'calendar_filter_meds',
+      _selectedMedicationIds.map((e) => e.toString()).toList(),
+    );
+    await prefs.setStringList(
+      'calendar_filter_status',
+      _selectedStatuses.map(_statusKey).toList(),
+    );
   }
 
   Map<int, String> _medicationNameMap() {
@@ -819,8 +952,10 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
   // Active filter summary chip shown next to the Filters button
   Widget _activeFilterSummaryChip() {
     final medCount = _selectedMedicationIds.length;
-    final deselectedStatuses = _StatusFilter.values.length - _selectedStatuses.length;
-    if (medCount == 0 && deselectedStatuses == 0) return const SizedBox.shrink();
+    final deselectedStatuses =
+        _StatusFilter.values.length - _selectedStatuses.length;
+    if (medCount == 0 && deselectedStatuses == 0)
+      return const SizedBox.shrink();
     final parts = <String>[];
     if (medCount > 0) parts.add('$medCount meds');
     if (deselectedStatuses > 0) parts.add('$deselectedStatuses status off');
@@ -837,22 +972,36 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
+
   // Filters button that opens bottom sheet (with badge)
   Widget _filtersButtonWithBadge(BuildContext context) {
-    final deselectedStatuses = _StatusFilter.values.length - _selectedStatuses.length;
-    final activeCount = _selectedMedicationIds.length + (deselectedStatuses > 0 ? deselectedStatuses : 0);
+    final deselectedStatuses =
+        _StatusFilter.values.length - _selectedStatuses.length;
+    final activeCount =
+        _selectedMedicationIds.length +
+        (deselectedStatuses > 0 ? deselectedStatuses : 0);
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        IconButton(icon: const Icon(Icons.filter_list), tooltip: 'Filters', onPressed: _showFiltersSheet),
+        IconButton(
+          icon: const Icon(Icons.filter_list),
+          tooltip: 'Filters',
+          onPressed: _showFiltersSheet,
+        ),
         if (activeCount > 0)
           Positioned(
             right: 4,
             top: 4,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
-              child: Text('$activeCount', style: const TextStyle(color: Colors.white, fontSize: 10)),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$activeCount',
+                style: const TextStyle(color: Colors.white, fontSize: 10),
+              ),
             ),
           ),
       ],
@@ -871,7 +1020,9 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.8,
@@ -881,7 +1032,11 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
           padding: const EdgeInsets.all(16),
           child: StatefulBuilder(
             builder: (context, setLocal) {
-              final filteredMeds = meds.where((m) => m.name.toLowerCase().contains(query.toLowerCase())).toList();
+              final filteredMeds = meds
+                  .where(
+                    (m) => m.name.toLowerCase().contains(query.toLowerCase()),
+                  )
+                  .toList();
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -889,7 +1044,10 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                     children: [
                       const Icon(Icons.filter_list),
                       const SizedBox(width: 8),
-                      const Text('Filters', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Filters',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const Spacer(),
                       TextButton(
                         onPressed: () {
@@ -920,13 +1078,19 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                     }),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Medications', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Medications',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       TextButton.icon(
                         onPressed: () {
-                          final allIds = meds.map((m) => m.id).whereType<int>().toList();
+                          final allIds = meds
+                              .map((m) => m.id)
+                              .whereType<int>()
+                              .toList();
                           setState(() {
                             tempMeds
                               ..clear()
@@ -976,7 +1140,10 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Status', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Status',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   Wrap(
                     spacing: 6,
                     children: _StatusFilter.values.map((s) {
@@ -985,12 +1152,16 @@ class _DosifiCalendarState extends ConsumerState<DosifiCalendar> {
                       return FilterChip(
                         label: Text(
                           _statusLabel(s),
-                          style: TextStyle(color: on ? cs.onPrimary : cs.onSurface),
+                          style: TextStyle(
+                            color: on ? cs.onPrimary : cs.onSurface,
+                          ),
                         ),
                         selected: on,
                         selectedColor: cs.primary,
                         backgroundColor: cs.surface,
-                        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.2)),
+                        side: BorderSide(
+                          color: cs.onSurface.withValues(alpha: 0.2),
+                        ),
                         showCheckmark: false,
                         onSelected: (v) {
                           setState(() {
@@ -1041,5 +1212,9 @@ class _CalendarEvent {
   final DoseLog? doseLog;
   final DateTime scheduledTime;
 
-  _CalendarEvent({required this.schedule, required this.doseLog, required this.scheduledTime});
+  _CalendarEvent({
+    required this.schedule,
+    required this.doseLog,
+    required this.scheduledTime,
+  });
 }

@@ -4,7 +4,8 @@ import 'package:dosifi_flutter/core/services/notification_action_handler.dart';
 void main() {
   group('NotificationActionHandler.parseNotificationInput', () {
     test('parses JSON payload with action field', () {
-      final payload = '{"action":"take","scheduleId":42,"timestamp":1700000000000}';
+      final payload =
+          '{"action":"take","scheduleId":42,"timestamp":1700000000000}';
       final parsed = NotificationActionHandler.parseNotificationInput(payload);
       expect(parsed, isNotNull);
       expect(parsed!.action, 'take');
@@ -13,7 +14,8 @@ void main() {
     });
 
     test('parses JSON payload with type field (tap)', () {
-      final payload = '{"type":"schedule","scheduleId":7,"timestamp":1700000001000}';
+      final payload =
+          '{"type":"schedule","scheduleId":7,"timestamp":1700000001000}';
       final parsed = NotificationActionHandler.parseNotificationInput(payload);
       expect(parsed, isNotNull);
       expect(parsed!.action, 'schedule');

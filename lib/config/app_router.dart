@@ -85,7 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: RouteNames.home,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const DashboardScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const DashboardScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -93,7 +96,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: RouteNames.medications,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsListScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const MedicationsListScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -101,7 +107,10 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
         name: RouteNames.supplies,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const SuppliesScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const SuppliesScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -109,7 +118,10 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
         name: RouteNames.schedule,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const ScheduleScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const ScheduleScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -117,7 +129,10 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
         name: RouteNames.calendar,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const CalendarScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const CalendarScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -136,7 +151,10 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
         name: RouteNames.settings,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const SettingsScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const SettingsScreen(),
+          ),
         ),
       ),
       // Development/Testing routes
@@ -145,7 +163,10 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
         name: RouteNames.notificationTest,
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
-          child: MainShellScreen(currentPath: state.fullPath, child: const NotificationTestScreen()),
+          child: MainShellScreen(
+            currentPath: state.fullPath,
+            child: const NotificationTestScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -175,7 +196,10 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
           final medicationId = state.pathParameters['id']!;
           return MaterialPage(
             key: state.pageKey,
-            child: MedicationFormScreenRefactored(medicationId: medicationId, compactSheetMode: false),
+            child: MedicationFormScreenRefactored(
+              medicationId: medicationId,
+              compactSheetMode: false,
+            ),
           );
         },
       ),
@@ -194,7 +218,8 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
       GoRoute(
         path: RoutePaths.addSupply,
         name: RouteNames.addSupply,
-        pageBuilder: (context, state) => MaterialPage(key: state.pageKey, child: const AddSupplyScreen()),
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const AddSupplyScreen()),
       ),
       GoRoute(
         path: RoutePaths.editSupply,
@@ -211,7 +236,8 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
       GoRoute(
         path: RoutePaths.addSchedule,
         name: RouteNames.addSchedule,
-        pageBuilder: (context, state) => MaterialPage(key: state.pageKey, child: const AddScheduleScreen()),
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const AddScheduleScreen()),
       ),
       GoRoute(
         path: RoutePaths.editSchedule,
@@ -234,11 +260,20 @@ child: MainShellScreen(currentPath: state.fullPath, child: const MedicationsList
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              Text('Page not found', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Page not found',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 8),
-              Text(state.error?.toString() ?? 'Unknown error', style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                state.error?.toString() ?? 'Unknown error',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 24),
-              ElevatedButton(onPressed: () => context.go(RoutePaths.home), child: const Text('Go Home')),
+              ElevatedButton(
+                onPressed: () => context.go(RoutePaths.home),
+                child: const Text('Go Home'),
+              ),
             ],
           ),
         ),
@@ -262,6 +297,7 @@ extension NavigationExtensions on BuildContext {
       go(RoutePaths.schedule);
     }
   }
+
   void navigateToCalendar() => go(RoutePaths.calendar);
   void navigateToAddMedication() => go(RoutePaths.addMedication);
   void navigateToMedicationDetails(String id) => go('/medications/$id');

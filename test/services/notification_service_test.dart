@@ -13,7 +13,8 @@ void main() {
 
   group('NotificationActionHandler.parseNotificationInput', () {
     test('parses JSON payload', () {
-      final payload = '{"type":"schedule","scheduleId":5,"timestamp":1700000001000}';
+      final payload =
+          '{"type":"schedule","scheduleId":5,"timestamp":1700000001000}';
       final parsed = NotificationActionHandler.parseNotificationInput(payload);
       expect(parsed, isNotNull);
       expect(parsed!.action, 'schedule');

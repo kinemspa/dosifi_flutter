@@ -11,29 +11,44 @@ class DoseSchedulingService {
   final ScheduleRepository _scheduleRepository;
   final DoseLogRepository _doseLogRepository;
 
-  DoseSchedulingService({required ScheduleRepository scheduleRepository, required DoseLogRepository doseLogRepository})
-    : _scheduleRepository = scheduleRepository,
-      _doseLogRepository = doseLogRepository;
+  DoseSchedulingService({
+    required ScheduleRepository scheduleRepository,
+    required DoseLogRepository doseLogRepository,
+  }) : _scheduleRepository = scheduleRepository,
+       _doseLogRepository = doseLogRepository;
 
   /// Generate dose logs from active schedules for a specific date range
-  Future<void> generateDoseLogsForDateRange(DateTime startDate, DateTime endDate) async {
+  Future<void> generateDoseLogsForDateRange(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
     debugPrint('🕐 Generating dose logs from $startDate to $endDate');
 
     final schedules = await _scheduleRepository.getActiveSchedules();
-    final existingLogs = await _doseLogRepository.getDoseLogsInRange(startDate, endDate);
+    final existingLogs = await _doseLogRepository.getDoseLogsInRange(
+      startDate,
+      endDate,
+    );
 
     // Create a set of existing log identifiers to avoid duplicates
     final existingLogKeys = existingLogs
-        .map((log) => '${log.medicationId}_${log.scheduledTime.toIso8601String()}')
+        .map(
+          (log) => '${log.medicationId}_${log.scheduledTime.toIso8601String()}',
+        )
         .toSet();
 
     final logsToCreate = <DoseLog>[];
 
     for (final schedule in schedules) {
-      final scheduledTimes = _calculateScheduledTimesForDateRange(schedule, startDate, endDate);
+      final scheduledTimes = _calculateScheduledTimesForDateRange(
+        schedule,
+        startDate,
+        endDate,
+      );
 
       for (final scheduledTime in scheduledTimes) {
-        final logKey = '${schedule.medicationId}_${scheduledTime.toIso8601String()}';
+        final logKey =
+            '${schedule.medicationId}_${scheduledTime.toIso8601String()}';
 
         // Only create if it doesn't already exist
         if (!existingLogKeys.contains(logKey)) {
@@ -76,7 +91,11 @@ class DoseSchedulingService {
   }
 
   /// Calculate scheduled times for a schedule within a date range
-  List<DateTime> _calculateScheduledTimesForDateRange(Schedule schedule, DateTime startDate, DateTime endDate) {
+  List<DateTime> _calculateScheduledTimesForDateRange(
+    Schedule schedule,
+    DateTime startDate,
+    DateTime endDate,
+  ) {
     final scheduledTimes = <DateTime>[];
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
@@ -86,7 +105,13 @@ class DoseSchedulingService {
 
     while (currentDate.isBefore(endDate)) {
       if (schedule.isActiveOnDate(currentDate)) {
-        final scheduledTime = DateTime(currentDate.year, currentDate.month, currentDate.day, hour, minute);
+        final scheduledTime = DateTime(
+          currentDate.year,
+          currentDate.month,
+          currentDate.day,
+          hour,
+          minute,
+        );
         scheduledTimes.add(scheduledTime);
       }
       currentDate = currentDate.add(const Duration(days: 1));
@@ -110,7 +135,8 @@ class DoseSchedulingService {
       scheduledTime: snoozedTime,
       status: DoseStatus.pending,
       doseAmount: doseLog.doseAmount,
-      notes: 'Snoozed from ${DateFormat('HH:mm').format(doseLog.scheduledTime)}',
+      notes:
+          'Snoozed from ${DateFormat('HH:mm').format(doseLog.scheduledTime)}',
     );
 
     // Mark the original as skipped
@@ -122,7 +148,11 @@ class DoseSchedulingService {
   }
 
   /// Take a dose and handle inventory deduction
-  Future<void> takeDose(int doseLogId, {double? actualDoseAmount, String? notes}) async {
+  Future<void> takeDose(
+    int doseLogId, {
+    double? actualDoseAmount,
+    String? notes,
+  }) async {
     await _doseLogRepository.markDoseAsTaken(
       doseLogId,
       takenTime: DateTime.now(),
@@ -155,15 +185,24 @@ class DoseSchedulingService {
   }
 
   /// Calculate medication forecasting based on current usage
-  Future<Map<int, int>> calculateMedicationForecast(int medicationId, int days) async {
+  Future<Map<int, int>> calculateMedicationForecast(
+    int medicationId,
+    int days,
+  ) async {
     final endDate = DateTime.now().add(Duration(days: days));
-    final schedules = await _scheduleRepository.getSchedulesForMedication(medicationId);
+    final schedules = await _scheduleRepository.getSchedulesForMedication(
+      medicationId,
+    );
 
     int totalDosesNeeded = 0;
     final now = DateTime.now();
 
     for (final schedule in schedules) {
-      final scheduledTimes = _calculateScheduledTimesForDateRange(schedule, now, endDate);
+      final scheduledTimes = _calculateScheduledTimesForDateRange(
+        schedule,
+        now,
+        endDate,
+      );
       totalDosesNeeded += scheduledTimes.length;
     }
 
@@ -171,13 +210,29 @@ class DoseSchedulingService {
   }
 
   /// Get compliance rate for a medication over a date range
-  Future<double> getComplianceRate(int medicationId, DateTime startDate, DateTime endDate) async {
-    return await _doseLogRepository.getComplianceRate(medicationId, startDate, endDate);
+  Future<double> getComplianceRate(
+    int medicationId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    return await _doseLogRepository.getComplianceRate(
+      medicationId,
+      startDate,
+      endDate,
+    );
   }
 
   /// Get dose statistics for analytics
-  Future<Map<String, int>> getDoseStatistics(int medicationId, DateTime startDate, DateTime endDate) async {
-    return await _doseLogRepository.getDoseComplianceStats(medicationId, startDate, endDate);
+  Future<Map<String, int>> getDoseStatistics(
+    int medicationId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    return await _doseLogRepository.getDoseComplianceStats(
+      medicationId,
+      startDate,
+      endDate,
+    );
   }
 
   /// Clean up old dose logs (older than specified days)
@@ -197,6 +252,8 @@ class DoseSchedulingService {
       }
     }
 
-    debugPrint('🧹 Cleaned up ${logsToDelete.length} dose logs older than $daysToKeep days');
+    debugPrint(
+      '🧹 Cleaned up ${logsToDelete.length} dose logs older than $daysToKeep days',
+    );
   }
 }

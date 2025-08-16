@@ -23,7 +23,9 @@ class CompactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderColor = (accentColor ?? theme.colorScheme.primary).withValues(alpha: 0.10);
+    final borderColor = (accentColor ?? theme.colorScheme.primary).withValues(
+      alpha: 0.10,
+    );
     return Material(
       color: theme.colorScheme.surface,
       borderRadius: borderRadius as BorderRadius,

@@ -16,11 +16,13 @@ extension MedicationExtensions on Medication {
     if (expirationDate == null) return false;
     final now = DateTime.now();
     final warningDate = now.add(const Duration(days: 30)); // 30 days warning
-    return expirationDate!.isBefore(warningDate) && expirationDate!.isAfter(now);
+    return expirationDate!.isBefore(warningDate) &&
+        expirationDate!.isAfter(now);
   }
 
   String get stockDisplay {
-    return '${stockQuantity.toStringAsFixed(0)} ${stockUnit?.displayName ?? ''}'.trim();
+    return '${stockQuantity.toStringAsFixed(0)} ${stockUnit?.displayName ?? ''}'
+        .trim();
   }
 
   String get displayStrength {
@@ -35,7 +37,14 @@ class MedicationCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final MedicationCardLayout? forceLayout;
 
-  const MedicationCard({super.key, required this.medication, this.onTap, this.onEdit, this.onDelete, this.forceLayout});
+  const MedicationCard({
+    super.key,
+    required this.medication,
+    this.onTap,
+    this.onEdit,
+    this.onDelete,
+    this.forceLayout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +76,16 @@ class MedicationCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Colors.white,
-          border: Border.all(color: typeColor.withValues(alpha: 0.25), width: 1),
+          border: Border.all(
+            color: typeColor.withValues(alpha: 0.25),
+            width: 1,
+          ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 6)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: Column(
@@ -85,7 +101,9 @@ class MedicationCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     color: typeColor.withValues(alpha: 0.10),
-                    border: Border.all(color: typeColor.withValues(alpha: 0.30)),
+                    border: Border.all(
+                      color: typeColor.withValues(alpha: 0.30),
+                    ),
                   ),
                   alignment: Alignment.center,
                   child: Icon(_getTypeIcon(), size: 22, color: typeColor),
@@ -122,11 +140,19 @@ class MedicationCard extends StatelessWidget {
                       // Strength and Type as plain text
                       Text(
                         'Strength: ${medication.displayStrength}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[800], fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Text(
                         'Type: ${medication.type.displayName}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -134,19 +160,29 @@ class MedicationCard extends StatelessWidget {
 
                 // Vertical divider on the right between content and trailing
                 const SizedBox(width: 12),
-                Container(width: 1, height: 48, color: Colors.grey.withValues(alpha: 0.25)),
+                Container(
+                  width: 1,
+                  height: 48,
+                  color: Colors.grey.withValues(alpha: 0.25),
+                ),
                 const SizedBox(width: 12),
 
                 // Trailing column (right)
                 ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 90, maxWidth: 140),
+                  constraints: const BoxConstraints(
+                    minWidth: 90,
+                    maxWidth: 140,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // Quantity current and unit
                       Text(
                         '${medication.stockQuantity.toStringAsFixed(0)} $unit',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -154,8 +190,14 @@ class MedicationCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            DateFormat('MMM yy').format(medication.expirationDate!),
-                            style: TextStyle(color: _getExpiryColor(), fontWeight: FontWeight.w700, fontSize: 11),
+                            DateFormat(
+                              'MMM yy',
+                            ).format(medication.expirationDate!),
+                            style: TextStyle(
+                              color: _getExpiryColor(),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
                             textAlign: TextAlign.right,
                           ),
                         ),
@@ -197,7 +239,10 @@ class MedicationCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: _getTypeColor().withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _getTypeColor().withValues(alpha: 0.2), width: 0.8),
+              border: Border.all(
+                color: _getTypeColor().withValues(alpha: 0.2),
+                width: 0.8,
+              ),
             ),
             alignment: Alignment.center,
             child: Icon(_getTypeIcon(), size: 18, color: _getTypeColor()),
@@ -212,7 +257,9 @@ class MedicationCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         medication.name,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -220,7 +267,9 @@ class MedicationCard extends StatelessWidget {
                     if (medication.expirationDate != null)
                       LabelChip(
                         icon: Icons.event,
-                        label: DateFormat('MMM yy').format(medication.expirationDate!),
+                        label: DateFormat(
+                          'MMM yy',
+                        ).format(medication.expirationDate!),
                         color: _getExpiryColor(),
                       ),
                   ],
@@ -233,13 +282,18 @@ class MedicationCard extends StatelessWidget {
                       label: medication.displayStrength,
                       color: Theme.of(context).colorScheme.secondary,
                     ),
-                    LabelChip(icon: Icons.category, label: medication.type.displayName, color: _getTypeColor()),
+                    LabelChip(
+                      icon: Icons.category,
+                      label: medication.type.displayName,
+                      color: _getTypeColor(),
+                    ),
                     const Spacer(),
                     Text(
                       medication.stockDisplay,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor()),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: _getStockColor(),
+                      ),
                     ),
                   ],
                 ),
@@ -260,9 +314,17 @@ class MedicationCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(colors: [c1, c2, c3], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+          colors: [c1, c2, c3],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
-          BoxShadow(color: c2.withValues(alpha: 0.3), blurRadius: 24, offset: const Offset(0, 12)),
+          BoxShadow(
+            color: c2.withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
         ],
       ),
       child: InkWell(
@@ -278,21 +340,62 @@ class MedicationCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-              CircleAvatar(radius: 24, backgroundColor: Colors.white.withValues(alpha: 0.2), child: Icon(_getTypeIcon(), color: Colors.white, size: 22)),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                child: Icon(_getTypeIcon(), color: Colors.white, size: 22),
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(medication.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.3)),
-                  const SizedBox(height: 6),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600)),
-                ]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      medication.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${medication.type.displayName} • ${medication.displayStrength}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 10),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text(medication.stockDisplay, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-                if (medication.expirationDate != null)
-                  Text(DateFormat('MMM yy').format(medication.expirationDate!), style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12, fontWeight: FontWeight.bold)),
-              ]),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    medication.stockDisplay,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  if (medication.expirationDate != null)
+                    Text(
+                      DateFormat('MMM yy').format(medication.expirationDate!),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -307,8 +410,17 @@ class MedicationCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white.withValues(alpha: 0.18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.45), width: 1),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 18, offset: const Offset(0, 10))],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.45),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -323,23 +435,79 @@ class MedicationCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.20), Colors.white.withValues(alpha: 0.08)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.20),
+                  Colors.white.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
-            child: Row(children: [
-              Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withValues(alpha: 0.35))), alignment: Alignment.center, child: Icon(_getTypeIcon(), color: Colors.white, size: 20)),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(medication.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text('${medication.type.displayName} • ${medication.displayStrength}', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
-              ])),
-              const SizedBox(width: 10),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text(medication.stockDisplay, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
-                if (medication.expirationDate != null)
-                  Text(DateFormat('MM/yy').format(medication.expirationDate!), style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
-              ]),
-            ]),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(_getTypeIcon(), color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        medication.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${medication.type.displayName} • ${medication.displayStrength}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      medication.stockDisplay,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (medication.expirationDate != null)
+                      Text(
+                        DateFormat('MM/yy').format(medication.expirationDate!),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -350,7 +518,17 @@ class MedicationCard extends StatelessWidget {
   Widget _buildRetroTerminalCard(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(color: const Color(0xFF0A0F0A), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00FF88), width: 1.5), boxShadow: [BoxShadow(color: const Color(0xFF00FF88).withValues(alpha: 0.15), blurRadius: 12)]),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A0F0A),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF00FF88), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00FF88).withValues(alpha: 0.15),
+            blurRadius: 12,
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () {
           if (onTap != null) {
@@ -361,23 +539,49 @@ class MedicationCard extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(children: [
-            const Icon(Icons.terminal, color: Color(0xFF00FF88), size: 20),
-            const SizedBox(width: 10),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-              // Using const style; values below are dynamic text with same style applied
-            ])),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(medication.stockDisplay, style: const TextStyle(color: Color(0xFF00FF88), fontFamily: 'RobotoMono', fontWeight: FontWeight.w800)),
-            ]),
-          ]),
+          child: Row(
+            children: [
+              const Icon(Icons.terminal, color: Color(0xFF00FF88), size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    // Using const style; values below are dynamic text with same style applied
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    medication.stockDisplay,
+                    style: const TextStyle(
+                      color: Color(0xFF00FF88),
+                      fontFamily: 'RobotoMono',
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // Helper to render the terminal text lines (dynamic)
-  Widget _terminalText(String text) => Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF00FF88), fontFamily: 'RobotoMono', fontSize: 13));
+  Widget _terminalText(String text) => Text(
+    text,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: const TextStyle(
+      color: Color(0xFF00FF88),
+      fontFamily: 'RobotoMono',
+      fontSize: 13,
+    ),
+  );
 
   // 4) Neumorphic soft card (light grey, soft shadows)
   Widget _buildNeumorphicSoftCard(BuildContext context) {
@@ -387,8 +591,16 @@ class MedicationCard extends StatelessWidget {
         color: const Color(0xFFEFEFF4),
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [
-          BoxShadow(color: Color(0xFFFFFFFF), offset: Offset(-6, -6), blurRadius: 12),
-          BoxShadow(color: Color(0xFFCDD1D5), offset: Offset(6, 6), blurRadius: 12),
+          BoxShadow(
+            color: Color(0xFFFFFFFF),
+            offset: Offset(-6, -6),
+            blurRadius: 12,
+          ),
+          BoxShadow(
+            color: Color(0xFFCDD1D5),
+            offset: Offset(6, 6),
+            blurRadius: 12,
+          ),
         ],
       ),
       child: InkWell(
@@ -402,17 +614,59 @@ class MedicationCard extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(children: [
-            Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFEFEFF4), borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.white, offset: Offset(-3, -3), blurRadius: 6), BoxShadow(color: Color(0xFFCDD1D5), offset: Offset(3, 3), blurRadius: 6)]), alignment: Alignment.center, child: Icon(_getTypeIcon(), color: const Color(0xFF60636A))),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-            ])),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(medication.stockDisplay, style: const TextStyle(color: Color(0xFF3A3D42), fontWeight: FontWeight.w900)),
-              if (medication.expirationDate != null)
-                Text(DateFormat('MMM yy').format(medication.expirationDate!), style: const TextStyle(color: Color(0xFF6B6F76), fontSize: 12)),
-            ]),
-          ]),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFEFF4),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-3, -3),
+                      blurRadius: 6,
+                    ),
+                    BoxShadow(
+                      color: Color(0xFFCDD1D5),
+                      offset: Offset(3, 3),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Icon(_getTypeIcon(), color: const Color(0xFF60636A)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    medication.stockDisplay,
+                    style: const TextStyle(
+                      color: Color(0xFF3A3D42),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  if (medication.expirationDate != null)
+                    Text(
+                      DateFormat('MMM yy').format(medication.expirationDate!),
+                      style: const TextStyle(
+                        color: Color(0xFF6B6F76),
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -422,7 +676,14 @@ class MedicationCard extends StatelessWidget {
   Widget _buildWireframeCard(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.black, width: 2), boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(2, 2), blurRadius: 0)]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.black, width: 2),
+        boxShadow: const [
+          BoxShadow(color: Colors.black, offset: Offset(2, 2), blurRadius: 0),
+        ],
+      ),
       child: InkWell(
         onTap: () {
           if (onTap != null) {
@@ -433,16 +694,55 @@ class MedicationCard extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.all(10),
-          child: Row(children: [
-            Container(width: 36, height: 36, decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2), borderRadius: BorderRadius.circular(6)), alignment: Alignment.center, child: Icon(_getTypeIcon(), color: Colors.black, size: 18)),
-            const SizedBox(width: 10),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(medication.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: -0.2)),
-              Text('${medication.type.displayName} • ${medication.displayStrength}', style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w600)),
-            ])),
-            const SizedBox(width: 10),
-            Text(medication.stockDisplay, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
-          ]),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                alignment: Alignment.center,
+                child: Icon(_getTypeIcon(), color: Colors.black, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      medication.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    Text(
+                      '${medication.type.displayName} • ${medication.displayStrength}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                medication.stockDisplay,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -450,14 +750,24 @@ class MedicationCard extends StatelessWidget {
 
   // 6) Sticker card (rounded, playful background)
   Widget _buildStickerCard(BuildContext context) {
-    final bg = const LinearGradient(colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)], begin: Alignment.topLeft, end: Alignment.bottomRight);
+    final bg = const LinearGradient(
+      colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
         gradient: bg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFFFD54F), width: 2),
-        boxShadow: const [BoxShadow(color: Color(0x33FFC107), blurRadius: 12, offset: Offset(0, 6))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33FFC107),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -470,16 +780,42 @@ class MedicationCard extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(children: [
-            CircleAvatar(radius: 22, backgroundColor: const Color(0xFFFFF176), child: Icon(_getTypeIcon(), color: const Color(0xFFF57F17))),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [])),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(medication.stockDisplay, style: const TextStyle(color: Color(0xFF5D4037), fontWeight: FontWeight.w900)),
-              if (medication.expirationDate != null)
-                Text(DateFormat('MMM yy').format(medication.expirationDate!), style: const TextStyle(color: Color(0xFF8D6E63), fontSize: 12)),
-            ]),
-          ]),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: const Color(0xFFFFF176),
+                child: Icon(_getTypeIcon(), color: const Color(0xFFF57F17)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    medication.stockDisplay,
+                    style: const TextStyle(
+                      color: Color(0xFF5D4037),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  if (medication.expirationDate != null)
+                    Text(
+                      DateFormat('MMM yy').format(medication.expirationDate!),
+                      style: const TextStyle(
+                        color: Color(0xFF8D6E63),
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -524,13 +860,31 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
-            Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
+            Text(
+              medication.stockDisplay,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: _getStockColor(),
+              ),
+            ),
             const SizedBox(width: 6),
             const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
           ],
@@ -573,14 +927,27 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
                     children: [
-                      LabelChip(icon: Icons.category, label: medication.type.displayName, color: _getTypeColor()),
-                      LabelChip(icon: Icons.local_fire_department, label: medication.displayStrength, color: Theme.of(context).colorScheme.secondary),
+                      LabelChip(
+                        icon: Icons.category,
+                        label: medication.type.displayName,
+                        color: _getTypeColor(),
+                      ),
+                      LabelChip(
+                        icon: Icons.local_fire_department,
+                        label: medication.displayStrength,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                     ],
                   ),
                 ],
@@ -589,8 +956,15 @@ class MedicationCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
-                if (medication.isExpiringSoon || medication.isExpired) ..._buildCompactAlerts(),
+                Text(
+                  medication.stockDisplay,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: _getStockColor(),
+                  ),
+                ),
+                if (medication.isExpiringSoon || medication.isExpired)
+                  ..._buildCompactAlerts(),
               ],
             ),
           ],
@@ -616,7 +990,11 @@ class MedicationCard extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade300),
           color: Colors.white,
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
@@ -636,16 +1014,32 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
+                Text(
+                  medication.stockDisplay,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: _getStockColor(),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
               ],
@@ -688,13 +1082,31 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
-            Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
+            Text(
+              medication.stockDisplay,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: _getStockColor(),
+              ),
+            ),
             const SizedBox(width: 6),
             const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
           ],
@@ -732,8 +1144,18 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
@@ -743,7 +1165,14 @@ class MedicationCard extends StatelessWidget {
                 color: _getStockColor().withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: Text(medication.stockDisplay, style: TextStyle(color: _getStockColor(), fontWeight: FontWeight.bold, fontSize: 12)),
+              child: Text(
+                medication.stockDisplay,
+                style: TextStyle(
+                  color: _getStockColor(),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ],
         ),
@@ -777,11 +1206,19 @@ class MedicationCard extends StatelessWidget {
                 '${medication.name}  •  ${medication.displayStrength}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(width: 8),
-            Text(medication.stockDisplay, style: TextStyle(color: _getStockColor(), fontWeight: FontWeight.bold)),
+            Text(
+              medication.stockDisplay,
+              style: TextStyle(
+                color: _getStockColor(),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -822,9 +1259,21 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
@@ -833,9 +1282,20 @@ class MedicationCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
+                Text(
+                  medication.stockDisplay,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: _getStockColor(),
+                  ),
+                ),
                 if (medication.expirationDate != null)
-                  Text(DateFormat('MMM yy').format(medication.expirationDate!), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _getExpiryColor())),
+                  Text(
+                    DateFormat('MMM yy').format(medication.expirationDate!),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: _getExpiryColor()),
+                  ),
               ],
             ),
           ],
@@ -879,18 +1339,40 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, color: Colors.black87)),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[700])),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[700]),
+                  ),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: Colors.black87)),
+                Text(
+                  medication.stockDisplay,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
+                ),
                 if (medication.brandManufacturer != null)
-                  Text(medication.brandManufacturer!, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[700])),
+                  Text(
+                    medication.brandManufacturer!,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.grey[700]),
+                  ),
               ],
             ),
           ],
@@ -936,7 +1418,13 @@ class MedicationCard extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          medication.name,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       Wrap(spacing: 4, children: _buildCompactAlerts()),
                     ],
@@ -946,8 +1434,16 @@ class MedicationCard extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 4,
                     children: [
-                      LabelChip(icon: Icons.category, label: medication.type.displayName, color: _getTypeColor()),
-                      LabelChip(icon: Icons.local_fire_department, label: medication.displayStrength, color: Theme.of(context).colorScheme.secondary),
+                      LabelChip(
+                        icon: Icons.category,
+                        label: medication.type.displayName,
+                        color: _getTypeColor(),
+                      ),
+                      LabelChip(
+                        icon: Icons.local_fire_department,
+                        label: medication.displayStrength,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                     ],
                   ),
                 ],
@@ -956,7 +1452,13 @@ class MedicationCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
+                Text(
+                  medication.stockDisplay,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: _getStockColor(),
+                  ),
+                ),
                 const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
               ],
             ),
@@ -1001,20 +1503,53 @@ class MedicationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(medication.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('${medication.type.displayName} • ${medication.displayStrength}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700])),
+                  Text(
+                    '${medication.type.displayName} • ${medication.displayStrength}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                  ),
                   if (medication.brandManufacturer != null)
-                    Text('by ${medication.brandManufacturer}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+                    Text(
+                      'by ${medication.brandManufacturer}',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+                    ),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(medication.stockDisplay, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w900, color: _getStockColor())),
+                Text(
+                  medication.stockDisplay,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: _getStockColor(),
+                  ),
+                ),
+                if (medication.stockProgressLabel != null)
+                  Text(
+                    medication.stockProgressLabel!,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
                 if (medication.expirationDate != null)
-                  Text('Exp ${DateFormat('MM/yy').format(medication.expirationDate!)}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _getExpiryColor())),
+                  Text(
+                    'Exp ${DateFormat('MM/yy').format(medication.expirationDate!)}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: _getExpiryColor()),
+                  ),
               ],
             ),
           ],
@@ -1035,9 +1570,18 @@ class MedicationCard extends StatelessWidget {
       dense: true,
       visualDensity: VisualDensity.compact,
       leading: Icon(_getTypeIcon(), color: _getTypeColor()),
-      title: Text(medication.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text('${medication.displayStrength} • ${medication.type.displayName}'),
-      trailing: Text(medication.stockDisplay, style: TextStyle(color: _getStockColor(), fontWeight: FontWeight.bold)),
+      title: Text(
+        medication.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        '${medication.displayStrength} • ${medication.type.displayName}',
+      ),
+      trailing: Text(
+        medication.stockDisplay,
+        style: TextStyle(color: _getStockColor(), fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -1064,11 +1608,16 @@ class MedicationCard extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [_getTypeColor(), _getTypeColor().withValues(alpha: 0.5)],
+                  colors: [
+                    _getTypeColor(),
+                    _getTypeColor().withValues(alpha: 0.5),
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
-                borderRadius: const BorderRadius.horizontal(left: Radius.circular(14)),
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(14),
+                ),
               ),
             ),
             Expanded(
@@ -1080,14 +1629,28 @@ class MedicationCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(medication.name, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(
+                            medication.name,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           const SizedBox(height: 2),
                           Wrap(
                             spacing: 6,
                             runSpacing: 4,
                             children: [
-                              LabelChip(icon: Icons.local_fire_department, label: medication.displayStrength, color: Theme.of(context).colorScheme.secondary),
-                              LabelChip(icon: Icons.category, label: medication.type.displayName, color: _getTypeColor()),
+                              LabelChip(
+                                icon: Icons.local_fire_department,
+                                label: medication.displayStrength,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                              LabelChip(
+                                icon: Icons.category,
+                                label: medication.type.displayName,
+                                color: _getTypeColor(),
+                              ),
                               ..._buildCompactAlerts(),
                               ..._buildCompactStorageIndicators(),
                             ],
@@ -1099,9 +1662,29 @@ class MedicationCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(medication.stockDisplay, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: _getStockColor())),
+                        Text(
+                          medication.stockDisplay,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: _getStockColor(),
+                              ),
+                        ),
+                        if (medication.stockProgressLabel != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              medication.stockProgressLabel!,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ),
                         const SizedBox(height: 6),
-                        const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                        const Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                       ],
                     ),
                   ],
@@ -1123,10 +1706,17 @@ class MedicationCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: textColor),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: textColor,
+        ),
       ),
     );
   }
@@ -1156,7 +1746,11 @@ class MedicationCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       child: Text(
         medication.type.displayName,
-        style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: textColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -1190,7 +1784,11 @@ class MedicationCard extends StatelessWidget {
     return Chip(
       label: Text(
         medication.type.displayName,
-        style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       backgroundColor: chipColor,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1208,18 +1806,27 @@ class MedicationCard extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 2),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }
 
   bool _shouldShowAlerts() {
-    return medication.isExpired || medication.isExpiringSoon || (medication.alertOnLowStock && _isLowStock());
+    return medication.isExpired ||
+        medication.isExpiringSoon ||
+        (medication.alertOnLowStock && _isLowStock());
   }
 
   bool _isLowStock() {
@@ -1258,7 +1865,11 @@ class MedicationCard extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -1266,18 +1877,23 @@ class MedicationCard extends StatelessWidget {
   }
 
   bool _shouldShowStorageIndicators() {
-    return medication.requiresRefrigeration || medication.reconstitutionVolume != null;
+    return medication.requiresRefrigeration ||
+        medication.reconstitutionVolume != null;
   }
 
   Widget _buildStorageIndicators() {
     final List<Widget> indicators = [];
 
     if (medication.requiresRefrigeration) {
-      indicators.add(_buildStorageIndicator('Refrigerate', Icons.ac_unit, Colors.blue));
+      indicators.add(
+        _buildStorageIndicator('Refrigerate', Icons.ac_unit, Colors.blue),
+      );
     }
 
     if (medication.reconstitutionVolume != null) {
-      indicators.add(_buildStorageIndicator('Reconstituted', Icons.science, Colors.purple));
+      indicators.add(
+        _buildStorageIndicator('Reconstituted', Icons.science, Colors.purple),
+      );
     }
 
     return Wrap(spacing: 8, runSpacing: 4, children: indicators);
@@ -1286,7 +1902,10 @@ class MedicationCard extends StatelessWidget {
   Widget _buildStorageIndicator(String label, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1294,7 +1913,11 @@ class MedicationCard extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: color),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -1434,13 +2057,18 @@ class MedicationCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 3),
       width: 14,
       height: 14,
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(2),
+      ),
       child: Icon(icon, size: 8, color: color),
     );
   }
 
   void _handleMenuSelection(String value) {
-    debugPrint('🛠️ [CARD DEBUG] MedicationCard menu action: $value for ${medication.name}');
+    debugPrint(
+      '🛠️ [CARD DEBUG] MedicationCard menu action: $value for ${medication.name}',
+    );
     switch (value) {
       case 'edit':
         print('[DEBUG] Calling onEdit for ${medication.name}');
@@ -1455,7 +2083,8 @@ class MedicationCard extends StatelessWidget {
 
   // Match stock indicator logic from MedicationViewScreen
   _StockIndicator _computeStockIndicator(Medication med) {
-    final double threshold = med.lowStockThreshold ?? _getDefaultLowStockThreshold(med);
+    final double threshold =
+        med.lowStockThreshold ?? _getDefaultLowStockThreshold(med);
     final double current = med.stockQuantity;
     final double pct = (current / (threshold * 2)).clamp(0.0, 1.0);
 

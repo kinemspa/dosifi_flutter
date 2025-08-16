@@ -106,7 +106,7 @@ class ScheduleLayoutNotifier extends StateNotifier<ScheduleCardLayout> {
   }
 }
 
-final scheduleLayoutProvider = StateNotifierProvider<ScheduleLayoutNotifier, ScheduleCardLayout>(
-  (ref) => ScheduleLayoutNotifier(),
-);
-
+final scheduleLayoutProvider =
+    StateNotifierProvider<ScheduleLayoutNotifier, ScheduleCardLayout>(
+      (ref) => ScheduleLayoutNotifier(),
+    );

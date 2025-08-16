@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class EmbeddedReconstitutionCalculator extends StatefulWidget {
-  final Function(double volume, double concentration, String notes)? onCalculationResult;
+  final Function(double volume, double concentration, String notes)?
+      onCalculationResult;
   final double? initialStrength;
   final String? initialStrengthUnit;
 
@@ -13,22 +14,24 @@ class EmbeddedReconstitutionCalculator extends StatefulWidget {
   });
 
   @override
-  State<EmbeddedReconstitutionCalculator> createState() => _EmbeddedReconstitutionCalculatorState();
+  State<EmbeddedReconstitutionCalculator> createState() =>
+      _EmbeddedReconstitutionCalculatorState();
 }
 
-class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutionCalculator> {
+class _EmbeddedReconstitutionCalculatorState
+    extends State<EmbeddedReconstitutionCalculator> {
   final _strengthController = TextEditingController();
   final _desiredDoseController = TextEditingController();
 
   String _strengthUnit = 'mg';
-  final String _doseUnit = 'Units';
+  String _doseUnit = 'Units';
   String _syringeSize = '1mL';
   String? _targetVialSize;
 
   Map<String, dynamic>? _results;
 
-  final List<String> _strengthUnits = ['mg', 'mcg', 'Units', 'IU'];
-  final List<String> _doseUnits = ['mg', 'mcg', 'Units', 'IU'];
+  final List<String> _strengthUnits = ['mg', 'mcg', 'g', 'Units', 'IU'];
+  final List<String> _doseUnits = ['Units', 'IU', 'mg', 'mcg'];
   final List<String> _syringeSizes = ['0.3mL', '0.5mL', '1mL', '3mL', '5mL'];
   final List<String?> _vialSizes = [null, '1mL', '3mL', '5mL', '10mL', '20mL'];
 
@@ -76,7 +79,7 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       return;
     }
 
-    // Convert strength to base units
+    // Convert strength to base units for mg pathway
     double strengthInUnits = strength;
     if (_strengthUnit == 'mg') {
       strengthInUnits = strength;
@@ -85,22 +88,49 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
     } else if (_strengthUnit == 'g') {
       strengthInUnits = strength * 1000; // Convert g to mg
     }
-    // For IU and Units, keep as is
+    // For IU and Units, keep as provided (treated as per-mL mass-equivalent units)
 
     // Parse syringe size
-    final double syringeVolume = double.parse(_syringeSize.replaceAll('mL', ''));
+    final double syringeVolume = double.parse(
+      _syringeSize.replaceAll('mL', ''),
+    );
 
     setState(() {
       _results = _calculateOptions(strengthInUnits, syringeVolume);
     });
   }
 
-  Map<String, dynamic> _calculateOptions(double strength, double syringeVolume) {
+  Map<String, dynamic> _calculateOptions(
+    double strength,
+    double syringeVolume,
+  ) {
     final Map<String, dynamic> results = {};
+
+    double? desiredDose = double.tryParse(_desiredDoseController.text);
+
+    void addOption(String key, double volume, double concentration, String desc) {
+      // If a desiredDose is provided and concentration > 0, compute the per-dose volume
+      double? doseVolume;
+      bool withinSyringe = true;
+      if (desiredDose != null && concentration > 0) {
+        doseVolume = desiredDose / concentration;
+        // Simple constraint: dose volume must fit in selected syringe size
+        withinSyringe = doseVolume <= syringeVolume;
+      }
+      results[key] = {
+        'volume': volume,
+        'concentration': concentration,
+        'description': desc,
+        'doseVolume': doseVolume,
+        'withinSyringe': withinSyringe,
+      };
+    }
 
     if (_targetVialSize != null) {
       // With target vial volume
-      final double vialVolume = double.parse(_targetVialSize!.replaceAll('mL', ''));
+      final double vialVolume = double.parse(
+        _targetVialSize!.replaceAll('mL', ''),
+      );
 
       // Concentrated: 1mL reconstitution
       final double concentratedVolume = 1.0;
@@ -113,38 +143,44 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       // Diluted: full vial volume
       final double dilutedConcentration = strength / vialVolume;
 
-      results['concentrated'] = {
-        'volume': concentratedVolume,
-        'concentration': concentratedConcentration,
-        'description': '${concentratedVolume.toStringAsFixed(1)}mL reconstitution',
-      };
-      results['average'] = {
-        'volume': avgVolume,
-        'concentration': avgConcentration,
-        'description': '${avgVolume.toStringAsFixed(1)}mL reconstitution',
-      };
-      results['diluted'] = {
-        'volume': vialVolume,
-        'concentration': dilutedConcentration,
-        'description': '${vialVolume.toStringAsFixed(1)}mL reconstitution',
-      };
+      addOption(
+        'concentrated',
+        concentratedVolume,
+        concentratedConcentration,
+        '${concentratedVolume.toStringAsFixed(1)}mL reconstitution',
+      );
+      addOption(
+        'average',
+        avgVolume,
+        avgConcentration,
+        '${avgVolume.toStringAsFixed(1)}mL reconstitution',
+      );
+      addOption(
+        'diluted',
+        vialVolume,
+        dilutedConcentration,
+        '${vialVolume.toStringAsFixed(1)}mL reconstitution',
+      );
     } else {
       // Standard options without target vial
-      results['concentrated'] = {
-        'volume': 1.0,
-        'concentration': strength,
-        'description': '1mL reconstitution (concentrated)',
-      };
-      results['average'] = {
-        'volume': 5.0,
-        'concentration': strength / 5.0,
-        'description': '5mL reconstitution (average)',
-      };
-      results['diluted'] = {
-        'volume': 10.0,
-        'concentration': strength / 10.0,
-        'description': '10mL reconstitution (diluted)',
-      };
+      addOption(
+        'concentrated',
+        1.0,
+        strength,
+        '1mL reconstitution (concentrated)',
+      );
+      addOption(
+        'average',
+        5.0,
+        strength / 5.0,
+        '5mL reconstitution (average)',
+      );
+      addOption(
+        'diluted',
+        10.0,
+        strength / 10.0,
+        '10mL reconstitution (diluted)',
+      );
     }
 
     return results;
@@ -161,9 +197,12 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
         );
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Selected: ${result['description']}'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Selected: ${result['description']}'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -174,7 +213,9 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
       children: [
         Text(
           'Reconstitution Calculator',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Row(
@@ -196,8 +237,17 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _strengthUnit,
-                decoration: const InputDecoration(labelText: 'Unit', border: OutlineInputBorder(), isDense: true),
-                items: _strengthUnits.map((unit) => DropdownMenuItem(value: unit, child: Text(unit))).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Unit',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                items: _strengthUnits
+                    .map(
+                      (unit) =>
+                          DropdownMenuItem(value: unit, child: Text(unit)),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   setState(() {
                     _strengthUnit = value!;
@@ -219,7 +269,12 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                   border: OutlineInputBorder(),
                   isDense: true,
                 ),
-                items: _syringeSizes.map((size) => DropdownMenuItem(value: size, child: Text(size))).toList(),
+                items: _syringeSizes
+                    .map(
+                      (size) =>
+                          DropdownMenuItem(value: size, child: Text(size)),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   setState(() {
                     _syringeSize = value!;
@@ -237,7 +292,14 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                   border: OutlineInputBorder(),
                   isDense: true,
                 ),
-                items: _vialSizes.map((size) => DropdownMenuItem(value: size, child: Text(size ?? 'None'))).toList(),
+                items: _vialSizes
+                    .map(
+                      (size) => DropdownMenuItem(
+                        value: size,
+                        child: Text(size ?? 'None'),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   setState(() {
                     _targetVialSize = value;
@@ -248,28 +310,76 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: TextFormField(
+                controller: _desiredDoseController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Desired dose (optional)',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onChanged: (_) => _calculate(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _doseUnit,
+                decoration: const InputDecoration(
+                  labelText: 'Dose unit',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                items: _doseUnits
+                    .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                    .toList(),
+                onChanged: (v) {
+                  setState(() {
+                    _doseUnit = v!;
+                    // Note: unit conversion between mg/IU/Units is domain-specific and
+                    // not attempted here; this is a display hint for now.
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
         if (_results != null) ...[
           Text(
             'Reconstitution Options:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           ..._results!.entries.map((entry) {
             final option = entry.key;
-            final data = entry.value;
+            final data = entry.value as Map<String, dynamic>;
             final concentration = data['concentration'] as double;
             final description = data['description'] as String;
+            final doseVolume = data['doseVolume'] as double?;
+            final withinSyringe = data['withinSyringe'] as bool? ?? true;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: InkWell(
-                onTap: () => _selectOption(option),
+                onTap: withinSyringe ? () => _selectOption(option) : null,
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(
+                      color: withinSyringe
+                          ? Colors.grey.shade300
+                          : Colors.red.shade200,
+                    ),
                     borderRadius: BorderRadius.circular(4),
+                    color: withinSyringe ? null : Colors.red.shade50,
                   ),
                   child: Row(
                     children: [
@@ -277,15 +387,66 @@ class _EmbeddedReconstitutionCalculatorState extends State<EmbeddedReconstitutio
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(option.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                            Text(description, style: Theme.of(context).textTheme.bodySmall),
+                            Text(
+                              option.toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              description,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            if (doseVolume != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      withinSyringe
+                                          ? Icons.check_circle
+                                          : Icons.error_outline,
+                                      size: 14,
+                                      color: withinSyringe
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Dose vol: ${doseVolume.toStringAsFixed(2)} mL',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: withinSyringe
+                                                ? Colors.green[800]
+                                                : Colors.red[800],
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ),
-                      Text(
-                        '${concentration.toStringAsFixed(1)} $_strengthUnit/mL',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${concentration.toStringAsFixed(2)} $_strengthUnit/mL',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Syringe: $_syringeSize',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ],
                       ),
+                      const SizedBox(width: 6),
                       const Icon(Icons.arrow_forward_ios, size: 16),
                     ],
                   ),

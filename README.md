@@ -81,6 +81,11 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 
 ## Recent Improvements
 
+### Navigation and Accessibility (Latest)
+- Shell back button now uses smart navigation to switch across tabs without exiting unexpectedly.
+- Removed implicit back arrows from root tabs for consistent tab experience.
+- Added Semantics and Tooltips to dashboard quick actions and tools, plus tooltips on dose action buttons and info icons.
+
 ### Build Fixes (Latest)
 - Fixed analyzer errors in medication form and view screens (missing import for MedicationType, corrected async return type, added info bottom sheet helpers, and balanced widget tree in StockInformationSection).
 - Re-ran static analysis to confirm zero errors; remaining items are warnings and infos for future cleanup.

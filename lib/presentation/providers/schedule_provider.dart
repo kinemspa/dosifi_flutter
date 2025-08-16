@@ -18,7 +18,8 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
   final Ref _ref;
   final NotificationService _notificationService = NotificationService();
 
-  ScheduleListNotifier(this._repository, this._ref) : super(const AsyncValue.loading()) {
+  ScheduleListNotifier(this._repository, this._ref)
+    : super(const AsyncValue.loading()) {
     _initializeNotifications();
     loadSchedules();
   }
@@ -50,7 +51,9 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
 
   Future<void> addSchedule(Schedule schedule) async {
     try {
-      debugPrint('📅 [SCHEDULE PROVIDER] Starting to add schedule for medication ${schedule.medicationId}');
+      debugPrint(
+        '📅 [SCHEDULE PROVIDER] Starting to add schedule for medication ${schedule.medicationId}',
+      );
       debugPrint('📅 [SCHEDULE PROVIDER] Schedule data: ${schedule.toMap()}');
 
       final id = await _repository.insertSchedule(schedule);
@@ -66,7 +69,9 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
       state.whenData((schedules) {
         final updatedSchedules = [...schedules, newSchedule];
         state = AsyncValue.data(updatedSchedules);
-        debugPrint('📅 [SCHEDULE PROVIDER] State updated with ${updatedSchedules.length} schedules');
+        debugPrint(
+          '📅 [SCHEDULE PROVIDER] State updated with ${updatedSchedules.length} schedules',
+        );
       });
 
       debugPrint('📅 [SCHEDULE PROVIDER] Schedule added successfully');
@@ -134,7 +139,9 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
       if (!schedule.isActive) return;
 
       // Get medication details
-      final medicationAsync = await _ref.read(medicationByIdProvider(schedule.medicationId).future);
+      final medicationAsync = await _ref.read(
+        medicationByIdProvider(schedule.medicationId).future,
+      );
       if (medicationAsync == null) return;
 
       // Schedule notifications for the next 30 days
@@ -172,7 +179,10 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     await overrideRepo.upsertOverride(override);
 
     // Cancel any pending notification for that schedule/date
-    await _notificationService.cancelNotificationForScheduleDate(scheduleId, date);
+    await _notificationService.cancelNotificationForScheduleDate(
+      scheduleId,
+      date,
+    );
 
     // If cancelled, nothing more to do
     if (isCancelled) return;
@@ -180,7 +190,9 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     // Find schedule and medication to reschedule this single notification
     final schedules = state.value ?? await _repository.getActiveSchedules();
     final schedule = schedules.firstWhere((s) => s.id == scheduleId);
-    final medication = await _ref.read(medicationByIdProvider(schedule.medicationId).future);
+    final medication = await _ref.read(
+      medicationByIdProvider(schedule.medicationId).future,
+    );
     if (medication == null) return;
 
     // Determine final time
@@ -191,11 +203,13 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     if (!when.isAfter(DateTime.now())) return;
 
     final title = '💊 Time for ${medication.name}';
-    final timeOnly = '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
+    final timeOnly =
+        '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
     final dateOnly = '${when.day}/${when.month}/${when.year}';
     final da = doseAmount ?? schedule.doseAmount;
     final du = doseUnit ?? schedule.doseUnit;
-    final body = '$timeOnly • $dateOnly\n$da $du • ${medication.displayStrength}';
+    final body =
+        '$timeOnly • $dateOnly\n$da $du • ${medication.displayStrength}';
 
     final id = _notificationService.computeNotificationId(scheduleId, when);
     await _notificationService.scheduleNotificationWithActions(
@@ -210,16 +224,20 @@ class ScheduleListNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
 }
 
 // Provider for the schedule list state notifier
-final scheduleListProvider = StateNotifierProvider<ScheduleListNotifier, AsyncValue<List<Schedule>>>((ref) {
-  final repository = ref.watch(scheduleRepositoryProvider);
-  return ScheduleListNotifier(repository, ref);
-});
+final scheduleListProvider =
+    StateNotifierProvider<ScheduleListNotifier, AsyncValue<List<Schedule>>>((
+      ref,
+    ) {
+      final repository = ref.watch(scheduleRepositoryProvider);
+      return ScheduleListNotifier(repository, ref);
+    });
 
 // Provider for getting schedules by medication
-final schedulesByMedicationProvider = FutureProvider.family<List<Schedule>, int>((ref, medicationId) async {
-  final repository = ref.watch(scheduleRepositoryProvider);
-  return await repository.getSchedulesByMedication(medicationId);
-});
+final schedulesByMedicationProvider =
+    FutureProvider.family<List<Schedule>, int>((ref, medicationId) async {
+      final repository = ref.watch(scheduleRepositoryProvider);
+      return await repository.getSchedulesByMedication(medicationId);
+    });
 
 // Provider for today's schedules
 final todaySchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
@@ -233,7 +251,8 @@ final todaySchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
 
       // Check if today is within the schedule's date range
       if (schedule.startDate.isAfter(today)) return false;
-      if (schedule.endDate != null && schedule.endDate!.isBefore(today)) return false;
+      if (schedule.endDate != null && schedule.endDate!.isBefore(today))
+        return false;
 
       // Check if it matches the repeat pattern for today
       return _matchesRepeatPattern(schedule, today);
@@ -287,7 +306,8 @@ final upcomingSchedulesProvider = Provider<AsyncValue<List<Schedule>>>((ref) {
 
       // Check if the schedule falls within the next 7 days
       if (schedule.startDate.isAfter(nextWeek)) return false;
-      if (schedule.endDate != null && schedule.endDate!.isBefore(today)) return false;
+      if (schedule.endDate != null && schedule.endDate!.isBefore(today))
+        return false;
 
       return true;
     }).toList();

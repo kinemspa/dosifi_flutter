@@ -356,6 +356,14 @@ Features:
 
 ## 10. Development Guidelines
 
+### 10.0 Accessibility Guidelines
+- Provide tooltip text for all IconButtons and FABs that trigger primary actions.
+- Wrap custom tappables with Semantics where needed and ensure button roles are set.
+- Avoid using color alone to convey status; pair with icons or labels.
+- Ensure focus order is logical; prefer standard Material widgets to inherit accessibility.
+- Prefer descriptive labels: e.g., 'Add Medication' over 'Add'.
+- Test with TalkBack/VoiceOver for critical flows (dashboard quick actions, schedule dose actions, supplies add/edit).
+
 ### 10.1 Code Style
 - Follow Dart style guide
 - Use meaningful variable names

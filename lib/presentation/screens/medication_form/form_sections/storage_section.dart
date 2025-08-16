@@ -18,13 +18,18 @@ class StorageSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Icon(Icons.storage, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
                 'Storage Information',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               IconButton(
@@ -34,7 +39,8 @@ class StorageSection extends StatelessWidget {
                   InfoSheet.show(
                     context,
                     title: 'Storage',
-                    message: 'Provide storage instructions and temperature. Toggle refrigeration if required. When refrigeration is on, temperature is set to 2–8 °C.',
+                    message:
+                        'Provide storage instructions and temperature. Toggle refrigeration if required. When refrigeration is on, temperature is set to 2–8 °C.',
                   );
                 },
               ),
@@ -46,7 +52,9 @@ class StorageSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Storage Instructions',
               hintText: 'e.g., Store in cool, dry place',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.info_outline),
@@ -59,8 +67,12 @@ class StorageSection extends StatelessWidget {
             enabled: !controller.requiresRefrigeration,
             decoration: InputDecoration(
               labelText: 'Storage Temperature',
-              hintText: controller.requiresRefrigeration ? '2–8 °C (auto-set when refrigerated)' : 'e.g., Room temperature',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              hintText: controller.requiresRefrigeration
+                  ? '2–8 °C (auto-set when refrigerated)'
+                  : 'e.g., Room temperature',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.thermostat),
@@ -78,7 +90,9 @@ class StorageSection extends StatelessWidget {
               subtitle: const Text('Medication must be stored in refrigerator'),
               value: controller.requiresRefrigeration,
               onChanged: controller.setRequiresRefrigeration,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],

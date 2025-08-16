@@ -14,7 +14,11 @@ class ParsedNotificationAction {
   final String action; // take|snooze|cancel|schedule|tap
   final int scheduleId;
   final DateTime scheduledDateTime;
-  ParsedNotificationAction({required this.action, required this.scheduleId, required this.scheduledDateTime});
+  ParsedNotificationAction({
+    required this.action,
+    required this.scheduleId,
+    required this.scheduledDateTime,
+  });
 }
 
 class NotificationActionHandler {
@@ -22,21 +26,38 @@ class NotificationActionHandler {
   static const String actionSnooze = 'snooze_dose';
   static const String actionCancel = 'cancel_dose';
 
-  final WidgetRef ref;
+  final T Function<T>(ProviderListenable<T>) read;
+  final void Function(ProviderBase<Object?> provider)? invalidate;
+  final INotificationService notifications;
 
-  NotificationActionHandler(this.ref);
+  NotificationActionHandler({
+    required this.read,
+    this.invalidate,
+    INotificationService? notifications,
+  }) : notifications = notifications ?? NotificationService();
 
   /// Public helper to parse a notification input (JSON or legacy) into a structured object.
-  static ParsedNotificationAction? parseNotificationInput(String? payloadOrActionId) {
+  static ParsedNotificationAction? parseNotificationInput(
+    String? payloadOrActionId,
+  ) {
     if (payloadOrActionId == null) return null;
     try {
       if (payloadOrActionId.trim().startsWith('{')) {
-        final map = Map<String, dynamic>.from(jsonDecode(payloadOrActionId) as Map);
-        final action = (map['action'] as String?) ?? (map['type'] as String? ?? 'tap');
+        final map = Map<String, dynamic>.from(
+          jsonDecode(payloadOrActionId) as Map,
+        );
+        final action =
+            (map['action'] as String?) ?? (map['type'] as String? ?? 'tap');
         final scheduleId = (map['scheduleId'] as num).toInt();
         final ts = (map['timestamp'] as num?)?.toInt();
-        final dateTime = ts != null ? DateTime.fromMillisecondsSinceEpoch(ts) : DateTime.now();
-        return ParsedNotificationAction(action: action, scheduleId: scheduleId, scheduledDateTime: dateTime);
+        final dateTime = ts != null
+            ? DateTime.fromMillisecondsSinceEpoch(ts)
+            : DateTime.now();
+        return ParsedNotificationAction(
+          action: action,
+          scheduleId: scheduleId,
+          scheduledDateTime: dateTime,
+        );
       } else {
         final parts = payloadOrActionId.split('_');
         if (parts.length < 3) return null;
@@ -44,7 +65,11 @@ class NotificationActionHandler {
         final scheduleId = int.parse(parts[1]);
         final timestamp = int.parse(parts[2]);
         final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        return ParsedNotificationAction(action: action, scheduleId: scheduleId, scheduledDateTime: dateTime);
+        return ParsedNotificationAction(
+          action: action,
+          scheduleId: scheduleId,
+          scheduledDateTime: dateTime,
+        );
       }
     } catch (_) {
       return null;
@@ -57,13 +82,18 @@ class NotificationActionHandler {
     if (payloadOrActionId == null) return;
 
     if (kDebugMode) {
-      print('NotificationActionHandler: Handling notification input: $payloadOrActionId');
+      print(
+        'NotificationActionHandler: Handling notification input: $payloadOrActionId',
+      );
     }
 
     try {
       final parsed = parseNotificationInput(payloadOrActionId);
       if (parsed == null) {
-        if (kDebugMode) print('NotificationActionHandler: Unable to parse notification input');
+        if (kDebugMode)
+          print(
+            'NotificationActionHandler: Unable to parse notification input',
+          );
         return;
       }
       final action = parsed.action;
@@ -76,7 +106,7 @@ class NotificationActionHandler {
       }
 
       // Get the schedule
-      final schedulesAsync = ref.read(scheduleListProvider);
+      final schedulesAsync = read(scheduleListProvider);
       final schedules = await schedulesAsync.when(
         data: (s) async => s,
         loading: () async => <Schedule>[],
@@ -89,7 +119,7 @@ class NotificationActionHandler {
       );
 
       // Get existing dose log if any
-      final doseLogsAsync = ref.read(doseLogListProvider);
+      final doseLogsAsync = read(doseLogListProvider);
       final doseLogs = await doseLogsAsync.when(
         data: (logs) async => logs,
         loading: () async => <DoseLog>[],
@@ -123,7 +153,9 @@ class NotificationActionHandler {
         default:
           // Default notification tap - open the app to the schedule screen for the day
           if (kDebugMode) {
-            print('NotificationActionHandler: Default notification tap for schedule $scheduleId');
+            print(
+              'NotificationActionHandler: Default notification tap for schedule $scheduleId',
+            );
           }
           _navigateToScheduleForDate(scheduledDateTime);
           break;
@@ -136,17 +168,27 @@ class NotificationActionHandler {
   }
 
   /// Handle taking a dose from notification
-  Future<void> _handleTakeDose(Schedule schedule, DateTime scheduledDateTime, DoseLog? existingDoseLog) async {
+  Future<void> _handleTakeDose(
+    Schedule schedule,
+    DateTime scheduledDateTime,
+    DoseLog? existingDoseLog,
+  ) async {
     try {
       if (kDebugMode) {
-        print('NotificationActionHandler: Taking dose for schedule ${schedule.id}');
+        print(
+          'NotificationActionHandler: Taking dose for schedule ${schedule.id}',
+        );
       }
 
       final now = DateTime.now();
 
       // Create or update dose log as taken
       final doseLog =
-          existingDoseLog?.copyWith(status: DoseStatus.taken, takenTime: now, doseAmount: schedule.doseAmount) ??
+          existingDoseLog?.copyWith(
+            status: DoseStatus.taken,
+            takenTime: now,
+            doseAmount: schedule.doseAmount,
+          ) ??
           DoseLog.create(
             medicationId: schedule.medicationId,
             scheduleId: schedule.id,
@@ -156,13 +198,15 @@ class NotificationActionHandler {
           );
 
       if (existingDoseLog?.id != null) {
-        await ref.read(doseLogListProvider.notifier).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
+        await read(
+          doseLogListProvider.notifier,
+        ).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
       } else {
         // Add new dose log and mark as taken
-        await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
+        await read(doseLogListProvider.notifier).addDoseLog(doseLog);
 
         // Find the created dose log to mark as taken (which handles stock deduction)
-        final updatedDoseLogsAsync = ref.read(doseLogListProvider);
+        final updatedDoseLogsAsync = read(doseLogListProvider);
         final updatedDoseLogs = await updatedDoseLogsAsync.when(
           data: (logs) async => logs,
           loading: () async => <DoseLog>[],
@@ -178,18 +222,19 @@ class NotificationActionHandler {
         );
 
         if (createdDoseLog.id != null) {
-          await ref
-              .read(doseLogListProvider.notifier)
-              .markDoseAsTaken(createdDoseLog.id!, takenTime: now, doseAmount: schedule.doseAmount);
+          await read(doseLogListProvider.notifier).markDoseAsTaken(
+            createdDoseLog.id!,
+            takenTime: now,
+            doseAmount: schedule.doseAmount,
+          );
         }
       }
 
       // Refresh medication list to show updated stock
-      ref.invalidate(medicationListProvider);
+      invalidate?.call(medicationListProvider);
 
       // Show a success notification
-      final notificationService = NotificationService();
-      await notificationService.showInstantNotification(
+      await notifications.showInstantNotification(
         title: 'Dose Taken',
         body: 'Your dose has been recorded and stock updated.',
       );
@@ -202,8 +247,7 @@ class NotificationActionHandler {
         print('NotificationActionHandler: Error taking dose: $e');
       }
       // Show error notification
-      final notificationService = NotificationService();
-      await notificationService.showInstantNotification(
+      await notifications.showInstantNotification(
         title: 'Error',
         body: 'Failed to record dose. Please try again.',
       );
@@ -211,32 +255,39 @@ class NotificationActionHandler {
   }
 
   /// Handle snoozing a dose from notification
-  Future<void> _handleSnoozeDose(Schedule schedule, DateTime scheduledDateTime, DoseLog? existingDoseLog) async {
+  Future<void> _handleSnoozeDose(
+    Schedule schedule,
+    DateTime scheduledDateTime,
+    DoseLog? existingDoseLog,
+  ) async {
     try {
       if (kDebugMode) {
-        print('NotificationActionHandler: Snoozing dose for schedule ${schedule.id}');
+        print(
+          'NotificationActionHandler: Snoozing dose for schedule ${schedule.id}',
+        );
       }
 
       // Default snooze duration (could be made configurable)
       const snoozeDurationMinutes = 15;
-      final snoozeDateTime = DateTime.now().add(const Duration(minutes: snoozeDurationMinutes));
+      final snoozeDateTime = DateTime.now().add(
+        const Duration(minutes: snoozeDurationMinutes),
+      );
 
       // Cancel current notification
-      final notificationService = NotificationService();
-      final notificationId = _generateNotificationId(schedule.id!, scheduledDateTime);
-      await notificationService.cancelNotification(notificationId);
+      final notificationId = _generateNotificationId(
+        schedule.id!,
+        scheduledDateTime,
+      );
+      await notifications.cancelNotification(notificationId);
 
       // Get medication for new notification
-      final medicationAsync = ref.read(medicationByIdProvider(schedule.medicationId));
-      final medication = await medicationAsync.when(
-        data: (med) async => med,
-        loading: () async => null,
-        error: (_, __) async => null,
+      final medication = await read(
+        medicationByIdProvider(schedule.medicationId).future,
       );
 
       if (medication != null) {
         // Schedule new notification for snoozed time
-        await notificationService.scheduleNotificationForSchedule(
+        await notifications.scheduleNotificationForSchedule(
           schedule: schedule,
           medication: medication,
           scheduledDate: snoozeDateTime,
@@ -244,7 +295,7 @@ class NotificationActionHandler {
       }
 
       // Show confirmation notification
-      await notificationService.showInstantNotification(
+      await notifications.showInstantNotification(
         title: 'Dose Snoozed',
         body: 'Reminder snoozed for $snoozeDurationMinutes minutes.',
       );
@@ -260,10 +311,16 @@ class NotificationActionHandler {
   }
 
   /// Handle canceling a dose from notification
-  Future<void> _handleCancelDose(Schedule schedule, DateTime scheduledDateTime, DoseLog? existingDoseLog) async {
+  Future<void> _handleCancelDose(
+    Schedule schedule,
+    DateTime scheduledDateTime,
+    DoseLog? existingDoseLog,
+  ) async {
     try {
       if (kDebugMode) {
-        print('NotificationActionHandler: Canceling dose for schedule ${schedule.id}');
+        print(
+          'NotificationActionHandler: Canceling dose for schedule ${schedule.id}',
+        );
       }
 
       // Create or update dose log as skipped
@@ -277,18 +334,22 @@ class NotificationActionHandler {
           );
 
       if (existingDoseLog?.id != null) {
-        await ref.read(doseLogListProvider.notifier).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
+        await read(
+          doseLogListProvider.notifier,
+        ).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
       } else {
-        await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
+        await read(doseLogListProvider.notifier).addDoseLog(doseLog);
       }
 
       // Cancel the notification
-      final notificationService = NotificationService();
-      final notificationId = _generateNotificationId(schedule.id!, scheduledDateTime);
-      await notificationService.cancelNotification(notificationId);
+      final notificationId = _generateNotificationId(
+        schedule.id!,
+        scheduledDateTime,
+      );
+      await notifications.cancelNotification(notificationId);
 
       // Show confirmation notification
-      await notificationService.showInstantNotification(
+      await notifications.showInstantNotification(
         title: 'Dose Cancelled',
         body: 'The dose has been marked as skipped.',
       );
@@ -304,7 +365,8 @@ class NotificationActionHandler {
   }
 
   int _generateNotificationId(int scheduleId, DateTime date) {
-    final dateString = '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
+    final dateString =
+        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
     return int.parse('$scheduleId$dateString') % 2147483647;
   }
 

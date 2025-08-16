@@ -19,13 +19,18 @@ class MedicationTypeSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.blue[100], borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.blue[100],
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Icon(Icons.category, color: Colors.blue[700], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
                 'Medication Type',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Text(' *', style: TextStyle(color: Colors.red)),
             ],
@@ -35,29 +40,40 @@ class MedicationTypeSection extends StatelessWidget {
             value: controller.selectedType,
             decoration: InputDecoration(
               hintText: 'Select medication type...',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.medical_services),
             ),
             items: MedicationType.values
-                .where((t) => t != MedicationType.cream && t != MedicationType.ointment && t != MedicationType.spray && t != MedicationType.gel)
+                .where(
+                  (t) =>
+                      t != MedicationType.cream &&
+                      t != MedicationType.ointment &&
+                      t != MedicationType.spray &&
+                      t != MedicationType.gel,
+                )
                 .map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Row(
-                  children: [
-                    Icon(
-                      MedicationTypeUtils.getMedicationTypeIcon(type),
-                      size: 18,
-                      color: MedicationTypeUtils.getMedicationTypeColor(type),
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Row(
+                      children: [
+                        Icon(
+                          MedicationTypeUtils.getMedicationTypeIcon(type),
+                          size: 18,
+                          color: MedicationTypeUtils.getMedicationTypeColor(
+                            type,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(type.displayName),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    Text(type.displayName),
-                  ],
-                ),
-              );
-            }).toList(),
+                  );
+                })
+                .toList(),
             onChanged: (value) {
               controller.setSelectedType(value);
               controller.clearFormFields();

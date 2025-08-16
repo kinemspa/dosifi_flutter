@@ -106,7 +106,7 @@ class SupplyLayoutNotifier extends StateNotifier<SupplyCardLayout> {
   }
 }
 
-final supplyLayoutProvider = StateNotifierProvider<SupplyLayoutNotifier, SupplyCardLayout>(
-  (ref) => SupplyLayoutNotifier(),
-);
-
+final supplyLayoutProvider =
+    StateNotifierProvider<SupplyLayoutNotifier, SupplyCardLayout>(
+      (ref) => SupplyLayoutNotifier(),
+    );

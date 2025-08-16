@@ -36,7 +36,10 @@ class DoseActivityArchiveRepository {
     return insert(entry);
   }
 
-  Future<List<DoseActivityArchiveEntry>> getAll({int limit = 500, int offset = 0}) async {
+  Future<List<DoseActivityArchiveEntry>> getAll({
+    int limit = 500,
+    int offset = 0,
+  }) async {
     final db = await _db;
     final rows = await db.query(
       'dose_activity_archive',
@@ -52,17 +55,19 @@ class DoseActivityArchiveRepository {
         scheduleId: r['schedule_id'] as int?,
         medicationId: r['medication_id'] as int?,
         medicationSnapshot: r['medication_snapshot'] != null
-            ? jsonDecode(r['medication_snapshot'] as String) as Map<String, dynamic>
+            ? jsonDecode(r['medication_snapshot'] as String)
+                  as Map<String, dynamic>
             : null,
         scheduleSnapshot: r['schedule_snapshot'] != null
-            ? jsonDecode(r['schedule_snapshot'] as String) as Map<String, dynamic>
+            ? jsonDecode(r['schedule_snapshot'] as String)
+                  as Map<String, dynamic>
             : null,
-        userContext:
-            r['user_context'] != null ? jsonDecode(r['user_context'] as String) as Map<String, dynamic> : null,
+        userContext: r['user_context'] != null
+            ? jsonDecode(r['user_context'] as String) as Map<String, dynamic>
+            : null,
         notes: r['notes'] as String?,
         actor: (r['actor'] as String?) ?? 'system',
       );
     }).toList();
   }
 }
-

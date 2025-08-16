@@ -31,7 +31,8 @@ class AnimatedGradientCard extends StatefulWidget {
   State<AnimatedGradientCard> createState() => _AnimatedGradientCardState();
 }
 
-class _AnimatedGradientCardState extends State<AnimatedGradientCard> with SingleTickerProviderStateMixin {
+class _AnimatedGradientCardState extends State<AnimatedGradientCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _elevationAnimation;
@@ -39,7 +40,10 @@ class _AnimatedGradientCardState extends State<AnimatedGradientCard> with Single
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: widget.animationDuration, vsync: this);
+    _controller = AnimationController(
+      duration: widget.animationDuration,
+      vsync: this,
+    );
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
@@ -88,7 +92,9 @@ class _AnimatedGradientCardState extends State<AnimatedGradientCard> with Single
                   widget.shadows ??
                   [
                     BoxShadow(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.3),
                       offset: Offset(0, _elevationAnimation.value / 2),
                       blurRadius: _elevationAnimation.value * 2,
                       spreadRadius: 0,
@@ -102,8 +108,13 @@ class _AnimatedGradientCardState extends State<AnimatedGradientCard> with Single
                 onTapDown: _handleTapDown,
                 onTapUp: _handleTapUp,
                 onTapCancel: _handleTapCancel,
-                borderRadius: (widget.borderRadius ?? BorderRadius.circular(20)) as BorderRadius,
-                child: Padding(padding: widget.padding ?? const EdgeInsets.all(16.0), child: widget.child),
+                borderRadius:
+                    (widget.borderRadius ?? BorderRadius.circular(20))
+                        as BorderRadius,
+                child: Padding(
+                  padding: widget.padding ?? const EdgeInsets.all(16.0),
+                  child: widget.child,
+                ),
               ),
             ),
           ),

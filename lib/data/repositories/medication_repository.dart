@@ -16,7 +16,10 @@ class MedicationRepository {
   // Read
   Future<List<Medication>> getAllMedications() async {
     final db = await _db;
-    final List<Map<String, dynamic>> maps = await db.query('medications', orderBy: 'name ASC');
+    final List<Map<String, dynamic>> maps = await db.query(
+      'medications',
+      orderBy: 'name ASC',
+    );
     return List.generate(maps.length, (i) => Medication.fromMap(maps[i]));
   }
 
@@ -36,14 +39,23 @@ class MedicationRepository {
       print('💾 [REPO DEBUG] First record: ${maps.first}');
     }
 
-    final medications = List.generate(maps.length, (i) => Medication.fromMap(maps[i]));
-    print('💾 [REPO DEBUG] Converted to ${medications.length} Medication objects');
+    final medications = List.generate(
+      maps.length,
+      (i) => Medication.fromMap(maps[i]),
+    );
+    print(
+      '💾 [REPO DEBUG] Converted to ${medications.length} Medication objects',
+    );
     return medications;
   }
 
   Future<Medication?> getMedicationById(int id) async {
     final db = await _db;
-    final List<Map<String, dynamic>> maps = await db.query('medications', where: 'id = ?', whereArgs: [id]);
+    final List<Map<String, dynamic>> maps = await db.query(
+      'medications',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isEmpty) return null;
     return Medication.fromMap(maps.first);
   }
@@ -85,7 +97,12 @@ class MedicationRepository {
   // Update
   Future<int> updateMedication(Medication medication) async {
     final db = await _db;
-    return await db.update('medications', medication.toMap(), where: 'id = ?', whereArgs: [medication.id]);
+    return await db.update(
+      'medications',
+      medication.toMap(),
+      where: 'id = ?',
+      whereArgs: [medication.id],
+    );
   }
 
   Future<int> deactivateMedication(int id) async {
@@ -103,11 +120,19 @@ class MedicationRepository {
     final db = await _db;
     return await db.transaction((txn) async {
       // Snapshot medication
-      final medMaps = await txn.query('medications', where: 'id = ?', whereArgs: [id]);
+      final medMaps = await txn.query(
+        'medications',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
       final medSnapshot = medMaps.isNotEmpty ? medMaps.first : null;
 
       // Snapshot schedules
-      final scheduleMaps = await txn.query('schedules', where: 'medication_id = ?', whereArgs: [id]);
+      final scheduleMaps = await txn.query(
+        'schedules',
+        where: 'medication_id = ?',
+        whereArgs: [id],
+      );
 
       // Archive delete event before cascading
       try {
@@ -130,14 +155,26 @@ class MedicationRepository {
       // Delete dose logs for those schedules
       if (scheduleIds.isNotEmpty) {
         final idsCsv = List.filled(scheduleIds.length, '?').join(',');
-        await txn.delete('dose_logs', where: 'schedule_id IN ($idsCsv)', whereArgs: scheduleIds);
+        await txn.delete(
+          'dose_logs',
+          where: 'schedule_id IN ($idsCsv)',
+          whereArgs: scheduleIds,
+        );
       }
 
       // Delete schedules for this medication
-      await txn.delete('schedules', where: 'medication_id = ?', whereArgs: [id]);
+      await txn.delete(
+        'schedules',
+        where: 'medication_id = ?',
+        whereArgs: [id],
+      );
 
       // Finally delete the medication
-      final result = await txn.delete('medications', where: 'id = ?', whereArgs: [id]);
+      final result = await txn.delete(
+        'medications',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
       return result;
     });
   }
@@ -162,11 +199,17 @@ class MedicationRepository {
   }
 
   // Stock management methods
-  Future<int> updateMedicationStock(int medicationId, double newStockQuantity) async {
+  Future<int> updateMedicationStock(
+    int medicationId,
+    double newStockQuantity,
+  ) async {
     final db = await _db;
     return await db.update(
       'medications',
-      {'stock_quantity': newStockQuantity.clamp(0.0, double.infinity), 'updated_at': DateTime.now().toIso8601String()},
+      {
+        'stock_quantity': newStockQuantity.clamp(0.0, double.infinity),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
       where: 'id = ?',
       whereArgs: [medicationId],
     );
@@ -188,13 +231,17 @@ class MedicationRepository {
         throw Exception('Medication not found');
       }
 
-      final currentStock = (medicationMaps.first['stock_quantity'] as num?)?.toDouble() ?? 0.0;
+      final currentStock =
+          (medicationMaps.first['stock_quantity'] as num?)?.toDouble() ?? 0.0;
       final newStock = (currentStock + adjustment).clamp(0.0, double.infinity);
 
       // Update stock
       return await txn.update(
         'medications',
-        {'stock_quantity': newStock, 'updated_at': DateTime.now().toIso8601String()},
+        {
+          'stock_quantity': newStock,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
         where: 'id = ?',
         whereArgs: [medicationId],
       );
@@ -214,7 +261,9 @@ class MedicationRepository {
     return (result.first['stock_quantity'] as num?)?.toDouble();
   }
 
-  Future<List<Medication>> getLowStockMedications({double threshold = 5.0}) async {
+  Future<List<Medication>> getLowStockMedications({
+    double threshold = 5.0,
+  }) async {
     final db = await _db;
     final List<Map<String, dynamic>> maps = await db.query(
       'medications',

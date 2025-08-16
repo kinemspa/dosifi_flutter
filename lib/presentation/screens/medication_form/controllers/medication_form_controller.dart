@@ -17,13 +17,20 @@ class MedicationFormController extends ChangeNotifier {
   final TextEditingController volumeController = TextEditingController();
   final TextEditingController concentrationController = TextEditingController();
   final TextEditingController lotBatchController = TextEditingController();
-  final TextEditingController lowStockThresholdController = TextEditingController();
-  final TextEditingController storageInstructionsController = TextEditingController();
-  final TextEditingController storageTemperatureController = TextEditingController();
-  final TextEditingController reconstitutionVolumeController = TextEditingController();
-  final TextEditingController finalConcentrationController = TextEditingController();
-  final TextEditingController reconstitutionNotesController = TextEditingController();
-  final TextEditingController reconstitutionFluidController = TextEditingController();
+  final TextEditingController lowStockThresholdController =
+      TextEditingController();
+  final TextEditingController storageInstructionsController =
+      TextEditingController();
+  final TextEditingController storageTemperatureController =
+      TextEditingController();
+  final TextEditingController reconstitutionVolumeController =
+      TextEditingController();
+  final TextEditingController finalConcentrationController =
+      TextEditingController();
+  final TextEditingController reconstitutionNotesController =
+      TextEditingController();
+  final TextEditingController reconstitutionFluidController =
+      TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController instructionsController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
@@ -42,6 +49,9 @@ class MedicationFormController extends ChangeNotifier {
   // Theme color state (hex string like #FF6F61)
   String? _selectedThemeColor;
 
+  // Notification profile (string identifier)
+  String? _notificationSet;
+
   MedicationFormController(this.ref, this.medicationId) {
     _wireTextListeners();
   }
@@ -57,16 +67,17 @@ class MedicationFormController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isEditMode => medicationId != null;
   String? get selectedThemeColor => _selectedThemeColor;
+  String? get notificationSet => _notificationSet;
 
   // Provide a curated palette
   List<String> get colorOptions => const [
-        '#6C5CE7', // indigo
-        '#00B894', // teal
-        '#0984E3', // blue
-        '#E17055', // orange
-        '#E84393', // pink
-        '#636E72', // gray
-      ];
+    '#6C5CE7', // indigo
+    '#00B894', // teal
+    '#0984E3', // blue
+    '#E17055', // orange
+    '#E84393', // pink
+    '#636E72', // gray
+  ];
 
   Color colorFromHex(String hex) {
     final cleaned = hex.replaceAll('#', '');
@@ -130,6 +141,11 @@ class MedicationFormController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNotificationSet(String? value) {
+    _notificationSet = value;
+    notifyListeners();
+  }
+
   String _defaultColorForType(MedicationType type) {
     switch (type) {
       case MedicationType.tablet:
@@ -152,7 +168,9 @@ class MedicationFormController extends ChangeNotifier {
   Future<void> loadMedicationData() async {
     if (!isEditMode) return;
 
-    final medication = await ref.read(medicationByIdProvider(int.parse(medicationId!)).future);
+    final medication = await ref.read(
+      medicationByIdProvider(int.parse(medicationId!)).future,
+    );
     if (medication != null) {
       populateFormWithMedication(medication);
     }
@@ -165,11 +183,14 @@ class MedicationFormController extends ChangeNotifier {
     strengthController.text = medication.strengthPerUnit.toString();
     stockController.text = medication.stockQuantity.toString();
     lotBatchController.text = medication.lotBatchNumber ?? '';
-    lowStockThresholdController.text = medication.lowStockThreshold?.toString() ?? '';
+    lowStockThresholdController.text =
+        medication.lowStockThreshold?.toString() ?? '';
     storageInstructionsController.text = medication.storageInstructions ?? '';
     storageTemperatureController.text = medication.storageTemperature ?? '';
-    reconstitutionVolumeController.text = medication.reconstitutionVolume?.toString() ?? '';
-    finalConcentrationController.text = medication.finalConcentration?.toString() ?? '';
+    reconstitutionVolumeController.text =
+        medication.reconstitutionVolume?.toString() ?? '';
+    finalConcentrationController.text =
+        medication.finalConcentration?.toString() ?? '';
     reconstitutionNotesController.text = medication.reconstitutionNotes ?? '';
     reconstitutionFluidController.text = medication.reconstitutionFluid ?? '';
     descriptionController.text = medication.description ?? '';
@@ -180,11 +201,14 @@ class MedicationFormController extends ChangeNotifier {
 
     _selectedType = medication.type;
     _selectedStrengthUnit = medication.strengthUnit;
-    _selectedStockUnit = medication.stockUnit?.displayName ?? MedicationTypeUtils.getStockUnit(medication.type);
+    _selectedStockUnit =
+        medication.stockUnit?.displayName ??
+        MedicationTypeUtils.getStockUnit(medication.type);
     _expirationDate = medication.expirationDate;
     _requiresRefrigeration = medication.requiresRefrigeration;
     _alertOnLowStock = medication.alertOnLowStock;
     _isActive = medication.isActive;
+    _notificationSet = medication.notificationSet;
 
     notifyListeners();
   }
@@ -231,6 +255,7 @@ class MedicationFormController extends ChangeNotifier {
     _requiresRefrigeration = false;
     _alertOnLowStock = false;
     _isActive = true;
+    _notificationSet = null;
     notifyListeners();
   }
 
@@ -260,7 +285,8 @@ class MedicationFormController extends ChangeNotifier {
     // Normalize percent for pre-filled syringe: convert % to mg/mL using 1% = 10 mg/mL
     StrengthUnit? normalizedUnit = _selectedStrengthUnit;
     double parsedStrength = double.parse(strengthController.text);
-    if (_selectedType == MedicationType.preFilledSyringe && _selectedStrengthUnit == StrengthUnit.percent) {
+    if (_selectedType == MedicationType.preFilledSyringe &&
+        _selectedStrengthUnit == StrengthUnit.percent) {
       // Convert to mg/mL
       final concMgPerMl = parsedStrength * 10.0;
       normalizedUnit = StrengthUnit.mg;
@@ -270,18 +296,23 @@ class MedicationFormController extends ChangeNotifier {
     final medication = Medication.create(
       name: nameController.text.trim(),
       type: _selectedType!,
-      brandManufacturer: brandController.text.trim().isNotEmpty ? brandController.text.trim() : null,
+      brandManufacturer: brandController.text.trim().isNotEmpty
+          ? brandController.text.trim()
+          : null,
       strengthPerUnit: parsedStrength,
       strengthUnit: normalizedUnit!,
       stockQuantity: double.parse(stockController.text),
       stockUnit: _mapStockUnitToEnum(_selectedStockUnit),
-      lotBatchNumber: lotBatchController.text.trim().isNotEmpty ? lotBatchController.text.trim() : null,
+      lotBatchNumber: lotBatchController.text.trim().isNotEmpty
+          ? lotBatchController.text.trim()
+          : null,
       expirationDate: _expirationDate,
       storageInstructions: storageInstructionsController.text.trim().isNotEmpty
           ? storageInstructionsController.text.trim()
           : null,
       requiresRefrigeration: _requiresRefrigeration,
-      reconstitutionVolume: reconstitutionVolumeController.text.trim().isNotEmpty
+      reconstitutionVolume:
+          reconstitutionVolumeController.text.trim().isNotEmpty
           ? double.parse(reconstitutionVolumeController.text)
           : null,
       finalConcentration: finalConcentrationController.text.trim().isNotEmpty
@@ -293,15 +324,24 @@ class MedicationFormController extends ChangeNotifier {
       reconstitutionFluid: reconstitutionFluidController.text.trim().isNotEmpty
           ? reconstitutionFluidController.text.trim()
           : null,
-      description: descriptionController.text.trim().isNotEmpty ? descriptionController.text.trim() : null,
-      instructions: instructionsController.text.trim().isNotEmpty ? instructionsController.text.trim() : null,
-      notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
-      barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
+      description: descriptionController.text.trim().isNotEmpty
+          ? descriptionController.text.trim()
+          : null,
+      instructions: instructionsController.text.trim().isNotEmpty
+          ? instructionsController.text.trim()
+          : null,
+      notes: notesController.text.trim().isNotEmpty
+          ? notesController.text.trim()
+          : null,
+      barcode: barcodeController.text.trim().isNotEmpty
+          ? barcodeController.text.trim()
+          : null,
       // theme color
       // themeColor stored later via repository update if needed
       alertOnLowStock: _alertOnLowStock,
       packageSize: null,
       vialsInStock: null,
+      notificationSet: _notificationSet,
     );
 
     // Attach themeColor if chosen by setting it on the created object before insert
@@ -311,7 +351,9 @@ class MedicationFormController extends ChangeNotifier {
 
   // Update existing medication
   Future<void> updateMedication() async {
-    final existingMedication = await ref.read(medicationByIdProvider(int.parse(medicationId!)).future);
+    final existingMedication = await ref.read(
+      medicationByIdProvider(int.parse(medicationId!)).future,
+    );
 
     if (existingMedication == null) {
       throw Exception('Medication not found');
@@ -320,7 +362,8 @@ class MedicationFormController extends ChangeNotifier {
     // Normalize percent for pre-filled syringe
     StrengthUnit? normalizedUnit = _selectedStrengthUnit;
     double parsedStrength = double.parse(strengthController.text);
-    if (_selectedType == MedicationType.preFilledSyringe && _selectedStrengthUnit == StrengthUnit.percent) {
+    if (_selectedType == MedicationType.preFilledSyringe &&
+        _selectedStrengthUnit == StrengthUnit.percent) {
       final concMgPerMl = parsedStrength * 10.0;
       normalizedUnit = StrengthUnit.mg;
       parsedStrength = concMgPerMl;
@@ -329,13 +372,18 @@ class MedicationFormController extends ChangeNotifier {
     final updatedMedication = existingMedication.copyWith(
       name: nameController.text.trim(),
       type: _selectedType!,
-      brandManufacturer: brandController.text.trim().isNotEmpty ? brandController.text.trim() : null,
+      brandManufacturer: brandController.text.trim().isNotEmpty
+          ? brandController.text.trim()
+          : null,
       strengthPerUnit: parsedStrength,
       strengthUnit: normalizedUnit!,
       stockQuantity: double.parse(stockController.text),
-      lotBatchNumber: lotBatchController.text.trim().isNotEmpty ? lotBatchController.text.trim() : null,
+      lotBatchNumber: lotBatchController.text.trim().isNotEmpty
+          ? lotBatchController.text.trim()
+          : null,
       expirationDate: _expirationDate,
-      reconstitutionVolume: reconstitutionVolumeController.text.trim().isNotEmpty
+      reconstitutionVolume:
+          reconstitutionVolumeController.text.trim().isNotEmpty
           ? double.parse(reconstitutionVolumeController.text)
           : null,
       finalConcentration: finalConcentrationController.text.trim().isNotEmpty
@@ -344,21 +392,33 @@ class MedicationFormController extends ChangeNotifier {
       reconstitutionNotes: reconstitutionNotesController.text.trim().isNotEmpty
           ? reconstitutionNotesController.text.trim()
           : null,
-      description: descriptionController.text.trim().isNotEmpty ? descriptionController.text.trim() : null,
-      instructions: instructionsController.text.trim().isNotEmpty ? instructionsController.text.trim() : null,
-      notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
-      barcode: barcodeController.text.trim().isNotEmpty ? barcodeController.text.trim() : null,
+      description: descriptionController.text.trim().isNotEmpty
+          ? descriptionController.text.trim()
+          : null,
+      instructions: instructionsController.text.trim().isNotEmpty
+          ? instructionsController.text.trim()
+          : null,
+      notes: notesController.text.trim().isNotEmpty
+          ? notesController.text.trim()
+          : null,
+      barcode: barcodeController.text.trim().isNotEmpty
+          ? barcodeController.text.trim()
+          : null,
       isActive: _isActive,
       themeColor: _selectedThemeColor,
     );
 
-    await ref.read(medicationListProvider.notifier).updateMedication(updatedMedication);
+    await ref
+        .read(medicationListProvider.notifier)
+        .updateMedication(updatedMedication);
   }
 
   // Delete medication
   Future<void> deleteMedication() async {
     if (!isEditMode) return;
-    await ref.read(medicationListProvider.notifier).deleteMedication(int.parse(medicationId!));
+    await ref
+        .read(medicationListProvider.notifier)
+        .deleteMedication(int.parse(medicationId!));
   }
 
   void _wireTextListeners() {
@@ -395,9 +455,10 @@ class MedicationFormController extends ChangeNotifier {
 }
 
 // Provider for the form controller
-final medicationFormControllerProvider = ChangeNotifierProvider.family<MedicationFormController, String?>((
-  ref,
-  medicationId,
-) {
-  return MedicationFormController(ref, medicationId);
-});
+final medicationFormControllerProvider =
+    ChangeNotifierProvider.family<MedicationFormController, String?>((
+      ref,
+      medicationId,
+    ) {
+      return MedicationFormController(ref, medicationId);
+    });

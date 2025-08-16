@@ -26,7 +26,8 @@ class DoseActionButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final effectiveDateTime = scheduledDateTime ?? _getScheduledDateTimeForToday();
+    final effectiveDateTime =
+        scheduledDateTime ?? _getScheduledDateTimeForToday();
     final isAlreadyTaken = existingDoseLog?.status == DoseStatus.taken;
     final isCancelled = existingDoseLog?.status == DoseStatus.skipped;
 
@@ -87,7 +88,11 @@ class DoseActionButtons extends ConsumerWidget {
     );
   }
 
-  Widget _buildCompactButtons(BuildContext context, WidgetRef ref, DateTime scheduledDateTime) {
+  Widget _buildCompactButtons(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime scheduledDateTime,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -127,7 +132,11 @@ class DoseActionButtons extends ConsumerWidget {
     );
   }
 
-  Widget _buildFullButtons(BuildContext context, WidgetRef ref, DateTime scheduledDateTime) {
+  Widget _buildFullButtons(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime scheduledDateTime,
+  ) {
     return Column(
       children: [
         Row(
@@ -184,21 +193,35 @@ class DoseActionButtons extends ConsumerWidget {
     String label, {
     bool isCompact = false,
   }) {
+    final tooltip = actionType == DoseActionType.take
+        ? 'Mark dose as taken'
+        : actionType == DoseActionType.snooze
+        ? 'Snooze reminder'
+        : 'Cancel this dose';
     return isCompact
         ? IconButton(
-            onPressed: () => _handleDoseAction(context, ref, scheduledDateTime, actionType),
+            tooltip: tooltip,
+            onPressed: () =>
+                _handleDoseAction(context, ref, scheduledDateTime, actionType),
             icon: Icon(icon, color: color),
             iconSize: 20,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           )
         : ElevatedButton.icon(
-            onPressed: () => _handleDoseAction(context, ref, scheduledDateTime, actionType),
+            onPressed: () =>
+                _handleDoseAction(context, ref, scheduledDateTime, actionType),
             icon: Icon(icon, size: 18),
             label: Text(label),
             style: ElevatedButton.styleFrom(
-              backgroundColor: actionType == DoseActionType.cancel ? null : color,
-              foregroundColor: actionType == DoseActionType.cancel ? color : Colors.white,
-              side: actionType == DoseActionType.cancel ? BorderSide(color: color) : null,
+              backgroundColor: actionType == DoseActionType.cancel
+                  ? null
+                  : color,
+              foregroundColor: actionType == DoseActionType.cancel
+                  ? color
+                  : Colors.white,
+              side: actionType == DoseActionType.cancel
+                  ? BorderSide(color: color)
+                  : null,
             ),
           );
   }
@@ -224,17 +247,27 @@ class DoseActionButtons extends ConsumerWidget {
       onActionCompleted?.call();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
 
-  Future<void> _takeDose(BuildContext context, WidgetRef ref, DateTime scheduledDateTime) async {
+  Future<void> _takeDose(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime scheduledDateTime,
+  ) async {
     final now = DateTime.now();
 
     // Create or update dose log
     final doseLog =
-        existingDoseLog?.copyWith(status: DoseStatus.taken, takenTime: now, doseAmount: schedule.doseAmount) ??
+        existingDoseLog?.copyWith(
+          status: DoseStatus.taken,
+          takenTime: now,
+          doseAmount: schedule.doseAmount,
+        ) ??
         DoseLog.create(
           medicationId: schedule.medicationId,
           scheduleId: schedule.id,
@@ -244,7 +277,9 @@ class DoseActionButtons extends ConsumerWidget {
         );
 
     if (existingDoseLog?.id != null) {
-      await ref.read(doseLogListProvider.notifier).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
+      await ref
+          .read(doseLogListProvider.notifier)
+          .updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
     } else {
       await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
 
@@ -268,7 +303,11 @@ class DoseActionButtons extends ConsumerWidget {
       if (createdDoseLog.id != null) {
         await ref
             .read(doseLogListProvider.notifier)
-            .markDoseAsTaken(createdDoseLog.id!, takenTime: now, doseAmount: schedule.doseAmount);
+            .markDoseAsTaken(
+              createdDoseLog.id!,
+              takenTime: now,
+              doseAmount: schedule.doseAmount,
+            );
       }
     }
 
@@ -277,17 +316,27 @@ class DoseActionButtons extends ConsumerWidget {
 
     // Cancel the notification for this specific dose
     final notificationService = NotificationService();
-    final notificationId = _generateNotificationId(schedule.id!, scheduledDateTime);
+    final notificationId = _generateNotificationId(
+      schedule.id!,
+      scheduledDateTime,
+    );
     await notificationService.cancelNotification(notificationId);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Dose taken! Stock has been updated.'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('✅ Dose taken! Stock has been updated.'),
+          backgroundColor: Colors.green,
+        ),
       );
     }
   }
 
-  Future<void> _snoozeDose(BuildContext context, WidgetRef ref, DateTime scheduledDateTime) async {
+  Future<void> _snoozeDose(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime scheduledDateTime,
+  ) async {
     if (!context.mounted) return;
 
     // Show snooze options dialog
@@ -297,11 +346,26 @@ class DoseActionButtons extends ConsumerWidget {
         title: const Text('Snooze Reminder'),
         content: const Text('How long would you like to snooze this reminder?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(5), child: const Text('5 min')),
-          TextButton(onPressed: () => Navigator.of(context).pop(15), child: const Text('15 min')),
-          TextButton(onPressed: () => Navigator.of(context).pop(30), child: const Text('30 min')),
-          TextButton(onPressed: () => Navigator.of(context).pop(60), child: const Text('1 hour')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(5),
+            child: const Text('5 min'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(15),
+            child: const Text('15 min'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(30),
+            child: const Text('30 min'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(60),
+            child: const Text('1 hour'),
+          ),
         ],
       ),
     );
@@ -310,11 +374,16 @@ class DoseActionButtons extends ConsumerWidget {
 
     // Cancel current notification
     final notificationService = NotificationService();
-    final notificationId = _generateNotificationId(schedule.id!, scheduledDateTime);
+    final notificationId = _generateNotificationId(
+      schedule.id!,
+      scheduledDateTime,
+    );
     await notificationService.cancelNotification(notificationId);
 
     // Schedule new notification for snoozed time
-    final medicationAsync = ref.read(medicationByIdProvider(schedule.medicationId));
+    final medicationAsync = ref.read(
+      medicationByIdProvider(schedule.medicationId),
+    );
     final medication = await medicationAsync.when(
       data: (med) async => med,
       loading: () async => null,
@@ -322,7 +391,9 @@ class DoseActionButtons extends ConsumerWidget {
     );
 
     if (medication != null) {
-      final snoozeDateTime = DateTime.now().add(Duration(minutes: snoozeMinutes));
+      final snoozeDateTime = DateTime.now().add(
+        Duration(minutes: snoozeMinutes),
+      );
       await notificationService.scheduleNotificationForSchedule(
         schedule: schedule,
         medication: medication,
@@ -332,12 +403,19 @@ class DoseActionButtons extends ConsumerWidget {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('⏰ Reminder snoozed for $snoozeMinutes minutes'), backgroundColor: Colors.orange),
+        SnackBar(
+          content: Text('⏰ Reminder snoozed for $snoozeMinutes minutes'),
+          backgroundColor: Colors.orange,
+        ),
       );
     }
   }
 
-  Future<void> _cancelDose(BuildContext context, WidgetRef ref, DateTime scheduledDateTime) async {
+  Future<void> _cancelDose(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime scheduledDateTime,
+  ) async {
     if (!context.mounted) return;
 
     // Show confirmation dialog
@@ -345,12 +423,20 @@ class DoseActionButtons extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Dose'),
-        content: const Text('Are you sure you want to cancel this dose? This will mark it as skipped.'),
+        content: const Text(
+          'Are you sure you want to cancel this dose? This will mark it as skipped.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('No, Keep')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No, Keep'),
+          ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Yes, Cancel',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -369,19 +455,27 @@ class DoseActionButtons extends ConsumerWidget {
         );
 
     if (existingDoseLog?.id != null) {
-      await ref.read(doseLogListProvider.notifier).updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
+      await ref
+          .read(doseLogListProvider.notifier)
+          .updateDoseLog(doseLog.copyWith(id: existingDoseLog!.id));
     } else {
       await ref.read(doseLogListProvider.notifier).addDoseLog(doseLog);
     }
 
     // Cancel the notification for this specific dose
     final notificationService = NotificationService();
-    final notificationId = _generateNotificationId(schedule.id!, scheduledDateTime);
+    final notificationId = _generateNotificationId(
+      schedule.id!,
+      scheduledDateTime,
+    );
     await notificationService.cancelNotification(notificationId);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Dose cancelled (marked as skipped)'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('❌ Dose cancelled (marked as skipped)'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -396,7 +490,8 @@ class DoseActionButtons extends ConsumerWidget {
   }
 
   int _generateNotificationId(int scheduleId, DateTime date) {
-    final dateString = '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
+    final dateString =
+        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
     return int.parse('$scheduleId$dateString') % 2147483647;
   }
 }

@@ -18,12 +18,18 @@ final doseOptions = {
     DoseOption(displayName: 'capsule(s)', unit: 'capsule'),
     DoseOption(displayName: 'mg', unit: 'mg'),
   ],
-  MedicationType.liquid: [DoseOption(displayName: 'ml', unit: 'ml'), DoseOption(displayName: 'mg', unit: 'mg')],
+  MedicationType.liquid: [
+    DoseOption(displayName: 'ml', unit: 'ml'),
+    DoseOption(displayName: 'mg', unit: 'mg'),
+  ],
   MedicationType.preFilledSyringe: [
     DoseOption(displayName: 'ml', unit: 'ml'),
     DoseOption(displayName: 'mg', unit: 'mg'),
   ],
-  MedicationType.readyMadeVial: [DoseOption(displayName: 'ml', unit: 'ml'), DoseOption(displayName: 'mg', unit: 'mg')],
+  MedicationType.readyMadeVial: [
+    DoseOption(displayName: 'ml', unit: 'ml'),
+    DoseOption(displayName: 'mg', unit: 'mg'),
+  ],
 };
 
 List<DoseOption> getDoseOptions(MedicationType type) {

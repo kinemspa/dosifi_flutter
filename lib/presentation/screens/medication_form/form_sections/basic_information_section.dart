@@ -18,23 +18,29 @@ class BasicInformationSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Icon(Icons.info, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
                 'Basic Information',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.info_outline, size: 18),
                 tooltip: 'About basic information',
                 onPressed: () {
-              InfoSheet.show(
+                  InfoSheet.show(
                     context,
                     title: 'Basic Information',
-                    message: 'Enter the medication name and optional brand/manufacturer. You can also add notes/instructions here.',
+                    message:
+                        'Enter the medication name and optional brand/manufacturer. You can also add notes/instructions here.',
                   );
                 },
               ),
@@ -46,7 +52,9 @@ class BasicInformationSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Medication Name *',
               hintText: 'Enter the medication name',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.medication),
@@ -64,7 +72,9 @@ class BasicInformationSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Brand / Manufacturer',
               hintText: 'Optional brand or manufacturer',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.business),
@@ -76,7 +86,9 @@ class BasicInformationSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Instructions',
               hintText: 'Dosage instructions or usage guidelines',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.list_alt),
@@ -89,7 +101,9 @@ class BasicInformationSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Notes',
               hintText: 'Additional notes or comments',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.note),

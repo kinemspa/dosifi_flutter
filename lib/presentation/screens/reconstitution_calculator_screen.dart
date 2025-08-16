@@ -7,9 +7,7 @@ class ReconstitutionCalculatorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reconstitution Calculator'),
-      ),
+      appBar: AppBar(title: const Text('Reconstitution Calculator')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: const EmbeddedReconstitutionCalculator(),
@@ -17,4 +15,3 @@ class ReconstitutionCalculatorScreen extends StatelessWidget {
     );
   }
 }
-

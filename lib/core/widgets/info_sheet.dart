@@ -23,7 +23,9 @@ class InfoSheet {
             Expanded(
               child: Text(
                 title,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
@@ -36,10 +38,9 @@ class InfoSheet {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Close'),
-          )
+          ),
         ],
       ),
     );
   }
 }
-

@@ -7,6 +7,11 @@ class CalendarScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // MainShellScreen provides Scaffold/AppBar; this screen only renders the calendar content
-    return const DosifiCalendar();
+    return const SafeArea(
+      child: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: DosifiCalendar(),
+      ),
+    );
   }
 }

@@ -24,13 +24,20 @@ class ScheduleRepository {
   // Read
   Future<List<Schedule>> getAllSchedules() async {
     final db = await _db;
-    final List<Map<String, dynamic>> maps = await db.query('schedules', orderBy: 'time_of_day ASC');
+    final List<Map<String, dynamic>> maps = await db.query(
+      'schedules',
+      orderBy: 'time_of_day ASC',
+    );
     return List.generate(maps.length, (i) => Schedule.fromMap(maps[i]));
   }
 
   Future<Schedule?> getScheduleById(int id) async {
     final db = await _db;
-    final List<Map<String, dynamic>> maps = await db.query('schedules', where: 'id = ?', whereArgs: [id]);
+    final List<Map<String, dynamic>> maps = await db.query(
+      'schedules',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isEmpty) return null;
     return Schedule.fromMap(maps.first);
   }
@@ -60,7 +67,12 @@ class ScheduleRepository {
   // Update
   Future<int> updateSchedule(Schedule schedule) async {
     final db = await _db;
-    return await db.update('schedules', schedule.toMap(), where: 'id = ?', whereArgs: [schedule.id]);
+    return await db.update(
+      'schedules',
+      schedule.toMap(),
+      where: 'id = ?',
+      whereArgs: [schedule.id],
+    );
   }
 
   Future<int> deactivateSchedule(int id) async {
@@ -78,7 +90,11 @@ class ScheduleRepository {
     final db = await _db;
     return await db.transaction((txn) async {
       // Snapshot schedule
-      final schedMaps = await txn.query('schedules', where: 'id = ?', whereArgs: [id]);
+      final schedMaps = await txn.query(
+        'schedules',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
       final schedSnapshot = schedMaps.isNotEmpty ? schedMaps.first : null;
 
       // Archive delete event for schedule before cascading
@@ -88,7 +104,9 @@ class ScheduleRepository {
           eventType: 'deleted_schedule',
           occurredAt: DateTime.now(),
           scheduleId: id,
-          medicationId: schedSnapshot != null ? schedSnapshot['medication_id'] as int? : null,
+          medicationId: schedSnapshot != null
+              ? schedSnapshot['medication_id'] as int?
+              : null,
           scheduleSnapshot: schedSnapshot,
           userContext: {'action': 'deleteSchedule'},
           notes: 'Cascade delete schedule',
@@ -99,7 +117,11 @@ class ScheduleRepository {
       // Remove all dose logs for this schedule first
       await txn.delete('dose_logs', where: 'schedule_id = ?', whereArgs: [id]);
       // Then delete the schedule
-      final result = await txn.delete('schedules', where: 'id = ?', whereArgs: [id]);
+      final result = await txn.delete(
+        'schedules',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
       return result;
     });
   }
@@ -113,7 +135,10 @@ class ScheduleRepository {
     final db = await _db;
     await db.update(
       'schedules',
-      {'is_active': isActive ? 1 : 0, 'updated_at': DateTime.now().toIso8601String()},
+      {
+        'is_active': isActive ? 1 : 0,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
       where: 'id = ?',
       whereArgs: [id],
     );

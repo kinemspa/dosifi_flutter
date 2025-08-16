@@ -41,28 +41,71 @@ class AppTheme {
       scaffoldBackgroundColor: _lightBackground,
       textTheme: GoogleFonts.poppinsTextTheme().copyWith(
         // Soften titles/headings more per feedback
-        displayLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.85)),
-        displayMedium: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.85)),
-        displaySmall: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.85)),
-        headlineLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.82)),
-        headlineMedium: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.82)),
-        headlineSmall: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.82)),
-        titleLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.8)),
-        titleMedium: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: scheme.onSurface.withValues(alpha: 0.78)),
-        titleSmall: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: scheme.onSurface.withValues(alpha: 0.76)),
-        bodyLarge: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.78)),
-        bodyMedium: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.75)),
-        bodySmall: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.62)),
-        labelLarge: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.78)),
-        labelMedium: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.7)),
-        labelSmall: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.6)),
+        displayLarge: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.85),
+        ),
+        displayMedium: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.85),
+        ),
+        displaySmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.85),
+        ),
+        headlineLarge: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.82),
+        ),
+        headlineMedium: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.82),
+        ),
+        headlineSmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.82),
+        ),
+        titleLarge: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface.withValues(alpha: 0.8),
+        ),
+        titleMedium: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurface.withValues(alpha: 0.78),
+        ),
+        titleSmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurface.withValues(alpha: 0.76),
+        ),
+        bodyLarge: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.78),
+        ),
+        bodyMedium: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.75),
+        ),
+        bodySmall: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.62),
+        ),
+        labelLarge: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.78),
+        ),
+        labelMedium: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.7),
+        ),
+        labelSmall: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.6),
+        ),
       ),
       appBarTheme: const AppBarTheme(
         elevation: 2,
         centerTitle: true,
         backgroundColor: _primaryColor,
         foregroundColor: _appBarTextColor,
-        titleTextStyle: TextStyle(color: _appBarTextColor, fontSize: 20, fontWeight: FontWeight.w600),
+        titleTextStyle: TextStyle(
+          color: _appBarTextColor,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
         iconTheme: IconThemeData(color: _appBarTextColor),
         actionsIconTheme: IconThemeData(color: _appBarTextColor),
       ),
@@ -75,7 +118,9 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -99,10 +144,15 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: const Color(0xFFCBD5E1).withValues(alpha: 0.6)),
+          borderSide: BorderSide(
+            color: const Color(0xFFCBD5E1).withValues(alpha: 0.6),
+          ),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -112,29 +162,45 @@ class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: _errorColor),
         ),
-        hintStyle: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.32), fontSize: 13),
-        labelStyle: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.55)),
-        floatingLabelStyle: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.65), fontWeight: FontWeight.w600),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.32),
+          fontSize: 13,
+        ),
+        labelStyle: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.55),
+        ),
+        floatingLabelStyle: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.65),
+          fontWeight: FontWeight.w600,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
         elevation: 8,
         selectedItemColor: scheme.primary,
-unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
+        unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.surface,
         selectedColor: scheme.primary,
         disabledColor: const Color(0xFFECEFF3),
         labelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onSurface),
-        secondaryLabelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onPrimary),
+        secondaryLabelStyle: GoogleFonts.poppins(
+          fontSize: 14,
+          color: scheme.onPrimary,
+        ),
         deleteIconColor: scheme.onSurface,
         selectedShadowColor: Colors.transparent,
         showCheckmark: false,
@@ -163,29 +229,73 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: _darkBackground,
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.88)),
-        displayMedium: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.88)),
-        displaySmall: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.88)),
-        headlineLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.86)),
-        headlineMedium: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.86)),
-        headlineSmall: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.86)),
-        titleLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: scheme.onSurface.withValues(alpha: 0.84)),
-        titleMedium: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: scheme.onSurface.withValues(alpha: 0.82)),
-        titleSmall: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: scheme.onSurface.withValues(alpha: 0.8)),
-        bodyLarge: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.85)),
-        bodyMedium: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.82)),
-        bodySmall: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.7)),
-        labelLarge: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.85)),
-        labelMedium: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.82)),
-        labelSmall: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.72)),
-      ),
+      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme)
+          .copyWith(
+            displayLarge: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.88),
+            ),
+            displayMedium: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.88),
+            ),
+            displaySmall: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.88),
+            ),
+            headlineLarge: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.86),
+            ),
+            headlineMedium: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.86),
+            ),
+            headlineSmall: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.86),
+            ),
+            titleLarge: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface.withValues(alpha: 0.84),
+            ),
+            titleMedium: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface.withValues(alpha: 0.82),
+            ),
+            titleSmall: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface.withValues(alpha: 0.8),
+            ),
+            bodyLarge: GoogleFonts.poppins(
+              color: scheme.onSurface.withValues(alpha: 0.85),
+            ),
+            bodyMedium: GoogleFonts.poppins(
+              color: scheme.onSurface.withValues(alpha: 0.82),
+            ),
+            bodySmall: GoogleFonts.poppins(
+              color: scheme.onSurface.withValues(alpha: 0.7),
+            ),
+            labelLarge: GoogleFonts.poppins(
+              color: scheme.onSurface.withValues(alpha: 0.85),
+            ),
+            labelMedium: GoogleFonts.poppins(
+              color: scheme.onSurface.withValues(alpha: 0.82),
+            ),
+            labelSmall: GoogleFonts.poppins(
+              color: scheme.onSurface.withValues(alpha: 0.72),
+            ),
+          ),
       appBarTheme: const AppBarTheme(
         elevation: 2,
         centerTitle: true,
         backgroundColor: _primaryColor,
         foregroundColor: _appBarTextColor,
-        titleTextStyle: TextStyle(color: _appBarTextColor, fontSize: 20, fontWeight: FontWeight.w600),
+        titleTextStyle: TextStyle(
+          color: _appBarTextColor,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
         iconTheme: IconThemeData(color: _appBarTextColor),
         actionsIconTheme: IconThemeData(color: _appBarTextColor),
       ),
@@ -199,7 +309,9 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -223,10 +335,15 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: (Colors.grey[600] ?? Colors.grey).withValues(alpha: 0.3)),
+          borderSide: BorderSide(
+            color: (Colors.grey[600] ?? Colors.grey).withValues(alpha: 0.3),
+          ),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -236,30 +353,46 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
           borderRadius: BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: _errorColor),
         ),
-        hintStyle: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.35), fontSize: 13),
-        labelStyle: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.65)),
-        floatingLabelStyle: GoogleFonts.poppins(color: scheme.onSurface.withValues(alpha: 0.72), fontWeight: FontWeight.w600),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.35),
+          fontSize: 13,
+        ),
+        labelStyle: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.65),
+        ),
+        floatingLabelStyle: GoogleFonts.poppins(
+          color: scheme.onSurface.withValues(alpha: 0.72),
+          fontWeight: FontWeight.w600,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
         elevation: 8,
         backgroundColor: scheme.surface,
         selectedItemColor: scheme.primary,
-unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
+        unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.surface,
         selectedColor: scheme.primary,
         disabledColor: _darkSurfaceVariant,
         labelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onSurface),
-        secondaryLabelStyle: GoogleFonts.poppins(fontSize: 14, color: scheme.onPrimary),
+        secondaryLabelStyle: GoogleFonts.poppins(
+          fontSize: 14,
+          color: scheme.onPrimary,
+        ),
         deleteIconColor: scheme.onSurface,
         selectedShadowColor: Colors.transparent,
         showCheckmark: false,
@@ -296,6 +429,10 @@ unselectedItemColor: scheme.onSurface.withValues(alpha: 0.6),
 
   // Shadows
   static List<BoxShadow> get buttonShadow => [
-        BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 8)),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 16,
+      offset: const Offset(0, 8),
+    ),
+  ];
 }

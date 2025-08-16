@@ -11,7 +11,11 @@ class AddSupplyScreen extends ConsumerStatefulWidget {
   final String? supplyId;
   final bool compactSheetMode;
 
-  const AddSupplyScreen({super.key, this.supplyId, this.compactSheetMode = false});
+  const AddSupplyScreen({
+    super.key,
+    this.supplyId,
+    this.compactSheetMode = false,
+  });
 
   @override
   ConsumerState<AddSupplyScreen> createState() => _AddSupplyScreenState();
@@ -94,8 +98,17 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(isEditing ? 'Edit Supply' : 'Add Medical Supply'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.navigateBackSmart()),
-        actions: [if (isEditing) IconButton(icon: const Icon(Icons.delete), onPressed: _showDeleteDialog)],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.navigateBackSmart(),
+        ),
+        actions: [
+          if (isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _showDeleteDialog,
+            ),
+        ],
       ),
       body: formBody,
     );
@@ -113,7 +126,10 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
+            ),
             child: const Icon(Icons.inventory_2, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
@@ -121,9 +137,15 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Medical Supply Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  'Medical Supply Information',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 SizedBox(height: 4),
-                Text('Fill in the details for your medical supply', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  'Fill in the details for your medical supply',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -166,14 +188,19 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                 labelText: 'Supply Type *',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.category),
-                helperText: 'Item: countable • Fluid: volumes • Diluent: reconstitution',
+                helperText:
+                    'Item: countable • Fluid: volumes • Diluent: reconstitution',
               ),
               items: SupplyType.values.map((type) {
                 return DropdownMenuItem(
                   value: type,
                   child: Row(
                     children: [
-                      Icon(_getTypeIcon(type), size: 20, color: _getTypeColor(type)),
+                      Icon(
+                        _getTypeIcon(type),
+                        size: 20,
+                        color: _getTypeColor(type),
+                      ),
                       const SizedBox(width: 8),
                       Text(type.displayName),
                     ],
@@ -240,7 +267,9 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.inventory),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Quantity is required';
@@ -277,7 +306,9 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.notifications),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value != null && value.trim().isNotEmpty) {
                   final level = double.tryParse(value.trim());
@@ -289,7 +320,10 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               },
             ),
             const SizedBox(height: 8),
-            const HelperBlock.info('Optional: Set minimum stock level for alerts', icon: Icons.help_outline),
+            const HelperBlock.info(
+              'Optional: Set minimum stock level for alerts',
+              icon: Icons.help_outline,
+            ),
           ],
         ),
       ),
@@ -339,7 +373,10 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const HelperBlock.info('Set an expiry if the supply spoils or becomes unusable', icon: Icons.help_outline),
+            const HelperBlock.info(
+              'Set an expiry if the supply spoils or becomes unusable',
+              icon: Icons.help_outline,
+            ),
             const SizedBox(height: 16),
 
             // Location
@@ -404,7 +441,12 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+      child: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -413,9 +455,14 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Supply'),
-        content: const Text('Are you sure you want to delete this supply? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete this supply? This action cannot be undone.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -454,7 +501,8 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
   Future<void> _selectExpirationDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _expirationDate ?? DateTime.now().add(const Duration(days: 365)),
+      initialDate:
+          _expirationDate ?? DateTime.now().add(const Duration(days: 365)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
     );
@@ -479,17 +527,29 @@ class _AddSupplyScreenState extends ConsumerState<AddSupplyScreen> {
       final supply = Supply.create(
         name: _nameController.text.trim(),
         type: _selectedType,
-        brand: _brandController.text.trim().isEmpty ? null : _brandController.text.trim(),
-        size: _sizeController.text.trim().isEmpty ? null : _sizeController.text.trim(),
+        brand: _brandController.text.trim().isEmpty
+            ? null
+            : _brandController.text.trim(),
+        size: _sizeController.text.trim().isEmpty
+            ? null
+            : _sizeController.text.trim(),
         quantity: double.parse(_quantityController.text.trim()),
         reorderLevel: _reorderLevelController.text.trim().isEmpty
             ? null
             : double.parse(_reorderLevelController.text.trim()),
-        unit: _unitController.text.trim().isEmpty ? _selectedType.defaultUnit : _unitController.text.trim(),
-        lotNumber: _lotNumberController.text.trim().isEmpty ? null : _lotNumberController.text.trim(),
+        unit: _unitController.text.trim().isEmpty
+            ? _selectedType.defaultUnit
+            : _unitController.text.trim(),
+        lotNumber: _lotNumberController.text.trim().isEmpty
+            ? null
+            : _lotNumberController.text.trim(),
         expirationDate: _expirationDate,
-        location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
-        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+        location: _locationController.text.trim().isEmpty
+            ? null
+            : _locationController.text.trim(),
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
       );
 
       await ref.read(supplyListProvider.notifier).addSupply(supply);

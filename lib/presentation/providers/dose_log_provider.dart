@@ -53,9 +53,19 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
     }
   }
 
-  Future<void> markDoseAsTaken(int id, {DateTime? takenTime, double? doseAmount, String? notes}) async {
+  Future<void> markDoseAsTaken(
+    int id, {
+    DateTime? takenTime,
+    double? doseAmount,
+    String? notes,
+  }) async {
     try {
-      await _repository.markDoseAsTaken(id, takenTime: takenTime, doseAmount: doseAmount, notes: notes);
+      await _repository.markDoseAsTaken(
+        id,
+        takenTime: takenTime,
+        doseAmount: doseAmount,
+        notes: notes,
+      );
 
       state.whenData((doseLogs) {
         final updatedList = doseLogs.map((d) {
@@ -83,7 +93,10 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
       state.whenData((doseLogs) {
         final updatedList = doseLogs.map((d) {
           if (d.id == id) {
-            return d.copyWith(status: DoseStatus.skipped, notes: notes ?? d.notes);
+            return d.copyWith(
+              status: DoseStatus.skipped,
+              notes: notes ?? d.notes,
+            );
           }
           return d;
         }).toList();
@@ -127,10 +140,13 @@ class DoseLogListNotifier extends StateNotifier<AsyncValue<List<DoseLog>>> {
 }
 
 // Provider for the dose log list state notifier
-final doseLogListProvider = StateNotifierProvider<DoseLogListNotifier, AsyncValue<List<DoseLog>>>((ref) {
-  final repository = ref.watch(doseLogRepositoryProvider);
-  return DoseLogListNotifier(repository);
-});
+final doseLogListProvider =
+    StateNotifierProvider<DoseLogListNotifier, AsyncValue<List<DoseLog>>>((
+      ref,
+    ) {
+      final repository = ref.watch(doseLogRepositoryProvider);
+      return DoseLogListNotifier(repository);
+    });
 
 // Provider for today's dose logs
 final todaysDoseLogsProvider = Provider<AsyncValue<List<DoseLog>>>((ref) {
@@ -140,7 +156,8 @@ final todaysDoseLogsProvider = Provider<AsyncValue<List<DoseLog>>>((ref) {
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     return doseLogs.where((doseLog) {
-      return doseLog.scheduledTime.isAfter(startOfDay) && doseLog.scheduledTime.isBefore(endOfDay);
+      return doseLog.scheduledTime.isAfter(startOfDay) &&
+          doseLog.scheduledTime.isBefore(endOfDay);
     }).toList()..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
   });
 });
@@ -162,28 +179,48 @@ final overdueDoseLogsProvider = Provider<AsyncValue<List<DoseLog>>>((ref) {
 });
 
 // Provider for dose logs by medication
-final doseLogsByMedicationProvider = FutureProvider.family<List<DoseLog>, int>((ref, medicationId) async {
+final doseLogsByMedicationProvider = FutureProvider.family<List<DoseLog>, int>((
+  ref,
+  medicationId,
+) async {
   final repository = ref.watch(doseLogRepositoryProvider);
   return await repository.getDoseLogsForMedication(medicationId);
 });
 
 // Provider for dose logs by date
-final doseLogsByDateProvider = FutureProvider.family<List<DoseLog>, DateTime>((ref, date) async {
+final doseLogsByDateProvider = FutureProvider.family<List<DoseLog>, DateTime>((
+  ref,
+  date,
+) async {
   final repository = ref.watch(doseLogRepositoryProvider);
   return await repository.getDoseLogsForDate(date);
 });
 
 // Provider for compliance stats
-final complianceStatsProvider = FutureProvider.family<Map<String, int>, ComplianceRequest>((ref, request) async {
-  final repository = ref.watch(doseLogRepositoryProvider);
-  return await repository.getDoseComplianceStats(request.medicationId, request.startDate, request.endDate);
-});
+final complianceStatsProvider =
+    FutureProvider.family<Map<String, int>, ComplianceRequest>((
+      ref,
+      request,
+    ) async {
+      final repository = ref.watch(doseLogRepositoryProvider);
+      return await repository.getDoseComplianceStats(
+        request.medicationId,
+        request.startDate,
+        request.endDate,
+      );
+    });
 
 // Provider for compliance rate
-final complianceRateProvider = FutureProvider.family<double, ComplianceRequest>((ref, request) async {
-  final repository = ref.watch(doseLogRepositoryProvider);
-  return await repository.getComplianceRate(request.medicationId, request.startDate, request.endDate);
-});
+final complianceRateProvider = FutureProvider.family<double, ComplianceRequest>(
+  (ref, request) async {
+    final repository = ref.watch(doseLogRepositoryProvider);
+    return await repository.getComplianceRate(
+      request.medicationId,
+      request.startDate,
+      request.endDate,
+    );
+  },
+);
 
 // Helper class for compliance providers
 class ComplianceRequest {
@@ -191,7 +228,11 @@ class ComplianceRequest {
   final DateTime startDate;
   final DateTime endDate;
 
-  ComplianceRequest({required this.medicationId, required this.startDate, required this.endDate});
+  ComplianceRequest({
+    required this.medicationId,
+    required this.startDate,
+    required this.endDate,
+  });
 
   @override
   bool operator ==(Object other) {

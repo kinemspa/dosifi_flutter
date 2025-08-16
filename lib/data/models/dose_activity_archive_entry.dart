@@ -34,12 +34,15 @@ class DoseActivityArchiveEntry {
       'occurred_at': occurredAt.toIso8601String(),
       'schedule_id': scheduleId,
       'medication_id': medicationId,
-      'medication_snapshot': medicationSnapshot != null ? jsonEncode(medicationSnapshot) : null,
-      'schedule_snapshot': scheduleSnapshot != null ? jsonEncode(scheduleSnapshot) : null,
+      'medication_snapshot': medicationSnapshot != null
+          ? jsonEncode(medicationSnapshot)
+          : null,
+      'schedule_snapshot': scheduleSnapshot != null
+          ? jsonEncode(scheduleSnapshot)
+          : null,
       'user_context': userContext != null ? jsonEncode(userContext) : null,
       'notes': notes,
       'actor': actor,
     };
   }
 }
-

@@ -36,7 +36,8 @@ class AnimatedGradientButton extends StatefulWidget {
   State<AnimatedGradientButton> createState() => _AnimatedGradientButtonState();
 }
 
-class _AnimatedGradientButtonState extends State<AnimatedGradientButton> with TickerProviderStateMixin {
+class _AnimatedGradientButtonState extends State<AnimatedGradientButton>
+    with TickerProviderStateMixin {
   late AnimationController _pressController;
   late AnimationController _rippleController;
   late Animation<double> _scaleAnimation;
@@ -46,19 +47,23 @@ class _AnimatedGradientButtonState extends State<AnimatedGradientButton> with Ti
   void initState() {
     super.initState();
 
-    _pressController = AnimationController(duration: widget.animationDuration, vsync: this);
+    _pressController = AnimationController(
+      duration: widget.animationDuration,
+      vsync: this,
+    );
 
-    _rippleController = AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
+    _rippleController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(parent: _pressController, curve: Curves.easeInOut));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
+    );
 
-    _rippleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _rippleController, curve: Curves.easeOut));
+    _rippleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _rippleController, curve: Curves.easeOut),
+    );
   }
 
   @override
@@ -118,12 +123,16 @@ class _AnimatedGradientButtonState extends State<AnimatedGradientButton> with Ti
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(widget.borderRadius),
+                        borderRadius: BorderRadius.circular(
+                          widget.borderRadius,
+                        ),
                         gradient: RadialGradient(
                           center: Alignment.center,
                           radius: _rippleAnimation.value * 2,
                           colors: [
-                            Colors.white.withValues(alpha: 0.3 * (1 - _rippleAnimation.value)),
+                            Colors.white.withValues(
+                              alpha: 0.3 * (1 - _rippleAnimation.value),
+                            ),
                             Colors.transparent,
                           ],
                         ),
@@ -151,11 +160,17 @@ class _AnimatedGradientButtonState extends State<AnimatedGradientButton> with Ti
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(effectiveTextColor),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  effectiveTextColor,
+                                ),
                               ),
                             )
                           else if (widget.icon != null) ...[
-                            Icon(widget.icon, color: effectiveTextColor, size: 20),
+                            Icon(
+                              widget.icon,
+                              color: effectiveTextColor,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                           ],
                           if (!widget.loading)

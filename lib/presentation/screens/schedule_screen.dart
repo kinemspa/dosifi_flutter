@@ -14,6 +14,7 @@ import 'package:dosifi_flutter/core/utils/compact_form_sheet.dart';
 import 'package:dosifi_flutter/presentation/screens/add_schedule_screen.dart';
 import 'package:dosifi_flutter/presentation/providers/schedule_layout_provider.dart';
 import 'package:dosifi_flutter/core/widgets/info_sheet.dart';
+import 'package:dosifi_flutter/config/app_router.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -22,13 +23,14 @@ class ScheduleScreen extends ConsumerStatefulWidget {
   ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTickerProviderStateMixin {
+class _ScheduleScreenState extends ConsumerState<ScheduleScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -54,16 +56,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                   segments: const [
                     ButtonSegment<int>(
                       value: 0,
-                      label: Text('Today'),
+                      label: Text("Today's Activity"),
                       icon: Icon(Icons.today, size: 18),
                     ),
                     ButtonSegment<int>(
                       value: 1,
-                      label: Text('Calendar'),
-                      icon: Icon(Icons.calendar_month, size: 18),
-                    ),
-                    ButtonSegment<int>(
-                      value: 2,
                       label: Text('Schedules'),
                       icon: Icon(Icons.schedule, size: 18),
                     ),
@@ -83,17 +80,31 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                         return theme.colorScheme.surface;
                       },
                     ),
+                    side: const WidgetStatePropertyAll(BorderSide(width: 0.8)),
+                    padding: const WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    ),
+                    visualDensity: VisualDensity.compact,
                   ),
                 ),
                 const Spacer(),
+                TextButton.icon(
+                  onPressed: () => context.navigateToCalendar(),
+                  icon: const Icon(Icons.calendar_month),
+                  label: const Text('Open Calendar'),
+                ),
                 IconButton(
                   tooltip: 'About Schedule',
-                  icon: Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                  icon: Icon(
+                    Icons.info_outline,
+                    color: theme.colorScheme.primary,
+                  ),
                   onPressed: () {
                     InfoSheet.show(
                       context,
                       title: 'Schedule',
-                      message: 'View your medication schedules in three ways:\n\n• Today: See and manage today\'s doses\n• Calendar: View doses on a calendar\n• Schedules: Manage all medication schedules',
+                      message:
+                          'View your medication schedules in two ways:\n\n• Today: See and manage today\'s doses\n• Schedules: Manage all medication schedules\n\nUse "Open Calendar" for the full calendar view.',
                     );
                   },
                 ),
@@ -106,29 +117,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
               controller: _tabController,
               children: [
                 _buildTodayTab(schedulesAsync),
-                _buildCalendarTab(schedulesAsync),
                 _buildSchedulesTab(schedulesAsync),
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: 'test_notification',
-            mini: true,
-            onPressed: _testNotification,
-            child: const Icon(Icons.notifications),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton(
-            heroTag: 'add_schedule',
-            onPressed: _showAddScheduleDialog,
-            child: const Icon(Icons.add),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add_schedule',
+        onPressed: _showAddScheduleDialog,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -145,13 +143,17 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
             children: [
               Text(
                 'Today\'s Doses',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               if (todaySchedules.isEmpty)
-                _buildEmptyState('No doses scheduled for today')
+                _buildEmptyState('Nothing for the rest of today')
               else
-                ...todaySchedules.map((schedule) => _buildTodayDoseCard(schedule)),
+                ...todaySchedules.map(
+                  (schedule) => _buildTodayDoseCard(schedule),
+                ),
             ],
           ),
         );
@@ -186,15 +188,24 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         return _todayOutlinedLargeTitle(schedule);
     }
   }
+
   Widget _todayOutlinedClassic(Schedule schedule) {
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-    final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
+    final medicationAsync = ref.watch(
+      medicationByIdProvider(schedule.medicationId),
+    );
 
     // Check if dose has been taken today
     final today = DateTime.now();
-    final scheduledDateTime = DateTime(today.year, today.month, today.day, hour, minute);
+    final scheduledDateTime = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      hour,
+      minute,
+    );
 
     final doseLogsAsync = ref.watch(doseLogListProvider);
     final existingDoseLog = doseLogsAsync.when(
@@ -222,20 +233,32 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
-          colors: [Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surface.withValues(alpha: 0.9)],
+          colors: [
+            Theme.of(context).colorScheme.surface,
+            Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15), width: 1.5),
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.secondary.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.05),
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withValues(alpha: 0.05),
             blurRadius: 40,
             offset: const Offset(0, 16),
             spreadRadius: 0,
@@ -253,7 +276,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                 height: 60,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withValues(alpha: 0.7)],
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -264,7 +290,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                   children: [
                     Text(
                       '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -277,20 +307,33 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                     medicationAsync.when(
                       data: (medication) => Text(
                         medication?.name ?? 'Unknown Medication',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       loading: () => const Text('Loading...'),
-                      error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
+                      error: (_, __) =>
+                          Text('Medication ID: ${schedule.medicationId}'),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}',
                       style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
-                    Text('${schedule.doseAmount} ${schedule.doseUnit}', style: TextStyle(color: Colors.grey[600])),
+                    Text(
+                      '${schedule.doseAmount} ${schedule.doseUnit}',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
                     medicationAsync.when(
                       data: (medication) => medication != null
-                          ? Text(medication.displayStrength, style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                          ? Text(
+                              medication.displayStrength,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                              ),
+                            )
                           : const SizedBox.shrink(),
                       loading: () => const SizedBox.shrink(),
                       error: (_, __) => const SizedBox.shrink(),
@@ -316,26 +359,25 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
   }
 
   // Delegate other variants to the classic implementation for now
-  Widget _todayOutlinedSoft(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedShadow(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedAccentBar(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedPill(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedDense(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedDivider(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedMonochrome(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedCompactChips(Schedule schedule) => _todayOutlinedClassic(schedule);
-  Widget _todayOutlinedLargeTitle(Schedule schedule) => _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedSoft(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedShadow(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedAccentBar(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedPill(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedDense(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedDivider(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedMonochrome(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedCompactChips(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
+  Widget _todayOutlinedLargeTitle(Schedule schedule) =>
+      _todayOutlinedClassic(schedule);
 
-  Widget _buildCalendarTab(AsyncValue<List<Schedule>> schedulesAsync) {
-    return schedulesAsync.when(
-      data: (schedules) {
-        // TODO: Implement calendar view using DosifiCalendar widget
-        return const Center(child: Text('Calendar view coming soon'));
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
-    );
-  }
 
   Widget _buildSchedulesTab(AsyncValue<List<Schedule>> schedulesAsync) {
     return schedulesAsync.when(
@@ -383,8 +425,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
         return _fullOutlinedLargeTitle(schedule);
     }
   }
+
   Widget _fullOutlinedClassic(Schedule schedule) {
-    final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
+    final medicationAsync = ref.watch(
+      medicationByIdProvider(schedule.medicationId),
+    );
 
     return CompactCard(
       accentColor: Theme.of(context).colorScheme.primary,
@@ -399,12 +444,19 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
             decoration: BoxDecoration(
               color: Theme.of(context).primaryColor.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2), width: 0.8),
+              border: Border.all(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                width: 0.8,
+              ),
             ),
             alignment: Alignment.center,
             child: Text(
               schedule.timeOfDay,
-              style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -418,17 +470,21 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                       child: medicationAsync.when(
                         data: (medication) => Text(
                           medication?.name ?? 'Unknown Medication',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         loading: () => const Text('Loading...'),
-                        error: (_, __) => Text('Medication ID: ${schedule.medicationId}'),
+                        error: (_, __) =>
+                            Text('Medication ID: ${schedule.medicationId}'),
                       ),
                     ),
                     LabelChip(
                       icon: Icons.event_repeat,
-                      label: ScheduleType.fromString(schedule.scheduleType).displayName,
+                      label: ScheduleType.fromString(
+                        schedule.scheduleType,
+                      ).displayName,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ],
@@ -438,7 +494,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    LabelChip(icon: Icons.schedule, label: schedule.timeOfDay, color: Colors.blueGrey),
+                    LabelChip(
+                      icon: Icons.schedule,
+                      label: schedule.timeOfDay,
+                      color: Colors.blueGrey,
+                    ),
                     LabelChip(
                       icon: Icons.local_fire_department,
                       label: '${schedule.doseAmount} ${schedule.doseUnit}',
@@ -465,14 +525,21 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
 
   // Delegate other variants to the classic implementation for now
   Widget _fullOutlinedSoft(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedShadow(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedAccentBar(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedShadow(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedAccentBar(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
   Widget _fullOutlinedPill(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedDense(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedDivider(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedMonochrome(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedCompactChips(Schedule schedule) => _fullOutlinedClassic(schedule);
-  Widget _fullOutlinedLargeTitle(Schedule schedule) => _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedDense(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedDivider(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedMonochrome(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedCompactChips(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
+  Widget _fullOutlinedLargeTitle(Schedule schedule) =>
+      _fullOutlinedClassic(schedule);
 
   Widget _buildEmptyState(String message) {
     return Center(
@@ -483,7 +550,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
           const SizedBox(height: 16),
           Text(
             message,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -501,7 +570,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     final timeParts = schedule.timeOfDay.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = timeParts.length > 1 ? int.parse(timeParts[1]) : 0;
-    final medicationAsync = ref.watch(medicationByIdProvider(schedule.medicationId));
+    final medicationAsync = ref.watch(
+      medicationByIdProvider(schedule.medicationId),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -515,10 +586,15 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10), width: 1.2),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -527,7 +603,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       child: Material(
         color: Colors.transparent,
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10,
+          ),
           leading: Container(
             width: 52,
             height: 52,
@@ -538,20 +617,28 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
             alignment: Alignment.center,
             child: Text(
               '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-              style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 13, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           title: medicationAsync.when(
             data: (medication) => Text(
               medication?.name ?? 'Unknown Medication',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             loading: () => const Text('Loading...'),
             error: (_, __) => Text(
               'Medication ID: ${schedule.medicationId}',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           subtitle: Padding(
@@ -561,17 +648,31 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                 Chip(
                   label: Text(
                     ScheduleType.fromString(schedule.scheduleType).displayName,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.08),
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 0,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 medicationAsync.when(
                   data: (medication) => medication != null
-                      ? Text(medication.displayStrength, style: TextStyle(color: Colors.grey[600], fontSize: 12))
+                      ? Text(
+                          medication.displayStrength,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        )
                       : const SizedBox.shrink(),
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
@@ -588,7 +689,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
                 tooltip: 'Edit schedule',
               ),
               IconButton(
-                icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+                icon: const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                ),
                 onPressed: () => _markDoseAsTaken(schedule),
                 tooltip: 'Mark today taken',
               ),
@@ -615,20 +719,34 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Today', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                'Today',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               if (todaySchedules.isEmpty)
                 const Text('No schedules for today')
               else
-                ...todaySchedules.map((schedule) => _buildScheduleCard(schedule)),
+                ...todaySchedules.map(
+                  (schedule) => _buildScheduleCard(schedule),
+                ),
 
               const SizedBox(height: 24),
-              Text('Upcoming', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                'Upcoming',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               if (upcomingSchedules.isEmpty)
                 const Text('No upcoming schedules')
               else
-                ...upcomingSchedules.map((schedule) => _buildScheduleCard(schedule)),
+                ...upcomingSchedules.map(
+                  (schedule) => _buildScheduleCard(schedule),
+                ),
             ],
           ),
         );
@@ -654,7 +772,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       if (!schedule.isActive) return false;
 
       // Get schedules from tomorrow up to next week
-      for (var day = tomorrow; day.isBefore(nextWeek); day = day.add(const Duration(days: 1))) {
+      for (
+        var day = tomorrow;
+        day.isBefore(nextWeek);
+        day = day.add(const Duration(days: 1))
+      ) {
         if (_getSchedulesForDay([schedule], day).isNotEmpty) {
           return true;
         }
@@ -663,20 +785,23 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
     }).toList();
   }
 
-  void _testNotification() async {
-    final notificationService = NotificationService();
-    await notificationService.showInstantNotification(title: 'Test Notification', body: 'This is a test notification.');
-  }
 
   void _showAddScheduleDialog() {
-    showCompactFormSheet(context, title: 'Add Schedule', child: const AddScheduleScreen(compactSheetMode: true));
+    showCompactFormSheet(
+      context,
+      title: 'Add Schedule',
+      child: const AddScheduleScreen(compactSheetMode: true),
+    );
   }
 
   void _showEditScheduleDialog(Schedule schedule) {
     showCompactFormSheet(
       context,
       title: 'Edit Schedule',
-      child: AddScheduleScreen(scheduleId: schedule.id.toString(), compactSheetMode: true),
+      child: AddScheduleScreen(
+        scheduleId: schedule.id.toString(),
+        compactSheetMode: true,
+      ),
     );
   }
 
@@ -689,7 +814,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
           'Are you sure you want to delete this schedule? This will also remove all future planned doses.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -712,14 +840,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Schedule and future doses deleted!'), backgroundColor: Colors.red),
+            const SnackBar(
+              content: Text('Schedule and future doses deleted!'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error deleting schedule: $e'), backgroundColor: Colors.red));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting schedule: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       }
     }
@@ -737,7 +871,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       final now = DateTime.now();
       final futureDoses = doseLogs
           .where(
-            (log) => log.scheduleId == scheduleId && log.scheduledTime.isAfter(now) && log.status == DoseStatus.pending,
+            (log) =>
+                log.scheduleId == scheduleId &&
+                log.scheduledTime.isAfter(now) &&
+                log.status == DoseStatus.pending,
           )
           .toList();
 
@@ -799,21 +936,31 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> with SingleTick
       // Mark as taken with stock deduction
       await ref
           .read(doseLogListProvider.notifier)
-          .markDoseAsTaken(createdDoseLog.id!, takenTime: now, doseAmount: schedule.doseAmount);
+          .markDoseAsTaken(
+            createdDoseLog.id!,
+            takenTime: now,
+            doseAmount: schedule.doseAmount,
+          );
 
       // Refresh medication list to show updated stock
       ref.invalidate(medicationListProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dose taken! Stock has been updated.'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Dose taken! Stock has been updated.'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error marking dose as taken: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error marking dose as taken: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

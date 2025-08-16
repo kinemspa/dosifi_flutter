@@ -136,7 +136,8 @@ class Supply {
 
   factory Supply.fromMap(Map<String, dynamic> map) {
     // Handle both old 'category' field and new 'type' field for backward compatibility
-    final typeString = map['type'] as String? ?? map['category'] as String? ?? 'Item';
+    final typeString =
+        map['type'] as String? ?? map['category'] as String? ?? 'Item';
     SupplyType supplyType;
     switch (typeString.toLowerCase()) {
       case 'fluid':
@@ -157,10 +158,14 @@ class Supply {
       brand: map['brand'] as String?,
       size: map['size'] as String?,
       quantity: (map['quantity'] as num).toDouble(),
-      reorderLevel: map['reorder_level'] != null ? (map['reorder_level'] as num).toDouble() : null,
+      reorderLevel: map['reorder_level'] != null
+          ? (map['reorder_level'] as num).toDouble()
+          : null,
       unit: map['unit'] as String?,
       lotNumber: map['lot_number'] as String?,
-      expirationDate: map['expiration_date'] != null ? DateTime.parse(map['expiration_date'] as String) : null,
+      expirationDate: map['expiration_date'] != null
+          ? DateTime.parse(map['expiration_date'] as String)
+          : null,
       location: map['location'] as String?,
       notes: map['notes'] as String?,
       isActive: (map['is_active'] as int) == 1,
@@ -219,7 +224,9 @@ class Supply {
 
   bool get isExpiringSoon {
     if (expirationDate == null) return false;
-    final daysUntilExpiration = expirationDate!.difference(DateTime.now()).inDays;
+    final daysUntilExpiration = expirationDate!
+        .difference(DateTime.now())
+        .inDays;
     return daysUntilExpiration <= 30 && daysUntilExpiration >= 0;
   }
 

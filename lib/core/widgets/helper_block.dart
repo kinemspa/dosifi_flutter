@@ -9,12 +9,24 @@ class HelperBlock extends StatelessWidget {
   final IconData? icon;
   final EdgeInsetsGeometry padding;
 
-  const HelperBlock.info(this.message, {super.key, this.icon, this.padding = const EdgeInsets.all(12)})
-      : type = HelperBlockType.info;
-  const HelperBlock.warning(this.message, {super.key, this.icon, this.padding = const EdgeInsets.all(12)})
-      : type = HelperBlockType.warning;
-  const HelperBlock.error(this.message, {super.key, this.icon, this.padding = const EdgeInsets.all(12)})
-      : type = HelperBlockType.error;
+  const HelperBlock.info(
+    this.message, {
+    super.key,
+    this.icon,
+    this.padding = const EdgeInsets.all(12),
+  }) : type = HelperBlockType.info;
+  const HelperBlock.warning(
+    this.message, {
+    super.key,
+    this.icon,
+    this.padding = const EdgeInsets.all(12),
+  }) : type = HelperBlockType.warning;
+  const HelperBlock.error(
+    this.message, {
+    super.key,
+    this.icon,
+    this.padding = const EdgeInsets.all(12),
+  }) : type = HelperBlockType.error;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +58,10 @@ class HelperBlock extends StatelessWidget {
       padding: padding,
       margin: EdgeInsets.zero,
       child: Container(
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,4 +80,3 @@ class HelperBlock extends StatelessWidget {
     );
   }
 }
-

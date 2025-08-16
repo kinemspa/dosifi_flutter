@@ -6,12 +6,44 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:convert';
 
+abstract class ISecureStorage {
+  Future<String?> read({required String key});
+  Future<void> write({required String key, String? value});
+}
+
+class _FlutterSecureStorageAdapter implements ISecureStorage {
+  final FlutterSecureStorage _inner = const FlutterSecureStorage();
+  @override
+  Future<String?> read({required String key}) => _inner.read(key: key);
+  @override
+  Future<void> write({required String key, String? value}) =>
+      _inner.write(key: key, value: value);
+}
+
+typedef DatabasePathProvider = Future<String> Function();
+
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
   static const int _databaseVersion = 14;
-  static const _secureStorage = FlutterSecureStorage();
-  static const String _dbPasswordKey = 'dosifi_db_password';
+  static ISecureStorage _secureStorage = _FlutterSecureStorageAdapter();
+  static String _dbPasswordKey = 'dosifi_db_password';
+  static DatabasePathProvider? databasePathProviderOverride;
+
+  // Test hooks
+  static void setSecureStorage(ISecureStorage storage) {
+    _secureStorage = storage;
+  }
+
+  static void setPasswordKey(String key) {
+    _dbPasswordKey = key;
+  }
+
+  static void resetTestOverrides() {
+    databasePathProviderOverride = null;
+    _secureStorage = _FlutterSecureStorageAdapter();
+    _dbPasswordKey = 'dosifi_db_password';
+  }
 
   static Future<Database> get database async {
     if (_database != null) return _database!;
@@ -27,7 +59,9 @@ class DatabaseService {
       await _secureStorage.write(key: _dbPasswordKey, value: password);
     }
 
-    final databasePath = await getDatabasesPath();
+    final databasePath = databasePathProviderOverride != null
+        ? await databasePathProviderOverride!.call()
+        : await getDatabasesPath();
     final path = join(databasePath, _databaseName);
 
     final db = await openDatabase(
@@ -55,7 +89,10 @@ class DatabaseService {
   static String _generateSecurePassword() {
     // Generate a cryptographically secure random key for database encryption
     final rng = Random.secure();
-    final bytes = List<int>.generate(32, (_) => rng.nextInt(256)); // 256-bit key
+    final bytes = List<int>.generate(
+      32,
+      (_) => rng.nextInt(256),
+    ); // 256-bit key
     return base64UrlEncode(bytes);
   }
 
@@ -261,14 +298,28 @@ class DatabaseService {
 
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_medications_name ON medications(name)');
-    await db.execute('CREATE INDEX idx_schedules_medication ON schedules(medication_id)');
-    await db.execute('CREATE INDEX idx_dose_logs_medication ON dose_logs(medication_id)');
-    await db.execute('CREATE INDEX idx_dose_logs_date ON dose_logs(scheduled_time)');
-    await db.execute('CREATE INDEX idx_archive_event_type ON dose_activity_archive(event_type)');
-    await db.execute('CREATE INDEX idx_archive_occurred_at ON dose_activity_archive(occurred_at)');
+    await db.execute(
+      'CREATE INDEX idx_schedules_medication ON schedules(medication_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_dose_logs_medication ON dose_logs(medication_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_dose_logs_date ON dose_logs(scheduled_time)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_archive_event_type ON dose_activity_archive(event_type)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_archive_occurred_at ON dose_activity_archive(occurred_at)',
+    );
   }
 
-  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  static Future<void> _onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     // Handle database migrations
     if (oldVersion < 2) {
       // Migration from version 1 to 2: Update inventory table
@@ -433,8 +484,12 @@ class DatabaseService {
           actor TEXT NOT NULL DEFAULT 'system'
         )
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_archive_event_type ON dose_activity_archive(event_type)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_archive_occurred_at ON dose_activity_archive(occurred_at)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_archive_event_type ON dose_activity_archive(event_type)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_archive_occurred_at ON dose_activity_archive(occurred_at)',
+      );
     }
 
     if (oldVersion < 6) {
@@ -442,16 +497,24 @@ class DatabaseService {
       try {
         // Check if medications table has number_of_units column
         final result = await db.rawQuery('PRAGMA table_info(medications)');
-        final hasNumberOfUnits = result.any((col) => col['name'] == 'number_of_units');
-        final hasStockQuantity = result.any((col) => col['name'] == 'stock_quantity');
+        final hasNumberOfUnits = result.any(
+          (col) => col['name'] == 'number_of_units',
+        );
+        final hasStockQuantity = result.any(
+          (col) => col['name'] == 'stock_quantity',
+        );
 
         if (hasNumberOfUnits && !hasStockQuantity) {
           // Rename number_of_units to stock_quantity
-          await db.execute('ALTER TABLE medications RENAME COLUMN number_of_units TO stock_quantity');
+          await db.execute(
+            'ALTER TABLE medications RENAME COLUMN number_of_units TO stock_quantity',
+          );
         }
       } catch (e) {
         // If the above fails, do a full table recreation
-        await db.execute('ALTER TABLE medications RENAME TO medications_backup_v6');
+        await db.execute(
+          'ALTER TABLE medications RENAME TO medications_backup_v6',
+        );
 
         // Create new medications table
         await db.execute('''
@@ -508,10 +571,18 @@ class DatabaseService {
 
         if (!hasDoseAmount) {
           // Add dose columns to schedules table
-          await db.execute('ALTER TABLE schedules ADD COLUMN dose_amount REAL DEFAULT 1.0');
-          await db.execute('ALTER TABLE schedules ADD COLUMN dose_unit TEXT DEFAULT "tablet"');
-          await db.execute('ALTER TABLE schedules ADD COLUMN dose_form TEXT DEFAULT "tablet"');
-          await db.execute('ALTER TABLE schedules ADD COLUMN strength_per_unit REAL DEFAULT 1.0');
+          await db.execute(
+            'ALTER TABLE schedules ADD COLUMN dose_amount REAL DEFAULT 1.0',
+          );
+          await db.execute(
+            'ALTER TABLE schedules ADD COLUMN dose_unit TEXT DEFAULT "tablet"',
+          );
+          await db.execute(
+            'ALTER TABLE schedules ADD COLUMN dose_form TEXT DEFAULT "tablet"',
+          );
+          await db.execute(
+            'ALTER TABLE schedules ADD COLUMN strength_per_unit REAL DEFAULT 1.0',
+          );
 
           // Update existing schedules with default values
           await db.execute('''
@@ -524,7 +595,9 @@ class DatabaseService {
           ''');
 
           // Make dose columns NOT NULL
-          await db.execute('ALTER TABLE schedules RENAME TO schedules_backup_v7');
+          await db.execute(
+            'ALTER TABLE schedules RENAME TO schedules_backup_v7',
+          );
 
           // Create new schedules table with proper schema
           await db.execute('''
@@ -580,12 +653,20 @@ class DatabaseService {
         // Check if supplies table exists and has the correct structure
         final result = await db.rawQuery('PRAGMA table_info(supplies)');
         final hasTypeColumn = result.any((col) => col['name'] == 'type');
-        final quantityColumn = result.firstWhere((col) => col['name'] == 'quantity', orElse: () => {});
-        final reorderColumn = result.firstWhere((col) => col['name'] == 'reorder_level', orElse: () => {});
+        final quantityColumn = result.firstWhere(
+          (col) => col['name'] == 'quantity',
+          orElse: () => {},
+        );
+        final reorderColumn = result.firstWhere(
+          (col) => col['name'] == 'reorder_level',
+          orElse: () => {},
+        );
 
         // Check if we need to update the table
         final bool needsUpdate =
-            !hasTypeColumn || quantityColumn['type'] == 'INTEGER' || reorderColumn['type'] == 'INTEGER';
+            !hasTypeColumn ||
+            quantityColumn['type'] == 'INTEGER' ||
+            reorderColumn['type'] == 'INTEGER';
 
         if (needsUpdate) {
           // Backup existing supplies data
@@ -613,7 +694,9 @@ class DatabaseService {
           ''');
 
           // Migrate existing data if any exists
-          final existingData = await db.rawQuery('SELECT COUNT(*) as count FROM supplies_backup_v8');
+          final existingData = await db.rawQuery(
+            'SELECT COUNT(*) as count FROM supplies_backup_v8',
+          );
           if ((existingData.first['count'] as int) > 0) {
             // Map old 'category' to 'type' and convert quantities to REAL
             await db.execute('''
@@ -653,7 +736,9 @@ class DatabaseService {
         final cols = await db.rawQuery('PRAGMA table_info(medications)');
         final hasVials = cols.any((c) => c['name'] == 'vials_in_stock');
         if (!hasVials) {
-          await db.execute('ALTER TABLE medications ADD COLUMN vials_in_stock REAL DEFAULT 0.0');
+          await db.execute(
+            'ALTER TABLE medications ADD COLUMN vials_in_stock REAL DEFAULT 0.0',
+          );
         }
       } catch (e) {
         debugPrint('Migration v9 failed: $e');
@@ -689,7 +774,9 @@ class DatabaseService {
         final cols = await db.rawQuery('PRAGMA table_info(medications)');
         final hasStockUnit = cols.any((c) => c['name'] == 'stock_unit');
         if (!hasStockUnit) {
-          await db.execute('ALTER TABLE medications ADD COLUMN stock_unit TEXT');
+          await db.execute(
+            'ALTER TABLE medications ADD COLUMN stock_unit TEXT',
+          );
         }
       } catch (e) {
         debugPrint('Migration v11 (stock_unit) failed: $e');
@@ -702,7 +789,9 @@ class DatabaseService {
         final cols = await db.rawQuery('PRAGMA table_info(medications)');
         final hasPackageSize = cols.any((c) => c['name'] == 'package_size');
         if (!hasPackageSize) {
-          await db.execute('ALTER TABLE medications ADD COLUMN package_size REAL');
+          await db.execute(
+            'ALTER TABLE medications ADD COLUMN package_size REAL',
+          );
         }
       } catch (e) {
         debugPrint('Migration v12 (package_size) failed: $e');
@@ -715,7 +804,9 @@ class DatabaseService {
         final cols = await db.rawQuery('PRAGMA table_info(medications)');
         final hasThemeColor = cols.any((c) => c['name'] == 'theme_color');
         if (!hasThemeColor) {
-          await db.execute('ALTER TABLE medications ADD COLUMN theme_color TEXT');
+          await db.execute(
+            'ALTER TABLE medications ADD COLUMN theme_color TEXT',
+          );
         }
       } catch (e) {
         debugPrint('Migration v13 (theme_color) failed: $e');
@@ -738,7 +829,9 @@ class DatabaseService {
   static Future<String> backupDatabase() async {
     try {
       // Get database instance to ensure it's initialized
-      final databasePath = await getDatabasesPath();
+      final databasePath = databasePathProviderOverride != null
+          ? await databasePathProviderOverride!.call()
+          : await getDatabasesPath();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final backupPath = join(databasePath, 'dosifi_backup_$timestamp.db');
 
@@ -787,12 +880,16 @@ class DatabaseService {
     // Scan sqlite_master for any object names referencing backup markers and drop them safely
     final patterns = ['backup_v6', 'backup_v7', 'backup_v8', 'backup'];
     try {
-      final rows = await db.rawQuery("SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL");
+      final rows = await db.rawQuery(
+        'SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL',
+      );
       for (final row in rows) {
         final type = (row['type'] as String?) ?? '';
         final name = (row['name'] as String?) ?? '';
         final sql = (row['sql'] as String?) ?? '';
-        final matches = patterns.any((p) => name.contains(p) || sql.contains(p));
+        final matches = patterns.any(
+          (p) => name.contains(p) || sql.contains(p),
+        );
         if (!matches) continue;
         try {
           if (type == 'table') {

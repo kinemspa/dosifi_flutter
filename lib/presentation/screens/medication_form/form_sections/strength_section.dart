@@ -44,13 +44,18 @@ class StrengthSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Icon(Icons.scale, color: Colors.grey[800], size: 18),
               ),
               const SizedBox(width: 10),
               Text(
                 'Strength Information',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               IconButton(
@@ -76,12 +81,16 @@ class StrengthSection extends StatelessWidget {
                   controller: controller.strengthController,
                   decoration: InputDecoration(
                     labelText: strengthLabel,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     filled: true,
                     fillColor: Colors.grey[50],
                     prefixIcon: const Icon(Icons.straighten),
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Enter strength';
@@ -99,13 +108,21 @@ class StrengthSection extends StatelessWidget {
                   value: controller.selectedStrengthUnit,
                   decoration: InputDecoration(
                     labelText: 'Unit *',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     filled: true,
                     fillColor: Colors.grey[50],
                   ),
-                  items: MedicationTypeUtils.getAvailableStrengthUnits(controller.selectedType).map((unit) {
-                    return DropdownMenuItem(value: unit, child: Text(unit.displayName));
-                  }).toList(),
+                  items:
+                      MedicationTypeUtils.getAvailableStrengthUnits(
+                        controller.selectedType,
+                      ).map((unit) {
+                        return DropdownMenuItem(
+                          value: unit,
+                          child: Text(unit.displayName),
+                        );
+                      }).toList(),
                   onChanged: (value) {
                     controller.setSelectedStrengthUnit(value);
                   },
@@ -120,23 +137,31 @@ class StrengthSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          if (controller.selectedType == MedicationType.preFilledSyringe && controller.selectedStrengthUnit == StrengthUnit.percent)
+          if (controller.selectedType == MedicationType.preFilledSyringe &&
+              controller.selectedStrengthUnit == StrengthUnit.percent)
             TextFormField(
               controller: controller.volumeController,
               decoration: InputDecoration(
                 labelText: 'Syringe volume (mL) *',
                 hintText: 'e.g., 1.0',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 filled: true,
                 fillColor: Colors.grey[50],
                 prefixIcon: const Icon(Icons.local_hospital),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
-                if (!(controller.selectedType == MedicationType.preFilledSyringe && controller.selectedStrengthUnit == StrengthUnit.percent)) {
+                if (!(controller.selectedType ==
+                        MedicationType.preFilledSyringe &&
+                    controller.selectedStrengthUnit == StrengthUnit.percent)) {
                   return null;
                 }
-                if (value == null || value.trim().isEmpty) return 'Enter syringe volume';
+                if (value == null || value.trim().isEmpty)
+                  return 'Enter syringe volume';
                 final v = double.tryParse(value);
                 if (v == null || v <= 0) return 'Enter a valid volume';
                 return null;

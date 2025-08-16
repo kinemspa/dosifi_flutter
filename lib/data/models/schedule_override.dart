@@ -107,4 +107,5 @@ class ScheduleOverride {
   }
 }
 
-String _isoDate(DateTime d) => DateTime(d.year, d.month, d.day).toIso8601String();
+String _isoDate(DateTime d) =>
+    DateTime(d.year, d.month, d.day).toIso8601String();

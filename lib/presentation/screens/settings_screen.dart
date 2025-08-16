@@ -26,7 +26,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // Test form controllers
   final _titleController = TextEditingController(text: 'Test Notification');
-  final _bodyController = TextEditingController(text: 'This is a test notification from Dosifi');
+  final _bodyController = TextEditingController(
+    text: 'This is a test notification from Dosifi',
+  );
   final _hoursController = TextEditingController(text: '0');
   final _minutesController = TextEditingController(text: '0');
   final _secondsController = TextEditingController(text: '5');
@@ -53,7 +55,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _checkNotificationStatus() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] Checking notification status...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] Checking notification status...\n';
     });
 
     try {
@@ -61,7 +64,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _notificationService.initialize();
       setState(() {
         _serviceInitialized = true;
-        _testResults += '[${DateTime.now().toLocal()}] ✅ NotificationService initialized\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ NotificationService initialized\n';
       });
 
       // Check permissions
@@ -73,10 +77,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _permissionStatus = permissionStatus;
         _testResults +=
             '[${DateTime.now().toLocal()}] ${hasPermission ? '✅' : '❌'} Notification permission: $hasPermission\n';
-        _testResults += '[${DateTime.now().toLocal()}] 📋 Permission details: $permissionStatus\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🌏 Device timezone: ${DateTime.now().timeZoneName}\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🌏 TZ Local: ${tz.local.name}\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🌏 Current TZ time: ${tz.TZDateTime.now(tz.local)}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 📋 Permission details: $permissionStatus\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🌏 Device timezone: ${DateTime.now().timeZoneName}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🌏 TZ Local: ${tz.local.name}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🌏 Current TZ time: ${tz.TZDateTime.now(tz.local)}\n';
       });
 
       // Get pending notifications
@@ -93,18 +101,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final pending = await _notificationService.getPendingNotifications();
       setState(() {
         _pendingNotifications = pending;
-        _testResults += '[${DateTime.now().toLocal()}] 📋 Found ${pending.length} pending notifications\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 📋 Found ${pending.length} pending notifications\n';
       });
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error loading pending notifications: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error loading pending notifications: $e\n';
       });
     }
   }
 
   Future<void> _testMultipleNotifications() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🧪 Testing 5 simultaneous notifications...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🧪 Testing 5 simultaneous notifications...\n';
     });
 
     try {
@@ -123,7 +134,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
 
         setState(() {
-          _testResults += '[${DateTime.now().toLocal()}] ✅ Scheduled notification $i for $scheduledTime\n';
+          _testResults +=
+              '[${DateTime.now().toLocal()}] ✅ Scheduled notification $i for $scheduledTime\n';
         });
       }
 
@@ -135,14 +147,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error scheduling multiple notifications: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error scheduling multiple notifications: $e\n';
       });
     }
   }
 
   Future<void> _testMedicationReminder() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🧪 Testing medication reminder...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🧪 Testing medication reminder...\n';
     });
 
     try {
@@ -177,8 +191,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
 
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ Medication reminder scheduled for $scheduledTime\n';
-        _testResults += '[${DateTime.now().toLocal()}] 💊 Medication: ${testMedication.name}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ Medication reminder scheduled for $scheduledTime\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 💊 Medication: ${testMedication.name}\n';
         _testResults +=
             '[${DateTime.now().toLocal()}] 📅 Schedule: ${testSchedule.doseAmount} ${testSchedule.doseUnit}\n';
       });
@@ -186,14 +202,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error creating medication reminder: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error creating medication reminder: $e\n';
       });
     }
   }
 
   Future<void> _runQuickTest() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] ⚡ Running quick 10-second test...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] ⚡ Running quick 10-second test...\n';
     });
 
     try {
@@ -202,20 +220,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _testResults +=
             '[${DateTime.now().toLocal()}] ${success ? '✅' : '❌'} Quick test: ${success ? 'Success' : 'Failed'}\n';
         if (success) {
-          _testResults += '[${DateTime.now().toLocal()}] ⏰ Notification should appear in 10 seconds\n';
+          _testResults +=
+              '[${DateTime.now().toLocal()}] ⏰ Notification should appear in 10 seconds\n';
         }
       });
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Quick test error: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Quick test error: $e\n';
       });
     }
   }
 
   Future<void> _runSystemDiagnostic() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🔍 Running system diagnostic...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🔍 Running system diagnostic...\n';
     });
 
     try {
@@ -228,25 +249,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       });
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error running diagnostic: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error running diagnostic: $e\n';
       });
     }
   }
 
   Future<void> _cancelAllNotifications() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🗑️ Canceling all notifications...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🗑️ Canceling all notifications...\n';
     });
 
     try {
       await _notificationService.cancelAllNotifications();
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ All notifications canceled\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ All notifications canceled\n';
       });
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error canceling notifications: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error canceling notifications: $e\n';
       });
     }
   }
@@ -266,7 +291,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // Notification Settings Section
           _buildSettingsSection('Notifications', Icons.notifications, [
             ListTile(
-              leading: Icon(Icons.notifications_active, color: _permissionGranted ? Colors.green : Colors.orange),
+              leading: Icon(
+                Icons.notifications_active,
+                color: _permissionGranted ? Colors.green : Colors.orange,
+              ),
               title: const Text('Notification Permissions'),
               subtitle: Text(_permissionGranted ? 'Enabled' : 'Disabled'),
               trailing: Switch(
@@ -285,7 +313,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: const Text('Daily reminders'),
               trailing: const Text('Coming Soon'),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
             ListTile(
@@ -294,7 +324,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: const Text('Default'),
               trailing: const Text('Coming Soon'),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
           ]),
@@ -308,7 +340,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: const Text('System default'),
               trailing: const Text('Coming Soon'),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
             ListTile(
@@ -317,7 +351,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: const Text('English'),
               trailing: const Text('Coming Soon'),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
           ]),
@@ -331,7 +367,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: const Text('Export medication data'),
               trailing: const Text('Coming Soon'),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
             ListTile(
@@ -340,7 +378,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: const Text('Import medication data'),
               trailing: const Text('Coming Soon'),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
           ]),
@@ -349,17 +389,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // Diagnostics Section
           _buildSettingsSection('Diagnostics', Icons.medical_services, [
             ListTile(
-              leading: Icon(Icons.bug_report, color: _showDiagnostics ? Colors.blue : Colors.grey),
+              leading: Icon(
+                Icons.bug_report,
+                color: _showDiagnostics ? Colors.blue : Colors.grey,
+              ),
               title: const Text('Notification Testing'),
-              subtitle: Text(_showDiagnostics ? 'Hide diagnostic tools' : 'Show diagnostic tools'),
-              trailing: Icon(_showDiagnostics ? Icons.expand_less : Icons.expand_more),
+              subtitle: Text(
+                _showDiagnostics
+                    ? 'Hide diagnostic tools'
+                    : 'Show diagnostic tools',
+              ),
+              trailing: Icon(
+                _showDiagnostics ? Icons.expand_less : Icons.expand_more,
+              ),
               onTap: () {
                 setState(() {
                   _showDiagnostics = !_showDiagnostics;
                 });
               },
             ),
-            if (_showDiagnostics) ...[const Divider(indent: 16), _buildNotificationDiagnostics()],
+            if (_showDiagnostics) ...[
+              const Divider(indent: 16),
+              _buildNotificationDiagnostics(),
+            ],
           ]),
           const SizedBox(height: 20),
 
@@ -378,7 +430,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: const Text('Privacy Policy'),
               trailing: const Icon(Icons.open_in_new),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
             ListTile(
@@ -386,7 +440,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: const Text('Help & Support'),
               trailing: const Icon(Icons.open_in_new),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feature coming soon!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature coming soon!')),
+                );
               },
             ),
           ]),
@@ -395,7 +451,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildSettingsSection(String title, IconData icon, List<Widget> children) {
+  Widget _buildSettingsSection(
+    String title,
+    IconData icon,
+    List<Widget> children,
+  ) {
     return CompactCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,11 +470,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: Theme.of(context).primaryColor, size: 16),
+                child: Icon(
+                  icon,
+                  color: Theme.of(context).primaryColor,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                child: Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.info_outline, size: 18),
@@ -434,7 +503,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         return 'App version and helpful links.';
                       default:
                         return title;
-                  }
+                    }
                   }();
                   InfoSheet.show(context, title: title, message: message);
                 },
@@ -483,7 +552,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('System Status', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'System Status',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -500,7 +574,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Row(
             children: [
               Icon(
-                _permissionGranted ? Icons.notifications_active : Icons.notifications_off,
+                _permissionGranted
+                    ? Icons.notifications_active
+                    : Icons.notifications_off,
                 color: _permissionGranted ? Colors.green : Colors.orange,
                 size: 16,
               ),
@@ -525,7 +601,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Quick Tests', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          'Quick Tests',
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -571,7 +652,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Advanced Tests', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          'Advanced Tests',
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -612,16 +698,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             Text(
               'Pending (${_pendingNotifications.length})',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            IconButton(onPressed: _loadPendingNotifications, icon: const Icon(Icons.refresh), iconSize: 18),
+            IconButton(
+              onPressed: _loadPendingNotifications,
+              icon: const Icon(Icons.refresh),
+              iconSize: 18,
+            ),
           ],
         ),
         const SizedBox(height: 8),
         if (_pendingNotifications.isEmpty)
           Text(
             'No pending notifications',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey, fontStyle: FontStyle.italic),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
+            ),
           )
         else
           Container(
@@ -632,7 +727,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               itemBuilder: (context, index) {
                 final notification = _pendingNotifications[index];
                 return CompactCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -645,7 +743,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         child: Text(
                           notification.id.toString(),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.blue),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.blue,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -655,27 +757,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           children: [
                             Text(
                               notification.title ?? 'No title',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             Text(
                               notification.body ?? 'No body',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey[700]),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
                         onPressed: () async {
-                          await _notificationService.cancelNotification(notification.id);
+                          await _notificationService.cancelNotification(
+                            notification.id,
+                          );
                           await _loadPendingNotifications();
                           setState(() {
                             _testResults +=
                                 '[${DateTime.now().toLocal()}] 🗑️ Canceled notification ${notification.id}\n';
                           });
                         },
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 16),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 16,
+                        ),
                         tooltip: 'Cancel',
                       ),
                     ],
@@ -695,8 +805,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Test Log', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-            IconButton(onPressed: _clearResults, icon: const Icon(Icons.clear), iconSize: 18),
+            Text(
+              'Test Log',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              onPressed: _clearResults,
+              icon: const Icon(Icons.clear),
+              iconSize: 18,
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -712,7 +831,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: SingleChildScrollView(
             child: Text(
               _testResults.isEmpty ? 'No test results yet...' : _testResults,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontFamily: 'monospace', fontSize: 10, color: Colors.greenAccent),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: 'monospace',
+                fontSize: 10,
+                color: Colors.greenAccent,
+              ),
             ),
           ),
         ),
@@ -733,7 +856,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SizedBox(height: 8),
             Text('Version: 1.0.0'),
             SizedBox(height: 8),
-            Text('A comprehensive medication tracking and management solution.'),
+            Text(
+              'A comprehensive medication tracking and management solution.',
+            ),
             SizedBox(height: 16),
             Text('Features:'),
             Text('• Medication inventory management'),
@@ -743,7 +868,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text('• Smart notifications'),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

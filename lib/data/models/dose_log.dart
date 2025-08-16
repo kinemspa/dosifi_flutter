@@ -65,7 +65,9 @@ class DoseLog {
       medicationId: map['medication_id'] as int,
       scheduleId: map['schedule_id'] as int?,
       scheduledTime: DateTime.parse(map['scheduled_time'] as String),
-      takenTime: map['taken_time'] != null ? DateTime.parse(map['taken_time'] as String) : null,
+      takenTime: map['taken_time'] != null
+          ? DateTime.parse(map['taken_time'] as String)
+          : null,
       status: DoseStatus.fromString(map['status'] as String),
       doseAmount: map['dose_amount'] as double?,
       notes: map['notes'] as String?,
@@ -98,7 +100,12 @@ class DoseLog {
   }
 
   /// Create a dose log for missed dose
-  factory DoseLog.missed({required int medicationId, int? scheduleId, required DateTime scheduledTime, String? notes}) {
+  factory DoseLog.missed({
+    required int medicationId,
+    int? scheduleId,
+    required DateTime scheduledTime,
+    String? notes,
+  }) {
     final now = DateTime.now();
     return DoseLog(
       medicationId: medicationId,
@@ -155,7 +162,8 @@ class DoseLog {
   bool get isSkipped => status == DoseStatus.skipped;
   bool get isPending => status == DoseStatus.pending;
   bool get isOverdue =>
-      status == DoseStatus.pending && DateTime.now().isAfter(scheduledTime.add(const Duration(hours: 1)));
+      status == DoseStatus.pending &&
+      DateTime.now().isAfter(scheduledTime.add(const Duration(hours: 1)));
 
   @override
   bool operator ==(Object other) {
@@ -177,6 +185,9 @@ enum DoseStatus {
   const DoseStatus(this.displayName);
 
   static DoseStatus fromString(String status) {
-    return DoseStatus.values.firstWhere((e) => e.name == status, orElse: () => DoseStatus.pending);
+    return DoseStatus.values.firstWhere(
+      (e) => e.name == status,
+      orElse: () => DoseStatus.pending,
+    );
   }
 }

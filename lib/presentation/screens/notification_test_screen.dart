@@ -10,10 +10,12 @@ class NotificationTestScreen extends ConsumerStatefulWidget {
   const NotificationTestScreen({super.key});
 
   @override
-  ConsumerState<NotificationTestScreen> createState() => _NotificationTestScreenState();
+  ConsumerState<NotificationTestScreen> createState() =>
+      _NotificationTestScreenState();
 }
 
-class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen> {
+class _NotificationTestScreenState
+    extends ConsumerState<NotificationTestScreen> {
   final NotificationService _notificationService = NotificationService();
   List<PendingNotificationRequest> _pendingNotifications = [];
   bool _permissionGranted = false;
@@ -23,7 +25,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
 
   // Test form controllers
   final _titleController = TextEditingController(text: 'Test Notification');
-  final _bodyController = TextEditingController(text: 'This is a test notification from Dosifi');
+  final _bodyController = TextEditingController(
+    text: 'This is a test notification from Dosifi',
+  );
   final _hoursController = TextEditingController(text: '0');
   final _minutesController = TextEditingController(text: '0');
   final _secondsController = TextEditingController(text: '5');
@@ -50,7 +54,8 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
 
   Future<void> _checkNotificationStatus() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] Checking notification status...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] Checking notification status...\n';
     });
 
     try {
@@ -58,7 +63,8 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       await _notificationService.initialize();
       setState(() {
         _serviceInitialized = true;
-        _testResults += '[${DateTime.now().toLocal()}] ✅ NotificationService initialized\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ NotificationService initialized\n';
       });
 
       // Check permissions
@@ -70,10 +76,14 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
         _permissionStatus = permissionStatus;
         _testResults +=
             '[${DateTime.now().toLocal()}] ${hasPermission ? '✅' : '❌'} Notification permission: $hasPermission\n';
-        _testResults += '[${DateTime.now().toLocal()}] 📋 Permission details: $permissionStatus\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🌏 Device timezone: ${DateTime.now().timeZoneName}\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🌏 TZ Local: ${tz.local.name}\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🌏 Current TZ time: ${tz.TZDateTime.now(tz.local)}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 📋 Permission details: $permissionStatus\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🌏 Device timezone: ${DateTime.now().timeZoneName}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🌏 TZ Local: ${tz.local.name}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🌏 Current TZ time: ${tz.TZDateTime.now(tz.local)}\n';
       });
 
       // Get pending notifications
@@ -90,18 +100,21 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       final pending = await _notificationService.getPendingNotifications();
       setState(() {
         _pendingNotifications = pending;
-        _testResults += '[${DateTime.now().toLocal()}] 📋 Found ${pending.length} pending notifications\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 📋 Found ${pending.length} pending notifications\n';
       });
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error loading pending notifications: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error loading pending notifications: $e\n';
       });
     }
   }
 
   Future<void> _testInstantNotification() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🧪 Testing instant notification...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🧪 Testing instant notification...\n';
     });
 
     try {
@@ -111,11 +124,13 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
         payload: 'test_instant_${DateTime.now().millisecondsSinceEpoch}',
       );
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ Instant notification sent\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ Instant notification sent\n';
       });
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error sending instant notification: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error sending instant notification: $e\n';
       });
     }
   }
@@ -125,11 +140,15 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
     final minutes = int.tryParse(_minutesController.text) ?? 0;
     final seconds = int.tryParse(_secondsController.text) ?? 5;
 
-    final scheduledTime = DateTime.now().add(Duration(hours: hours, minutes: minutes, seconds: seconds));
+    final scheduledTime = DateTime.now().add(
+      Duration(hours: hours, minutes: minutes, seconds: seconds),
+    );
 
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🧪 Testing scheduled notification for $scheduledTime...\n';
-      _testResults += '[${DateTime.now().toLocal()}] ⏰ Current time: ${DateTime.now().toLocal()}\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🧪 Testing scheduled notification for $scheduledTime...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] ⏰ Current time: ${DateTime.now().toLocal()}\n';
       _testResults +=
           '[${DateTime.now().toLocal()}] ⌛ Time until notification: ${scheduledTime.difference(DateTime.now())}\n';
     });
@@ -138,33 +157,39 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       // Check permissions first
       final permissionStatus = await _notificationService.getPermissionStatus();
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] 🔍 Permission check: $permissionStatus\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🔍 Permission check: $permissionStatus\n';
       });
 
       await _notificationService.scheduleNotification(
         id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title: 'Scheduled: ${_titleController.text}',
-        body: 'Scheduled for ${scheduledTime.toLocal()}\n${_bodyController.text}',
+        body:
+            'Scheduled for ${scheduledTime.toLocal()}\n${_bodyController.text}',
         scheduledDate: scheduledTime,
         payload: 'test_scheduled_${DateTime.now().millisecondsSinceEpoch}',
       );
 
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ Scheduled notification for $scheduledTime\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ Scheduled notification for $scheduledTime\n';
       });
 
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error scheduling notification: $e\n';
-        _testResults += '[${DateTime.now().toLocal()}] 🔧 Stack trace: ${e.runtimeType}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error scheduling notification: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 🔧 Stack trace: ${e.runtimeType}\n';
       });
     }
   }
 
   Future<void> _testMedicationReminder() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🧪 Testing medication reminder...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🧪 Testing medication reminder...\n';
     });
 
     try {
@@ -199,8 +224,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       );
 
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ Medication reminder scheduled for $scheduledTime\n';
-        _testResults += '[${DateTime.now().toLocal()}] 💊 Medication: ${testMedication.name}\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ Medication reminder scheduled for $scheduledTime\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] 💊 Medication: ${testMedication.name}\n';
         _testResults +=
             '[${DateTime.now().toLocal()}] 📅 Schedule: ${testSchedule.doseAmount} ${testSchedule.doseUnit}\n';
       });
@@ -208,14 +235,16 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error creating medication reminder: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error creating medication reminder: $e\n';
       });
     }
   }
 
   Future<void> _testRepeatingNotification() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🧪 Testing repeating notification...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🧪 Testing repeating notification...\n';
     });
 
     try {
@@ -229,38 +258,44 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       );
 
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ Repeating notification scheduled (every minute)\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ Repeating notification scheduled (every minute)\n';
       });
 
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error scheduling repeating notification: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error scheduling repeating notification: $e\n';
       });
     }
   }
 
   Future<void> _cancelAllNotifications() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🗑️ Canceling all notifications...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🗑️ Canceling all notifications...\n';
     });
 
     try {
       await _notificationService.cancelAllNotifications();
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ✅ All notifications canceled\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ✅ All notifications canceled\n';
       });
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error canceling notifications: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error canceling notifications: $e\n';
       });
     }
   }
 
   Future<void> _runSystemDiagnostic() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] 🔍 Running system diagnostic...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] 🔍 Running system diagnostic...\n';
     });
 
     try {
@@ -273,14 +308,16 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       });
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Error running diagnostic: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Error running diagnostic: $e\n';
       });
     }
   }
 
   Future<void> _runQuickTest() async {
     setState(() {
-      _testResults += '[${DateTime.now().toLocal()}] ⚡ Running quick 10-second test...\n';
+      _testResults +=
+          '[${DateTime.now().toLocal()}] ⚡ Running quick 10-second test...\n';
     });
 
     try {
@@ -289,13 +326,15 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
         _testResults +=
             '[${DateTime.now().toLocal()}] ${success ? '✅' : '❌'} Quick test: ${success ? 'Success' : 'Failed'}\n';
         if (success) {
-          _testResults += '[${DateTime.now().toLocal()}] ⏰ Notification should appear in 10 seconds\n';
+          _testResults +=
+              '[${DateTime.now().toLocal()}] ⏰ Notification should appear in 10 seconds\n';
         }
       });
       await _loadPendingNotifications();
     } catch (e) {
       setState(() {
-        _testResults += '[${DateTime.now().toLocal()}] ❌ Quick test error: $e\n';
+        _testResults +=
+            '[${DateTime.now().toLocal()}] ❌ Quick test error: $e\n';
       });
     }
   }
@@ -314,7 +353,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _checkNotificationStatus),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _checkNotificationStatus,
+          ),
           IconButton(icon: const Icon(Icons.clear), onPressed: _clearResults),
         ],
       ),
@@ -360,7 +402,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
           children: [
             Text(
               'Notification System Status',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -372,7 +416,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 const SizedBox(width: 8),
                 Text(
                   'Service Initialized: ${_serviceInitialized ? 'Yes' : 'No'}',
-                  style: TextStyle(color: _serviceInitialized ? Colors.green : Colors.red, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: _serviceInitialized ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -380,7 +427,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
             Row(
               children: [
                 Icon(
-                  _permissionGranted ? Icons.notifications_active : Icons.notifications_off,
+                  _permissionGranted
+                      ? Icons.notifications_active
+                      : Icons.notifications_off,
                   color: _permissionGranted ? Colors.green : Colors.orange,
                 ),
                 const SizedBox(width: 8),
@@ -402,7 +451,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                   Expanded(
                     child: Text(
                       'Details: ${_permissionStatus.entries.map((e) => '${e.key}: ${e.value}').join(', ')}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -433,7 +485,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
           children: [
             Text(
               'Test Configuration',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -455,14 +509,20 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
               maxLines: 3,
             ),
             const SizedBox(height: 12),
-            Text('Schedule Time (from now):', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'Schedule Time (from now):',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _hoursController,
-                    decoration: const InputDecoration(labelText: 'Hours', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'Hours',
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -470,7 +530,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 Expanded(
                   child: TextFormField(
                     controller: _minutesController,
-                    decoration: const InputDecoration(labelText: 'Minutes', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'Minutes',
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -478,7 +541,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 Expanded(
                   child: TextFormField(
                     controller: _secondsController,
-                    decoration: const InputDecoration(labelText: 'Seconds', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'Seconds',
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -497,7 +563,12 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Quick Tests', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Quick Tests',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -506,7 +577,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                     onPressed: _testInstantNotification,
                     icon: const Icon(Icons.flash_on),
                     label: const Text('Instant'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -515,7 +589,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                     onPressed: _testScheduledNotification,
                     icon: const Icon(Icons.schedule),
                     label: const Text('Scheduled'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -528,7 +605,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                     onPressed: _runQuickTest,
                     icon: const Icon(Icons.speed),
                     label: const Text('10s Test'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -537,7 +617,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                     onPressed: _runSystemDiagnostic,
                     icon: const Icon(Icons.medical_services),
                     label: const Text('Diagnostic'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -557,7 +640,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
           children: [
             Text(
               'Advanced Tests',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -566,7 +651,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 onPressed: _testMedicationReminder,
                 icon: const Icon(Icons.medication),
                 label: const Text('Test Medication Reminder'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -576,7 +664,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 onPressed: _testRepeatingNotification,
                 icon: const Icon(Icons.repeat),
                 label: const Text('Test Repeating Notification'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -586,7 +677,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 onPressed: _cancelAllNotifications,
                 icon: const Icon(Icons.cancel),
                 label: const Text('Cancel All Notifications'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ),
           ],
@@ -607,16 +701,24 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
               children: [
                 Text(
                   'Pending Notifications (${_pendingNotifications.length})',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                IconButton(onPressed: _loadPendingNotifications, icon: const Icon(Icons.refresh)),
+                IconButton(
+                  onPressed: _loadPendingNotifications,
+                  icon: const Icon(Icons.refresh),
+                ),
               ],
             ),
             const SizedBox(height: 12),
             if (_pendingNotifications.isEmpty)
               const Text(
                 'No pending notifications',
-                style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
               )
             else
               ...(_pendingNotifications.map(
@@ -628,7 +730,10 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                       backgroundColor: Colors.blue,
                       child: Text(
                         notification.id.toString(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                     title: Text(notification.title ?? 'No title'),
@@ -636,17 +741,26 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (notification.body != null)
-                          Text(notification.body!, maxLines: 2, overflow: TextOverflow.ellipsis),
+                          Text(
+                            notification.body!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         if (notification.payload != null)
                           Text(
                             'Payload: ${notification.payload}',
-                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
                           ),
                       ],
                     ),
                     trailing: IconButton(
                       onPressed: () async {
-                        await _notificationService.cancelNotification(notification.id);
+                        await _notificationService.cancelNotification(
+                          notification.id,
+                        );
                         await _loadPendingNotifications();
                         setState(() {
                           _testResults +=
@@ -676,9 +790,14 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
               children: [
                 Text(
                   'Test Results Log',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                IconButton(onPressed: _clearResults, icon: const Icon(Icons.clear)),
+                IconButton(
+                  onPressed: _clearResults,
+                  icon: const Icon(Icons.clear),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -693,8 +812,14 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
               ),
               child: SingleChildScrollView(
                 child: Text(
-                  _testResults.isEmpty ? 'No test results yet...' : _testResults,
-                  style: const TextStyle(fontFamily: 'Courier', fontSize: 12, color: Colors.greenAccent),
+                  _testResults.isEmpty
+                      ? 'No test results yet...'
+                      : _testResults,
+                  style: const TextStyle(
+                    fontFamily: 'Courier',
+                    fontSize: 12,
+                    color: Colors.greenAccent,
+                  ),
                 ),
               ),
             ),

@@ -92,7 +92,10 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
       state.whenData((supplies) {
         final updatedList = supplies.map((s) {
           if (s.id == id) {
-            final newQuantity = (s.quantity + adjustment).clamp(0.0, double.infinity);
+            final newQuantity = (s.quantity + adjustment).clamp(
+              0.0,
+              double.infinity,
+            );
             return s.copyWith(quantity: newQuantity);
           }
           return s;
@@ -106,10 +109,11 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
 }
 
 // Provider for the supply list state notifier
-final supplyListProvider = StateNotifierProvider<SupplyListNotifier, AsyncValue<List<Supply>>>((ref) {
-  final repository = ref.watch(supplyRepositoryProvider);
-  return SupplyListNotifier(repository);
-});
+final supplyListProvider =
+    StateNotifierProvider<SupplyListNotifier, AsyncValue<List<Supply>>>((ref) {
+      final repository = ref.watch(supplyRepositoryProvider);
+      return SupplyListNotifier(repository);
+    });
 
 // Provider for getting supply by ID
 final supplyByIdProvider = FutureProvider.family<Supply?, int>((ref, id) async {
@@ -118,7 +122,10 @@ final supplyByIdProvider = FutureProvider.family<Supply?, int>((ref, id) async {
 });
 
 // Provider for getting supplies by type
-final suppliesByTypeProvider = FutureProvider.family<List<Supply>, SupplyType>((ref, type) async {
+final suppliesByTypeProvider = FutureProvider.family<List<Supply>, SupplyType>((
+  ref,
+  type,
+) async {
   final repository = ref.watch(supplyRepositoryProvider);
   return await repository.getSuppliesByType(type);
 });
@@ -173,10 +180,16 @@ final supplyStatsProvider = Provider<Map<String, dynamic>>((ref) {
 });
 
 // Provider for searching supplies
-final supplySearchProvider = FutureProvider.family<List<Supply>, String>((ref, query) async {
+final supplySearchProvider = FutureProvider.family<List<Supply>, String>((
+  ref,
+  query,
+) async {
   if (query.isEmpty) {
     final allSupplies = ref.watch(supplyListProvider);
-    return allSupplies.maybeWhen(data: (supplies) => supplies, orElse: () => <Supply>[]);
+    return allSupplies.maybeWhen(
+      data: (supplies) => supplies,
+      orElse: () => <Supply>[],
+    );
   }
 
   final repository = ref.watch(supplyRepositoryProvider);

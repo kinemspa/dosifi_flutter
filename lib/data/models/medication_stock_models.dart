@@ -300,7 +300,8 @@ class VialStock extends MedicationStock {
       concentration: map['concentration'] as String,
       volumePerVialMl: (map['volume_per_vial_ml'] as num).toDouble(),
       totalVials: map['total_vials'] as int,
-      totalRemainingVolumeMl: (map['total_remaining_volume_ml'] as num).toDouble(),
+      totalRemainingVolumeMl: (map['total_remaining_volume_ml'] as num)
+          .toDouble(),
       expiryDate: DateTime.parse(map['expiry_date'] as String),
       batchId: map['batch_id'] as String,
       lowStockThreshold: map['low_stock_threshold'] as int,
@@ -326,7 +327,8 @@ class VialStock extends MedicationStock {
       concentration: concentration ?? this.concentration,
       volumePerVialMl: volumePerVialMl ?? this.volumePerVialMl,
       totalVials: totalVials ?? this.totalVials,
-      totalRemainingVolumeMl: totalRemainingVolumeMl ?? this.totalRemainingVolumeMl,
+      totalRemainingVolumeMl:
+          totalRemainingVolumeMl ?? this.totalRemainingVolumeMl,
       expiryDate: expiryDate ?? this.expiryDate,
       batchId: batchId ?? this.batchId,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
@@ -363,7 +365,8 @@ class LyophilizedVialStock extends MedicationStock {
   MedicationType get medicationType => MedicationType.lyophilizedVial;
 
   @override
-  double get totalRemainingUnits => reconstitutedVolumeRemainingMl + (totalVials * reconstitutionVolumeMl);
+  double get totalRemainingUnits =>
+      reconstitutedVolumeRemainingMl + (totalVials * reconstitutionVolumeMl);
 
   @override
   LyophilizedVialStock updateStock(double changeAmount) {
@@ -373,7 +376,8 @@ class LyophilizedVialStock extends MedicationStock {
       reconstitutionVolumeMl: reconstitutionVolumeMl,
       concentrationAfterReconstitution: concentrationAfterReconstitution,
       totalVials: totalVials,
-      reconstitutedVolumeRemainingMl: reconstitutedVolumeRemainingMl + changeAmount,
+      reconstitutedVolumeRemainingMl:
+          reconstitutedVolumeRemainingMl + changeAmount,
       expiryDate: expiryDate,
       batchId: batchId,
       lowStockThreshold: lowStockThreshold,
@@ -404,10 +408,13 @@ class LyophilizedVialStock extends MedicationStock {
     return LyophilizedVialStock(
       medName: map['med_name'] as String,
       powderStrengthPerVial: map['powder_strength_per_vial'] as String,
-      reconstitutionVolumeMl: (map['reconstitution_volume_ml'] as num).toDouble(),
-      concentrationAfterReconstitution: map['concentration_after_reconstitution'] as String,
+      reconstitutionVolumeMl: (map['reconstitution_volume_ml'] as num)
+          .toDouble(),
+      concentrationAfterReconstitution:
+          map['concentration_after_reconstitution'] as String,
       totalVials: map['total_vials'] as int,
-      reconstitutedVolumeRemainingMl: (map['reconstituted_volume_remaining_ml'] as num).toDouble(),
+      reconstitutedVolumeRemainingMl:
+          (map['reconstituted_volume_remaining_ml'] as num).toDouble(),
       expiryDate: DateTime.parse(map['expiry_date'] as String),
       batchId: map['batch_id'] as String,
       lowStockThreshold: map['low_stock_threshold'] as int,
@@ -426,7 +433,8 @@ class LyophilizedVialStock extends MedicationStock {
       reconstitutionVolumeMl: reconstitutionVolumeMl,
       concentrationAfterReconstitution: concentrationAfterReconstitution,
       totalVials: totalVials - 1,
-      reconstitutedVolumeRemainingMl: reconstitutedVolumeRemainingMl + reconstitutionVolumeMl,
+      reconstitutedVolumeRemainingMl:
+          reconstitutedVolumeRemainingMl + reconstitutionVolumeMl,
       expiryDate: expiryDate,
       batchId: batchId,
       lowStockThreshold: lowStockThreshold,
@@ -529,17 +537,21 @@ class MultiUsePenStock extends MedicationStock {
   MedicationType get medicationType => MedicationType.multiUsePen;
 
   @override
-  double get totalRemainingUnits => remainingDosesInCurrentCartridge + (totalCartridges * dosesPerCartridge).toDouble();
+  double get totalRemainingUnits =>
+      remainingDosesInCurrentCartridge +
+      (totalCartridges * dosesPerCartridge).toDouble();
 
   @override
   MultiUsePenStock updateStock(double changeAmount) {
-    int newRemaining = (remainingDosesInCurrentCartridge - changeAmount).round();
+    int newRemaining = (remainingDosesInCurrentCartridge - changeAmount)
+        .round();
     int newCartridges = totalCartridges;
 
     // Handle cartridge replacement
     if (newRemaining <= 0 && newCartridges > 0) {
       newCartridges -= 1;
-      newRemaining = dosesPerCartridge + newRemaining; // newRemaining is negative here
+      newRemaining =
+          dosesPerCartridge + newRemaining; // newRemaining is negative here
     }
 
     return MultiUsePenStock(
@@ -582,7 +594,8 @@ class MultiUsePenStock extends MedicationStock {
       dosesPerCartridge: map['doses_per_cartridge'] as int,
       totalPens: map['total_pens'] as int,
       totalCartridges: map['total_cartridges'] as int,
-      remainingDosesInCurrentCartridge: map['remaining_doses_in_current_cartridge'] as int,
+      remainingDosesInCurrentCartridge:
+          map['remaining_doses_in_current_cartridge'] as int,
       expiryDate: DateTime.parse(map['expiry_date'] as String),
       batchId: map['batch_id'] as String,
       lowStockThreshold: map['low_stock_threshold'] as int,

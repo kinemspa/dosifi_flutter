@@ -26,7 +26,9 @@ class MedicationSummaryBanner extends StatelessWidget {
     String expiryTextStr() {
       if (expiry == null) return 'No expiry set';
       final now = DateTime.now();
-      final days = expiry.difference(DateTime(now.year, now.month, now.day)).inDays;
+      final days = expiry
+          .difference(DateTime(now.year, now.month, now.day))
+          .inDays;
       if (days < 0) return 'Expired';
       if (days == 0) return 'Expires today';
       if (days == 1) return 'Expires tomorrow';
@@ -49,13 +51,19 @@ class MedicationSummaryBanner extends StatelessWidget {
                   color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.medication, color: theme.colorScheme.primary, size: 18),
+                child: Icon(
+                  Icons.medication,
+                  color: theme.colorScheme.primary,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   name.isNotEmpty ? name : 'New medication',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -68,16 +76,29 @@ class MedicationSummaryBanner extends StatelessWidget {
             runSpacing: 8,
             children: [
               if (strength.isNotEmpty || strengthUnit.isNotEmpty)
-                LabelChip(icon: Icons.straighten, label: 'Strength: ${strength.isEmpty ? '—' : strength} ${strengthUnit.isEmpty ? '' : strengthUnit}'),
-              if (controller.selectedType == MedicationType.preFilledSyringe && controller.selectedStrengthUnit == StrengthUnit.percent && syringeVolume.isNotEmpty)
+                LabelChip(
+                  icon: Icons.straighten,
+                  label:
+                      'Strength: ${strength.isEmpty ? '—' : strength} ${strengthUnit.isEmpty ? '' : strengthUnit}',
+                ),
+              if (controller.selectedType == MedicationType.preFilledSyringe &&
+                  controller.selectedStrengthUnit == StrengthUnit.percent &&
+                  syringeVolume.isNotEmpty)
                 LabelChip(
                   icon: Icons.local_hospital,
-                  label: 'Approx. ${((double.tryParse(strength) ?? 0) * 10).toStringAsFixed(2)} mg/mL • Vol: ${syringeVolume} mL',
+                  label:
+                      'Approx. ${((double.tryParse(strength) ?? 0) * 10).toStringAsFixed(2)} mg/mL • Vol: $syringeVolume mL',
                 ),
               if (stockQty.isNotEmpty || stockUnit.isNotEmpty)
-                LabelChip(icon: Icons.inventory_2, label: 'Stock: ${stockQty.isEmpty ? '—' : stockQty} ${stockUnit.isEmpty ? '' : stockUnit}'),
-              if (refrigerated) LabelChip(icon: Icons.ac_unit, label: 'Refrigerated'),
-              if (expiry != null) LabelChip(icon: Icons.event, label: expiryTextStr()),
+                LabelChip(
+                  icon: Icons.inventory_2,
+                  label:
+                      'Stock: ${stockQty.isEmpty ? '—' : stockQty} ${stockUnit.isEmpty ? '' : stockUnit}',
+                ),
+              if (refrigerated)
+                LabelChip(icon: Icons.ac_unit, label: 'Refrigerated'),
+              if (expiry != null)
+                LabelChip(icon: Icons.event, label: expiryTextStr()),
             ],
           ),
         ],
@@ -85,4 +106,3 @@ class MedicationSummaryBanner extends StatelessWidget {
     );
   }
 }
-

@@ -151,7 +151,8 @@ class Medication {
   final DateTime updatedAt;
 
   // Theme customization
-  final String? themeColor; // Color in hex format for user-customizable medication theme
+  final String?
+  themeColor; // Color in hex format for user-customizable medication theme
 
   const Medication({
     this.id,
@@ -281,16 +282,23 @@ class Medication {
       brandManufacturer: map['brand_manufacturer'] as String?,
       strengthPerUnit: (map['strength_per_unit'] as num).toDouble(),
       strengthUnit: StrengthUnit.fromString(map['strength_unit'] as String),
-      stockQuantity: (map['stock_quantity'] ?? map['number_of_units'] ?? 0).toDouble(),
-      stockUnit: map['stock_unit'] != null ? StrengthUnit.fromString(map['stock_unit'] as String) : null,
+      stockQuantity: (map['stock_quantity'] ?? map['number_of_units'] ?? 0)
+          .toDouble(),
+      stockUnit: map['stock_unit'] != null
+          ? StrengthUnit.fromString(map['stock_unit'] as String)
+          : null,
       vialsInStock: (map['vials_in_stock'] as num?)?.toDouble(),
       packageSize: (map['package_size'] as num?)?.toDouble(),
       lotBatchNumber: map['lot_batch_number'] as String?,
-      expirationDate: map['expiration_date'] != null ? DateTime.parse(map['expiration_date'] as String) : null,
+      expirationDate: map['expiration_date'] != null
+          ? DateTime.parse(map['expiration_date'] as String)
+          : null,
       reconstitutionVolume: map['reconstitution_volume'] != null
           ? (map['reconstitution_volume'] as num).toDouble()
           : null,
-      finalConcentration: map['final_concentration'] != null ? (map['final_concentration'] as num).toDouble() : null,
+      finalConcentration: map['final_concentration'] != null
+          ? (map['final_concentration'] as num).toDouble()
+          : null,
       reconstitutionNotes: map['reconstitution_notes'] as String?,
       description: map['description'] as String?,
       instructions: map['instructions'] as String?,
@@ -403,12 +411,22 @@ class Medication {
       default:
         unitLabel = stockUnit?.displayName.toLowerCase() ?? 'units';
     }
-    final currentStr = (type == MedicationType.liquid || type == MedicationType.readyMadeVial || type == MedicationType.lyophilizedVial)
+    final currentStr =
+        (type == MedicationType.liquid ||
+            type == MedicationType.readyMadeVial ||
+            type == MedicationType.lyophilizedVial)
         ? current.toStringAsFixed(1)
-        : (current.truncateToDouble() == current ? current.toStringAsFixed(0) : current.toStringAsFixed(1));
-    final totalStr = (type == MedicationType.liquid || type == MedicationType.readyMadeVial || type == MedicationType.lyophilizedVial)
+        : (current.truncateToDouble() == current
+              ? current.toStringAsFixed(0)
+              : current.toStringAsFixed(1));
+    final totalStr =
+        (type == MedicationType.liquid ||
+            type == MedicationType.readyMadeVial ||
+            type == MedicationType.lyophilizedVial)
         ? total.toStringAsFixed(1)
-        : (total.truncateToDouble() == total ? total.toStringAsFixed(0) : total.toStringAsFixed(1));
+        : (total.truncateToDouble() == total
+              ? total.toStringAsFixed(0)
+              : total.toStringAsFixed(1));
     return '$currentStr/$totalStr $unitLabel';
   }
 
@@ -419,7 +437,9 @@ class Medication {
 
   bool get isExpiringSoon {
     if (expirationDate == null) return false;
-    final daysUntilExpiration = expirationDate!.difference(DateTime.now()).inDays;
+    final daysUntilExpiration = expirationDate!
+        .difference(DateTime.now())
+        .inDays;
     return daysUntilExpiration <= 30 && daysUntilExpiration >= 0;
   }
 
@@ -618,7 +638,9 @@ class Medication {
           // Allow for floating point precision
           return ValidationResult.valid();
         }
-        return ValidationResult.invalid('${type.displayName} must be in increments of 0.25 (quarter units)');
+        return ValidationResult.invalid(
+          '${type.displayName} must be in increments of 0.25 (quarter units)',
+        );
 
       case MedicationType.preFilledSyringe:
       case MedicationType.singleUsePen:
@@ -631,7 +653,9 @@ class Medication {
         if (unitsPerDose == unitsPerDose.roundToDouble()) {
           return ValidationResult.valid();
         }
-        return ValidationResult.invalid('${type.displayName} must use whole units only');
+        return ValidationResult.invalid(
+          '${type.displayName} must use whole units only',
+        );
 
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
@@ -647,7 +671,9 @@ class Medication {
         if (unitsPerDose == unitsPerDose.roundToDouble()) {
           return ValidationResult.valid();
         }
-        return ValidationResult.invalid('Multi-use pen doses must be whole numbers');
+        return ValidationResult.invalid(
+          'Multi-use pen doses must be whole numbers',
+        );
 
       case MedicationType.other:
         // Default validation - allow arbitrary amounts
@@ -695,20 +721,30 @@ class Medication {
 
   /// Check if this medication is low on stock for given usage
   bool isLowStockForUsage(double unitsPerDose, double dosesPerDay) {
-    final threshold = (lowStockThreshold ?? _getDefaultLowStockThreshold()) * unitsPerDose * dosesPerDay;
+    final threshold =
+        (lowStockThreshold ?? _getDefaultLowStockThreshold()) *
+        unitsPerDose *
+        dosesPerDay;
     return stockQuantity < threshold;
   }
 
   /// Update stock quantity and return new medication instance
   Medication updateStockQuantity(double changeAmount) {
-    return copyWith(stockQuantity: stockQuantity + changeAmount, updatedAt: DateTime.now());
+    return copyWith(
+      stockQuantity: stockQuantity + changeAmount,
+      updatedAt: DateTime.now(),
+    );
   }
 
   @override
   int get hashCode => id.hashCode;
 
   // Stock logging methods
-  Future<StockUpdateResult> logStockChange({required double changeAmount, required String reason, String? notes}) async {
+  Future<StockUpdateResult> logStockChange({
+    required double changeAmount,
+    required String reason,
+    String? notes,
+  }) async {
     if (id == null) {
       throw Exception('Cannot log stock change for unsaved medication');
     }
@@ -720,7 +756,8 @@ class Medication {
     if (proposedTotal < 0) {
       return StockUpdateResult.failure(
         code: StockUpdateFailureCode.insufficientStock,
-        message: 'Insufficient stock for ${name}. Requested change ${changeAmount.toStringAsFixed(2)} would result in negative stock.',
+        message:
+            'Insufficient stock for $name. Requested change ${changeAmount.toStringAsFixed(2)} would result in negative stock.',
       );
     }
 
@@ -787,19 +824,23 @@ class StockUpdateResult {
   final String? message;
   final StockUpdateFailureCode? code;
 
-  const StockUpdateResult._({required this.ok, this.newTotal, this.message, this.code});
+  const StockUpdateResult._({
+    required this.ok,
+    this.newTotal,
+    this.message,
+    this.code,
+  });
 
   factory StockUpdateResult.success({required double newTotal}) =>
       StockUpdateResult._(ok: true, newTotal: newTotal);
 
-  factory StockUpdateResult.failure({required StockUpdateFailureCode code, String? message}) =>
-      StockUpdateResult._(ok: false, code: code, message: message);
+  factory StockUpdateResult.failure({
+    required StockUpdateFailureCode code,
+    String? message,
+  }) => StockUpdateResult._(ok: false, code: code, message: message);
 }
 
-enum StockUpdateFailureCode {
-  insufficientStock,
-  invalidOperation,
-}
+enum StockUpdateFailureCode { insufficientStock, invalidOperation }
 
 /// Validation result for dose constraints
 class ValidationResult {
@@ -809,7 +850,8 @@ class ValidationResult {
   const ValidationResult._(this.isValid, this.message);
 
   factory ValidationResult.valid() => const ValidationResult._(true, null);
-  factory ValidationResult.invalid(String message) => ValidationResult._(false, message);
+  factory ValidationResult.invalid(String message) =>
+      ValidationResult._(false, message);
 
   @override
   String toString() => isValid ? 'Valid' : 'Invalid: $message';
@@ -872,5 +914,6 @@ class StockLogEntry {
     return '$sign${amount.toStringAsFixed(amount.truncateToDouble() == amount ? 0 : 2)}';
   }
 
-  String get displayTotal => newTotal.toStringAsFixed(newTotal.truncateToDouble() == newTotal ? 0 : 2);
+  String get displayTotal =>
+      newTotal.toStringAsFixed(newTotal.truncateToDouble() == newTotal ? 0 : 2);
 }

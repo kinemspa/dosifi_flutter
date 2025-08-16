@@ -8,7 +8,8 @@ final medicationRepositoryProvider = Provider<MedicationRepository>((ref) {
 });
 
 // State notifier for managing medications list
-class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>> {
+class MedicationListNotifier
+    extends StateNotifier<AsyncValue<List<Medication>>> {
   final MedicationRepository _repository;
 
   MedicationListNotifier(this._repository) : super(const AsyncValue.loading()) {
@@ -21,7 +22,9 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
     try {
       final medications = await _repository.getActiveMedications();
       if (medications.isEmpty) {
-        print('💊 [PROVIDER DEBUG] No medications found, inserting test medication');
+        print(
+          '💊 [PROVIDER DEBUG] No medications found, inserting test medication',
+        );
         final testMedication = Medication(
           name: 'Test Aspirin',
           type: MedicationType.tablet,
@@ -51,9 +54,13 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
 
       print('💊 [PROVIDER DEBUG] Calling repository.getActiveMedications()');
       final medications = await _repository.getActiveMedications();
-      print('💊 [PROVIDER DEBUG] Repository returned ${medications.length} medications');
+      print(
+        '💊 [PROVIDER DEBUG] Repository returned ${medications.length} medications',
+      );
       if (medications.isNotEmpty) {
-        print('💊 [PROVIDER DEBUG] First medication: ${medications.first.name}');
+        print(
+          '💊 [PROVIDER DEBUG] First medication: ${medications.first.name}',
+        );
       }
       state = AsyncValue.data(medications);
       print('💊 [PROVIDER DEBUG] State updated with medications data');
@@ -105,7 +112,10 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
   }
 
   // Stock management methods
-  Future<void> updateMedicationStock(int medicationId, double newStockQuantity) async {
+  Future<void> updateMedicationStock(
+    int medicationId,
+    double newStockQuantity,
+  ) async {
     try {
       await _repository.updateMedicationStock(medicationId, newStockQuantity);
 
@@ -116,7 +126,10 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
     }
   }
 
-  Future<void> adjustMedicationStock(int medicationId, double adjustment) async {
+  Future<void> adjustMedicationStock(
+    int medicationId,
+    double adjustment,
+  ) async {
     try {
       await _repository.adjustMedicationStock(medicationId, adjustment);
 
@@ -153,25 +166,34 @@ class MedicationListNotifier extends StateNotifier<AsyncValue<List<Medication>>>
 }
 
 // Provider for the medication list state notifier
-final medicationListProvider = StateNotifierProvider<MedicationListNotifier, AsyncValue<List<Medication>>>((ref) {
-  final repository = ref.watch(medicationRepositoryProvider);
-  return MedicationListNotifier(repository);
-});
+final medicationListProvider =
+    StateNotifierProvider<MedicationListNotifier, AsyncValue<List<Medication>>>(
+      (ref) {
+        final repository = ref.watch(medicationRepositoryProvider);
+        return MedicationListNotifier(repository);
+      },
+    );
 
 // Provider for getting a single medication by ID
-final medicationByIdProvider = FutureProvider.family<Medication?, int>((ref, id) async {
+final medicationByIdProvider = FutureProvider.family<Medication?, int>((
+  ref,
+  id,
+) async {
   final repository = ref.watch(medicationRepositoryProvider);
   return await repository.getMedicationById(id);
 });
 
 // Provider for getting medication with all details
-final medicationDetailsProvider = FutureProvider.family<Map<String, dynamic>?, int>((ref, id) async {
-  final repository = ref.watch(medicationRepositoryProvider);
-  return await repository.getMedicationWithDetails(id);
-});
+final medicationDetailsProvider =
+    FutureProvider.family<Map<String, dynamic>?, int>((ref, id) async {
+      final repository = ref.watch(medicationRepositoryProvider);
+      return await repository.getMedicationWithDetails(id);
+    });
 
 // Provider for expiring medications
-final expiringMedicationsProvider = FutureProvider<List<Medication>>((ref) async {
+final expiringMedicationsProvider = FutureProvider<List<Medication>>((
+  ref,
+) async {
   final repository = ref.watch(medicationRepositoryProvider);
   return await repository.getExpiringMedications(30); // 30 days ahead
 });
@@ -183,7 +205,9 @@ final medicationSearchQueryProvider = StateProvider<String>((ref) => '');
 final medicationTypeFilterProvider = StateProvider<String?>((ref) => null);
 
 // Filtered medications provider
-final filteredMedicationsProvider = Provider<AsyncValue<List<Medication>>>((ref) {
+final filteredMedicationsProvider = Provider<AsyncValue<List<Medication>>>((
+  ref,
+) {
   final searchQuery = ref.watch(medicationSearchQueryProvider);
   final typeFilter = ref.watch(medicationTypeFilterProvider);
   final medications = ref.watch(medicationListProvider);
@@ -194,14 +218,21 @@ final filteredMedicationsProvider = Provider<AsyncValue<List<Medication>>>((ref)
     // Apply search filter
     if (searchQuery.isNotEmpty) {
       filtered = filtered.where((medication) {
-        return medication.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-            (medication.notes?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false);
+        return medication.name.toLowerCase().contains(
+              searchQuery.toLowerCase(),
+            ) ||
+            (medication.notes?.toLowerCase().contains(
+                  searchQuery.toLowerCase(),
+                ) ??
+                false);
       }).toList();
     }
 
     // Apply type filter
     if (typeFilter != null) {
-      filtered = filtered.where((medication) => medication.type.name == typeFilter).toList();
+      filtered = filtered
+          .where((medication) => medication.type.name == typeFilter)
+          .toList();
     }
 
     return filtered;

@@ -16,15 +16,26 @@ class ScheduleOverrideRepository {
     );
     if (count > 0) return count;
 
-    return await db.insert('schedule_overrides', override.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'schedule_overrides',
+      override.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<int> deleteOverride(int id) async {
     final db = await _db;
-    return await db.delete('schedule_overrides', where: 'id = ?', whereArgs: [id]);
+    return await db.delete(
+      'schedule_overrides',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
-  Future<ScheduleOverride?> getOverrideForDate(int scheduleId, DateTime date) async {
+  Future<ScheduleOverride?> getOverrideForDate(
+    int scheduleId,
+    DateTime date,
+  ) async {
     final db = await _db;
     final maps = await db.query(
       'schedule_overrides',
@@ -36,7 +47,11 @@ class ScheduleOverrideRepository {
     return ScheduleOverride.fromMap(maps.first);
   }
 
-  Future<List<ScheduleOverride>> getOverridesInRange(int scheduleId, DateTime start, DateTime end) async {
+  Future<List<ScheduleOverride>> getOverridesInRange(
+    int scheduleId,
+    DateTime start,
+    DateTime end,
+  ) async {
     final db = await _db;
     final maps = await db.query(
       'schedule_overrides',
@@ -48,4 +63,5 @@ class ScheduleOverrideRepository {
   }
 }
 
-String _isoDate(DateTime d) => DateTime(d.year, d.month, d.day).toIso8601String();
+String _isoDate(DateTime d) =>
+    DateTime(d.year, d.month, d.day).toIso8601String();

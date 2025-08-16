@@ -42,7 +42,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _navigateToHome() async {
     // Use very short delay in test environment, regular delay otherwise
-    final delay = _isInTestEnvironment ? const Duration(milliseconds: 1) : const Duration(seconds: 3);
+    final delay = _isInTestEnvironment
+        ? const Duration(milliseconds: 1)
+        : const Duration(seconds: 3);
 
     _navigationTimer = Timer(delay, () {
       if (mounted) {
@@ -74,23 +76,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   : Icon(Icons.medication, size: 100, color: Colors.white)
                         .animate()
                         .fade(duration: const Duration(milliseconds: 500))
-                        .scale(delay: const Duration(milliseconds: 300), duration: const Duration(milliseconds: 500)),
+                        .scale(
+                          delay: const Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 500),
+                        ),
               const SizedBox(height: 24),
               _isInTestEnvironment
                   ? Text(
                       'Dosifi',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.displayLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     )
                   : Text(
                           'Dosifi',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.displayLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.displayLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         )
                         .animate()
-                        .fade(delay: const Duration(milliseconds: 500), duration: const Duration(milliseconds: 500))
+                        .fade(
+                          delay: const Duration(milliseconds: 500),
+                          duration: const Duration(milliseconds: 500),
+                        )
                         .slideY(
                           begin: 0.3,
                           end: 0,
@@ -101,21 +112,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               _isInTestEnvironment
                   ? Text(
                       'Your Personal Medication Manager',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                     )
                   : Text(
                       'Your Personal Medication Manager',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                     ).animate().fade(
                       delay: const Duration(milliseconds: 800),
                       duration: const Duration(milliseconds: 500),
                     ),
               const SizedBox(height: 48),
               _isInTestEnvironment
-                  ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                  ? const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
                   : const CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ).animate().fade(delay: const Duration(seconds: 1), duration: const Duration(milliseconds: 500)),
+                    ).animate().fade(
+                      delay: const Duration(seconds: 1),
+                      duration: const Duration(milliseconds: 500),
+                    ),
             ],
           ),
         ),

@@ -8,13 +8,22 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Notification Flow Tests', () {
-    testWidgets('Open notification test screen and verify functionality', (tester) async {
+    testWidgets('Open notification test screen and verify functionality', (
+      tester,
+    ) async {
       // Launch the app
       app.main();
       await tester.pumpAndSettle();
 
       // Wait for splash screen to finish
       await tester.pumpAndSettle(const Duration(seconds: 3));
+
+      // Simulate deep link to today's schedule
+      final ctx = WidgetsBinding.instance.rootElement;
+      if (ctx != null) {
+        // Using rootNavigatorKey when available from the app tree is preferred.
+        // Here we no-op in case main app tree hasn't registered yet in integration context.
+      }
 
       // Look for the drawer/menu button and tap it
       final menuButton = find.byType(IconButton);
@@ -39,7 +48,10 @@ void main() {
             await tester.pumpAndSettle();
 
             // Check if test results updated
-            expect(find.textContaining('Testing instant notification'), findsAtLeastNWidgets(1));
+            expect(
+              find.textContaining('Testing instant notification'),
+              findsAtLeastNWidgets(1),
+            );
           }
 
           // Test scheduled notification button
@@ -49,7 +61,10 @@ void main() {
             await tester.pumpAndSettle();
 
             // Check if test results updated
-            expect(find.textContaining('Testing scheduled notification'), findsAtLeastNWidgets(1));
+            expect(
+              find.textContaining('Testing scheduled notification'),
+              findsAtLeastNWidgets(1),
+            );
           }
 
           // Test refresh button
@@ -62,7 +77,9 @@ void main() {
       }
     });
 
-    testWidgets('Test notification permissions and service status', (tester) async {
+    testWidgets('Test notification permissions and service status', (
+      tester,
+    ) async {
       // Launch the app
       app.main();
       await tester.pumpAndSettle();

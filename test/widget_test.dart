@@ -31,7 +31,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 10));
     });
 
-    testWidgets('Splash screen navigates to dashboard', (WidgetTester tester) async {
+    testWidgets('Splash screen navigates to dashboard', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const ProviderScope(child: DosifiApp()));
 
       // Verify we start with splash screen
@@ -49,8 +51,14 @@ void main() {
   group('Business Logic Tests', () {
     test('MedicationType enum has correct display names', () {
       expect(MedicationType.tablet.displayName, equals('Tablet'));
-      expect(MedicationType.lyophilizedVial.displayName, equals('Lyophilized Vial'));
-      expect(MedicationType.preFilledSyringe.displayName, equals('Pre-filled Syringe'));
+      expect(
+        MedicationType.lyophilizedVial.displayName,
+        equals('Lyophilized Vial'),
+      );
+      expect(
+        MedicationType.preFilledSyringe.displayName,
+        equals('Pre-filled Syringe'),
+      );
     });
 
     test('StrengthUnit enum has correct display names', () {
@@ -60,25 +68,47 @@ void main() {
     });
 
     test('MedicationUtils provides correct strength units for types', () {
-      final tabletUnits = MedicationUtils.getAvailableStrengthUnits(MedicationType.tablet);
+      final tabletUnits = MedicationUtils.getAvailableStrengthUnits(
+        MedicationType.tablet,
+      );
       expect(tabletUnits, contains(StrengthUnit.mg));
       expect(tabletUnits, contains(StrengthUnit.mcg));
 
-      final vialUnits = MedicationUtils.getAvailableStrengthUnits(MedicationType.lyophilizedVial);
+      final vialUnits = MedicationUtils.getAvailableStrengthUnits(
+        MedicationType.lyophilizedVial,
+      );
       expect(vialUnits, contains(StrengthUnit.iu));
       expect(vialUnits, contains(StrengthUnit.units));
     });
 
     test('MedicationUtils validates strength correctly', () {
       // Valid strength
-      expect(MedicationUtils.validateStrength(MedicationType.tablet, 10.0, StrengthUnit.mg), isNull);
+      expect(
+        MedicationUtils.validateStrength(
+          MedicationType.tablet,
+          10.0,
+          StrengthUnit.mg,
+        ),
+        isNull,
+      );
 
       // Invalid strength (too high for mcg)
-      expect(MedicationUtils.validateStrength(MedicationType.tablet, 50000.0, StrengthUnit.mcg), contains('too high'));
+      expect(
+        MedicationUtils.validateStrength(
+          MedicationType.tablet,
+          50000.0,
+          StrengthUnit.mcg,
+        ),
+        contains('too high'),
+      );
 
       // Percentage over 100
       expect(
-        MedicationUtils.validateStrength(MedicationType.liquid, 150.0, StrengthUnit.percent),
+        MedicationUtils.validateStrength(
+          MedicationType.liquid,
+          150.0,
+          StrengthUnit.percent,
+        ),
         contains('cannot exceed 100'),
       );
     });
@@ -86,7 +116,9 @@ void main() {
 
   group('Widget Tests', () {
     testWidgets('SplashScreen displays correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: SplashScreen())));
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: SplashScreen())),
+      );
 
       expect(find.text('Dosifi'), findsOneWidget);
       expect(find.text('Your Personal Medication Manager'), findsOneWidget);

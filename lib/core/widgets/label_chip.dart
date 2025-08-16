@@ -21,7 +21,8 @@ class LabelChip extends StatelessWidget {
     final chipTheme = theme.chipTheme;
 
     // Use themed colors by default for readability; allow explicit color override
-    final Color fg = color ?? (chipTheme.labelStyle?.color ?? theme.colorScheme.onSurface);
+    final Color fg =
+        color ?? (chipTheme.labelStyle?.color ?? theme.colorScheme.onSurface);
     final Color bg = color != null
         ? color!.withValues(alpha: 0.12)
         : (chipTheme.backgroundColor ?? theme.colorScheme.surface);
@@ -40,7 +41,10 @@ class LabelChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[Icon(icon, size: 12, color: fg), const SizedBox(width: 4)],
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: fg),
+            const SizedBox(width: 4),
+          ],
           Text(
             label,
             style: GoogleFonts.inter(

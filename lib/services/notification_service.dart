@@ -8,25 +8,68 @@ import 'package:dosifi_flutter/data/models/schedule.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/core/services/database_service.dart';
 
-class NotificationService {
+/// Lightweight interface to allow injecting a test double in unit tests.
+abstract class INotificationService {
+  Future<void> initialize();
+  Future<bool> requestPermissions();
+  Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    String? payload,
+  });
+  Future<void> scheduleRepeatingNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime firstScheduledDate,
+    required RepeatInterval repeatInterval,
+    String? payload,
+  });
+  Future<void> scheduleNotificationForSchedule({
+    required Schedule schedule,
+    required Medication medication,
+    required DateTime scheduledDate,
+  });
+  Future<void> scheduleNotificationsForSchedule({
+    required Schedule schedule,
+    required Medication medication,
+    int daysAhead,
+  });
+  int computeNotificationId(int scheduleId, DateTime when);
+  Future<void> cancelNotification(int id);
+  Future<void> cancelNotificationsForSchedule(int scheduleId);
+  Future<void> cancelNotificationForScheduleDate(int scheduleId, DateTime date);
+  Future<void> showInstantNotification({
+    required String title,
+    required String body,
+  });
+}
+
+class NotificationService implements INotificationService {
   static bool testMode = false; // Skip plugin initialization in tests
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   /// Optional action handler that UI can register to process notification taps/actions.
   void Function(String? actionId, String? payload)? onAction;
 
+  @override
   Future<void> initialize() async {
     if (_initialized) return;
 
     if (testMode) {
       _initialized = true;
       if (kDebugMode) {
-        print('NotificationService: Test mode enabled, skipping plugin initialization');
+        print(
+          'NotificationService: Test mode enabled, skipping plugin initialization',
+        );
       }
       return;
     }
@@ -41,23 +84,33 @@ class NotificationService {
         );
       }
 
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
         requestSoundPermission: true,
       );
 
-      const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
       final initialized = await _notifications.initialize(
         initSettings,
         onDidReceiveNotificationResponse: (response) {
           if (kDebugMode) {
-            print('Notification tapped. actionId=${response.actionId}, payload=${response.payload}');
+            print(
+              'Notification tapped. actionId=${response.actionId}, payload=${response.payload}',
+            );
           }
           // Prefer actionId for action buttons; otherwise fall back to payload.
-          final actionId = (response.actionId != null && response.actionId!.isNotEmpty) ? response.actionId : null;
+          final actionId =
+              (response.actionId != null && response.actionId!.isNotEmpty)
+              ? response.actionId
+              : null;
           onAction?.call(actionId, response.payload);
         },
       );
@@ -79,42 +132,60 @@ class NotificationService {
     }
   }
 
+  @override
   Future<bool> requestPermissions() async {
     if (!_initialized) await initialize();
 
     final androidPlugin = _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       // Request basic notification permission
       final granted = await androidPlugin.requestNotificationsPermission();
       if (kDebugMode) {
-        print('NotificationService: Basic notification permission granted: $granted');
+        print(
+          'NotificationService: Basic notification permission granted: $granted',
+        );
       }
 
       // Request exact alarm permission (Android 12+)
       try {
-        final exactAlarmPermission = await androidPlugin.requestExactAlarmsPermission();
+        final exactAlarmPermission = await androidPlugin
+            .requestExactAlarmsPermission();
         if (kDebugMode) {
-          print('NotificationService: Exact alarm permission granted: $exactAlarmPermission');
+          print(
+            'NotificationService: Exact alarm permission granted: $exactAlarmPermission',
+          );
         }
       } catch (e) {
         if (kDebugMode) {
-          print('NotificationService: Exact alarm permission request failed: $e');
+          print(
+            'NotificationService: Exact alarm permission request failed: $e',
+          );
         }
       }
 
       return granted ?? false;
     }
 
-    final iosPlugin = _notifications.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    final iosPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (iosPlugin != null) {
-      final granted = await iosPlugin.requestPermissions(alert: true, badge: true, sound: true);
+      final granted = await iosPlugin.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
       return granted ?? false;
     }
 
     return true;
   }
 
+  @override
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -134,15 +205,21 @@ class NotificationService {
       // Check if the scheduled date is in the future
       if (scheduledDate.isBefore(DateTime.now())) {
         if (kDebugMode) {
-          print('NotificationService: Cannot schedule notification for past time: $scheduledDate');
+          print(
+            'NotificationService: Cannot schedule notification for past time: $scheduledDate',
+          );
         }
         throw Exception('Cannot schedule notification for past time');
       }
 
       if (kDebugMode) {
-        print('NotificationService: Scheduling notification $id for $scheduledDate');
+        print(
+          'NotificationService: Scheduling notification $id for $scheduledDate',
+        );
         print('NotificationService: Current time: ${DateTime.now()}');
-        print('NotificationService: Time until notification: ${scheduledDate.difference(DateTime.now())}');
+        print(
+          'NotificationService: Time until notification: ${scheduledDate.difference(DateTime.now())}',
+        );
       }
 
       final notificationDetails = _createStyledNotificationDetails(
@@ -166,20 +243,30 @@ class NotificationService {
       if (kDebugMode) {
         print('NotificationService: TZDateTime: $tzDateTime');
         print('NotificationService: Local timezone: ${tz.local.name}');
-        print('NotificationService: Timezone offset: ${tzDateTime.timeZoneOffset}');
-        print('NotificationService: Is in future: ${tzDateTime.isAfter(tz.TZDateTime.now(tz.local))}');
+        print(
+          'NotificationService: Timezone offset: ${tzDateTime.timeZoneOffset}',
+        );
+        print(
+          'NotificationService: Is in future: ${tzDateTime.isAfter(tz.TZDateTime.now(tz.local))}',
+        );
       }
 
       // Check if we can schedule exact alarms
       final androidPlugin = _notifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      AndroidScheduleMode scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      AndroidScheduleMode scheduleMode =
+          AndroidScheduleMode.exactAllowWhileIdle;
 
       if (androidPlugin != null) {
         try {
-          final canScheduleExactAlarms = await androidPlugin.canScheduleExactNotifications();
+          final canScheduleExactAlarms = await androidPlugin
+              .canScheduleExactNotifications();
           if (kDebugMode) {
-            print('NotificationService: Can schedule exact alarms: $canScheduleExactAlarms');
+            print(
+              'NotificationService: Can schedule exact alarms: $canScheduleExactAlarms',
+            );
           }
           if (canScheduleExactAlarms != true) {
             scheduleMode = AndroidScheduleMode.inexact;
@@ -189,7 +276,9 @@ class NotificationService {
           }
         } catch (e) {
           if (kDebugMode) {
-            print('NotificationService: Error checking exact alarm capability: $e');
+            print(
+              'NotificationService: Error checking exact alarm capability: $e',
+            );
           }
           scheduleMode = AndroidScheduleMode.inexact;
         }
@@ -202,7 +291,8 @@ class NotificationService {
         tzDateTime,
         notificationDetails,
         androidScheduleMode: scheduleMode,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.wallClockTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.wallClockTime,
         payload: payload,
       );
 
@@ -217,6 +307,7 @@ class NotificationService {
     }
   }
 
+  @override
   Future<void> scheduleRepeatingNotification({
     required int id,
     required String title,
@@ -238,7 +329,11 @@ class NotificationService {
         enableVibration: true,
         playSound: true,
       ),
-      iOS: DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     await _notifications.periodicallyShow(
@@ -252,6 +347,7 @@ class NotificationService {
     );
   }
 
+  @override
   Future<void> scheduleNotificationForSchedule({
     required Schedule schedule,
     required Medication medication,
@@ -260,8 +356,10 @@ class NotificationService {
     final title = '💊 Time for ${medication.name}';
     final timeStr =
         '${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}';
-    final dateStr = '${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year}';
-    final body = '$timeStr • $dateStr\n${schedule.doseAmount} ${schedule.doseUnit} • ${medication.displayStrength}';
+    final dateStr =
+        '${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year}';
+    final body =
+        '$timeStr • $dateStr\n${schedule.doseAmount} ${schedule.doseUnit} • ${medication.displayStrength}';
 
     // Generate unique notification ID based on schedule ID and date
     final notificationId = _generateNotificationId(schedule.id!, scheduledDate);
@@ -276,6 +374,7 @@ class NotificationService {
     );
   }
 
+  @override
   Future<void> scheduleNotificationsForSchedule({
     required Schedule schedule,
     required Medication medication,
@@ -289,7 +388,11 @@ class NotificationService {
     try {
       final db = await DatabaseService.database;
       final startDay = DateTime(now.year, now.month, now.day).toIso8601String();
-      final endDay = DateTime(endDate.year, endDate.month, endDate.day).toIso8601String();
+      final endDay = DateTime(
+        endDate.year,
+        endDate.month,
+        endDate.day,
+      ).toIso8601String();
       overrides = await db.query(
         'schedule_overrides',
         where: 'schedule_id = ? AND date >= ? AND date < ?',
@@ -299,7 +402,11 @@ class NotificationService {
       // Table may not exist yet (fresh installs before migration). Ignore gracefully.
     }
 
-    for (var date = now; date.isBefore(endDate); date = date.add(const Duration(days: 1))) {
+    for (
+      var date = now;
+      date.isBefore(endDate);
+      date = date.add(const Duration(days: 1))
+    ) {
       if (!schedule.isActiveOnDate(date)) continue;
 
       // Defaults from schedule
@@ -309,8 +416,15 @@ class NotificationService {
       bool isCancelled = false;
 
       // Apply override if present for this day
-      final isoDay = DateTime(date.year, date.month, date.day).toIso8601String();
-      final o = overrides.firstWhere((m) => m['date'] == isoDay, orElse: () => {});
+      final isoDay = DateTime(
+        date.year,
+        date.month,
+        date.day,
+      ).toIso8601String();
+      final o = overrides.firstWhere(
+        (m) => m['date'] == isoDay,
+        orElse: () => {},
+      );
       if (o.isNotEmpty) {
         isCancelled = (o['is_cancelled'] as int? ?? 0) == 1;
         final ts = o['time_of_day'] as String?;
@@ -325,7 +439,13 @@ class NotificationService {
       final hour = int.parse(parts[0]);
       final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
 
-      final scheduledDateTime = DateTime(date.year, date.month, date.day, hour, minute);
+      final scheduledDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        hour,
+        minute,
+      );
 
       if (!scheduledDateTime.isAfter(now)) continue;
 
@@ -333,10 +453,12 @@ class NotificationService {
       final title = '💊 Time for ${medication.name}';
       final timeOnly =
           '${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')}';
-      final dateOnly = '${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}';
+      final dateOnly =
+          '${scheduledDateTime.day}/${scheduledDateTime.month}/${scheduledDateTime.year}';
       final doseAmount = doseAmountOverride ?? schedule.doseAmount;
       final doseUnit = doseUnitOverride ?? schedule.doseUnit;
-      final body = '$timeOnly • $dateOnly\n$doseAmount $doseUnit • ${medication.displayStrength}';
+      final body =
+          '$timeOnly • $dateOnly\n$doseAmount $doseUnit • ${medication.displayStrength}';
 
       final id = _generateNotificationId(schedule.id!, scheduledDateTime);
       await scheduleNotificationWithActions(
@@ -350,6 +472,7 @@ class NotificationService {
     }
   }
 
+  @override
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
   }
@@ -358,8 +481,10 @@ class NotificationService {
     await _notifications.cancelAll();
   }
 
+  @override
   Future<void> cancelNotificationsForSchedule(int scheduleId) async {
-    final pendingNotifications = await _notifications.pendingNotificationRequests();
+    final pendingNotifications = await _notifications
+        .pendingNotificationRequests();
 
     for (final notification in pendingNotifications) {
       if (notification.payload?.contains('schedule_$scheduleId') == true) {
@@ -374,14 +499,22 @@ class NotificationService {
 
   int _generateNotificationId(int scheduleId, DateTime date) {
     // Combine schedule ID with date to create unique notification ID
-    final dateString = '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
-    return int.parse('$scheduleId$dateString') % 2147483647; // Ensure it fits in int32
+    final dateString =
+        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
+    return int.parse('$scheduleId$dateString') %
+        2147483647; // Ensure it fits in int32
   }
 
   // Public helper for other layers to compute a notification id deterministically
-  int computeNotificationId(int scheduleId, DateTime date) => _generateNotificationId(scheduleId, date);
+  @override
+  int computeNotificationId(int scheduleId, DateTime date) =>
+      _generateNotificationId(scheduleId, date);
 
-  Future<void> cancelNotificationForScheduleDate(int scheduleId, DateTime date) async {
+  @override
+  Future<void> cancelNotificationForScheduleDate(
+    int scheduleId,
+    DateTime date,
+  ) async {
     final id = computeNotificationId(scheduleId, date);
     await cancelNotification(id);
   }
@@ -407,13 +540,17 @@ class NotificationService {
       // Check if the scheduled date is in the future
       if (scheduledDate.isBefore(DateTime.now())) {
         if (kDebugMode) {
-          print('NotificationService: Cannot schedule notification for past time: $scheduledDate');
+          print(
+            'NotificationService: Cannot schedule notification for past time: $scheduledDate',
+          );
         }
         throw Exception('Cannot schedule notification for past time');
       }
 
       if (kDebugMode) {
-        print('NotificationService: Scheduling notification with actions $id for $scheduledDate');
+        print(
+          'NotificationService: Scheduling notification with actions $id for $scheduledDate',
+        );
       }
 
       // Create notification details with action buttons
@@ -421,7 +558,8 @@ class NotificationService {
         android: AndroidNotificationDetails(
           'medication_reminders',
           'Medication Reminders',
-          channelDescription: 'Notifications for medication schedules and dosing reminders',
+          channelDescription:
+              'Notifications for medication schedules and dosing reminders',
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
@@ -484,12 +622,16 @@ class NotificationService {
 
       // Check scheduling capability
       final androidPlugin = _notifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      AndroidScheduleMode scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      AndroidScheduleMode scheduleMode =
+          AndroidScheduleMode.exactAllowWhileIdle;
 
       if (androidPlugin != null) {
         try {
-          final canScheduleExactAlarms = await androidPlugin.canScheduleExactNotifications();
+          final canScheduleExactAlarms = await androidPlugin
+              .canScheduleExactNotifications();
           if (canScheduleExactAlarms != true) {
             scheduleMode = AndroidScheduleMode.inexact;
           }
@@ -511,22 +653,32 @@ class NotificationService {
         tzDateTime,
         notificationDetails,
         androidScheduleMode: scheduleMode,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.wallClockTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.wallClockTime,
         payload: jsonEncode(payloadJson),
       );
 
       if (kDebugMode) {
-        print('NotificationService: Successfully scheduled notification with actions $id');
+        print(
+          'NotificationService: Successfully scheduled notification with actions $id',
+        );
       }
     } catch (e) {
       if (kDebugMode) {
-        print('NotificationService: Error scheduling notification with actions: $e');
+        print(
+          'NotificationService: Error scheduling notification with actions: $e',
+        );
       }
       rethrow;
     }
   }
 
-  Future<void> showInstantNotification({required String title, required String body, String? payload}) async {
+  @override
+  Future<void> showInstantNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
     if (!_initialized) await initialize();
 
     const notificationDetails = NotificationDetails(
@@ -538,7 +690,11 @@ class NotificationService {
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
       ),
-      iOS: DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     await _notifications.show(
@@ -553,13 +709,17 @@ class NotificationService {
   /// Check if exact alarm permissions are granted (Android 12+)
   Future<bool> areExactAlarmsEnabled() async {
     final androidPlugin = _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       try {
         return await androidPlugin.areNotificationsEnabled() ?? false;
       } catch (e) {
         if (kDebugMode) {
-          print('NotificationService: Error checking exact alarm permissions: $e');
+          print(
+            'NotificationService: Error checking exact alarm permissions: $e',
+          );
         }
         return false;
       }
@@ -572,14 +732,19 @@ class NotificationService {
     final result = <String, bool>{};
 
     final androidPlugin = _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       try {
-        result['notifications'] = await androidPlugin.areNotificationsEnabled() ?? false;
+        result['notifications'] =
+            await androidPlugin.areNotificationsEnabled() ?? false;
       } catch (e) {
         result['notifications'] = false;
         if (kDebugMode) {
-          print('NotificationService: Error checking notification permissions: $e');
+          print(
+            'NotificationService: Error checking notification permissions: $e',
+          );
         }
       }
 
@@ -590,7 +755,9 @@ class NotificationService {
       } catch (e) {
         result['exactAlarms'] = false;
         if (kDebugMode) {
-          print('NotificationService: Error checking exact alarm permissions: $e');
+          print(
+            'NotificationService: Error checking exact alarm permissions: $e',
+          );
         }
       }
     } else {
@@ -639,10 +806,20 @@ class NotificationService {
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
       ),
-      iOS: DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
-    await service._notifications.show(id, title, body, notificationDetails, payload: payload);
+    await service._notifications.show(
+      id,
+      title,
+      body,
+      notificationDetails,
+      payload: payload,
+    );
   }
 
   /// Debug utility to verify notification system health
@@ -669,15 +846,25 @@ class NotificationService {
     final pending = await getPendingNotifications();
     status['pending_count'] = pending.length;
     status['pending_notifications'] = pending
-        .map((n) => {'id': n.id, 'title': n.title, 'body': n.body, 'payload': n.payload})
+        .map(
+          (n) => {
+            'id': n.id,
+            'title': n.title,
+            'body': n.body,
+            'payload': n.payload,
+          },
+        )
         .toList();
 
     // Check exact alarm capability
     final androidPlugin = _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       try {
-        status['can_schedule_exact'] = await androidPlugin.canScheduleExactNotifications();
+        status['can_schedule_exact'] = await androidPlugin
+            .canScheduleExactNotifications();
       } catch (e) {
         status['can_schedule_exact'] = false;
         status['exact_alarm_error'] = e.toString();
@@ -702,7 +889,8 @@ class NotificationService {
       case 'medication':
         channelId = 'medication_reminders';
         channelName = 'Medication Reminders';
-        channelDescription = 'Notifications for medication schedules and dosing reminders';
+        channelDescription =
+            'Notifications for medication schedules and dosing reminders';
         androidDetails = AndroidNotificationDetails(
           channelId,
           channelName,
@@ -728,7 +916,8 @@ class NotificationService {
       case 'alert':
         channelId = 'medication_alerts';
         channelName = 'Medication Alerts';
-        channelDescription = 'Important alerts for low stock, expiry warnings, etc.';
+        channelDescription =
+            'Important alerts for low stock, expiry warnings, etc.';
         androidDetails = AndroidNotificationDetails(
           channelId,
           channelName,
@@ -754,7 +943,8 @@ class NotificationService {
       case 'test':
         channelId = 'test_notifications';
         channelName = 'Test Notifications';
-        channelDescription = 'Test notifications for app functionality and debugging';
+        channelDescription =
+            'Test notifications for app functionality and debugging';
         androidDetails = AndroidNotificationDetails(
           channelId,
           channelName,
@@ -822,7 +1012,8 @@ class NotificationService {
       await scheduleNotification(
         id: 999999, // Use a distinctive ID for testing
         title: 'Test Notification',
-        body: 'This is a test scheduled for ${testTime.hour}:${testTime.minute.toString().padLeft(2, '0')}',
+        body:
+            'This is a test scheduled for ${testTime.hour}:${testTime.minute.toString().padLeft(2, '0')}',
         scheduledDate: testTime,
         payload: 'test_notification_${testTime.millisecondsSinceEpoch}',
       );

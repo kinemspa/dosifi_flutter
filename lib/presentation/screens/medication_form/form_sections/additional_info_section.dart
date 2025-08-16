@@ -19,13 +19,22 @@ class AdditionalInfoSection extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(6)),
-                child: Icon(Icons.description, color: Colors.grey[800], size: 18),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.description,
+                  color: Colors.grey[800],
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Text(
                 'Additional Information',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               IconButton(
@@ -35,7 +44,8 @@ class AdditionalInfoSection extends StatelessWidget {
                   InfoSheet.show(
                     context,
                     title: 'Additional Information',
-                    message: 'Description and barcode are optional but useful for context.',
+                    message:
+                        'Description and barcode are optional but useful for context.',
                   );
                 },
               ),
@@ -47,7 +57,9 @@ class AdditionalInfoSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Description',
               hintText: 'Brief description of the medication',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.description),
@@ -60,7 +72,9 @@ class AdditionalInfoSection extends StatelessWidget {
             decoration: InputDecoration(
               labelText: 'Barcode',
               hintText: 'Product barcode or identifier',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey[50],
               prefixIcon: const Icon(Icons.qr_code_2),
@@ -69,14 +83,19 @@ class AdditionalInfoSection extends StatelessWidget {
                 icon: const Icon(Icons.camera_alt_outlined),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Barcode scanner coming soon')),
+                    const SnackBar(
+                      content: Text('Barcode scanner coming soon'),
+                    ),
                   );
                 },
               ),
             ),
           ),
           const SizedBox(height: 8),
-          const HelperBlock.info('You can enter a barcode now and scan later once available', icon: Icons.help_outline),
+          const HelperBlock.info(
+            'You can enter a barcode now and scan later once available',
+            icon: Icons.help_outline,
+          ),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -84,12 +103,61 @@ class AdditionalInfoSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               color: Colors.grey[50],
             ),
-            child: SwitchListTile(
-              title: const Text('Active'),
-              subtitle: const Text('Medication is currently being used'),
-              value: controller.isActive,
-              onChanged: controller.setIsActive,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Active'),
+                  subtitle: const Text('Medication is currently being used'),
+                  value: controller.isActive,
+                  onChanged: controller.setIsActive,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Notification Profile',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: controller.notificationSet ?? 'Default',
+                        decoration: InputDecoration(
+                          labelText: 'Profile',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          helperText: 'Choose how reminders are scheduled for this medication',
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'Default', child: Text('Default')),
+                          DropdownMenuItem(value: 'Custom', child: Text('Custom')),
+                          DropdownMenuItem(value: 'New Custom', child: Text('New Custom…')),
+                        ],
+                        onChanged: (val) {
+                          if (val == 'New Custom') {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Custom profile editor coming soon'),
+                              ),
+                            );
+                            controller.setNotificationSet('Custom');
+                          } else {
+                            controller.setNotificationSet(val);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

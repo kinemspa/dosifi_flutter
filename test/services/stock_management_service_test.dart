@@ -8,38 +8,22 @@ class TestMedicationFake extends Medication {
   double? mutableVials;
 
   TestMedicationFake({
-    int? id,
-    required String name,
-    required MedicationType type,
-    String? brandManufacturer,
-    required double strengthPerUnit,
-    required StrengthUnit strengthUnit,
-    required double stockQuantity,
-    StrengthUnit? stockUnit,
-    double? vialsInStock,
-    double? packageSize,
-    double? reconstitutionVolume,
-    double? finalConcentration,
-    bool requiresRefrigeration = false,
-  })  : mutableStock = stockQuantity,
-        mutableVials = vialsInStock,
-        super(
-          id: id,
-          name: name,
-          type: type,
-          brandManufacturer: brandManufacturer,
-          strengthPerUnit: strengthPerUnit,
-          strengthUnit: strengthUnit,
-          stockQuantity: stockQuantity,
-          stockUnit: stockUnit,
-          vialsInStock: vialsInStock,
-          packageSize: packageSize,
-          reconstitutionVolume: reconstitutionVolume,
-          finalConcentration: finalConcentration,
-          requiresRefrigeration: requiresRefrigeration,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+    super.id,
+    required super.name,
+    required super.type,
+    super.brandManufacturer,
+    required super.strengthPerUnit,
+    required super.strengthUnit,
+    required super.stockQuantity,
+    super.stockUnit,
+    super.vialsInStock,
+    super.packageSize,
+    super.reconstitutionVolume,
+    super.finalConcentration,
+    super.requiresRefrigeration,
+  }) : mutableStock = stockQuantity,
+       mutableVials = vialsInStock,
+       super(createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   @override
   Future<StockUpdateResult> logStockChange({
@@ -144,26 +128,29 @@ void main() {
       expect(med.mutableStock, 100);
     });
 
-    test('lyophilized reconstitution adds volume and decrements vials', () async {
-      final med = TestMedicationFake(
-        name: 'Lyoph',
-        type: MedicationType.lyophilizedVial,
-        strengthPerUnit: 1,
-        strengthUnit: StrengthUnit.units,
-        stockQuantity: 0,
-        vialsInStock: 2,
-        reconstitutionVolume: 10,
-        finalConcentration: 100,
-      );
-      final res = await StockManagementService.recordReconstitution(
-        medication: med,
-        diluentVolume: 10,
-      );
-      expect(res.ok, true);
-      expect(med.mutableStock, 10);
-      // vials decremented by one
-      expect(med.mutableVials, 1);
-    });
+    test(
+      'lyophilized reconstitution adds volume and decrements vials',
+      () async {
+        final med = TestMedicationFake(
+          name: 'Lyoph',
+          type: MedicationType.lyophilizedVial,
+          strengthPerUnit: 1,
+          strengthUnit: StrengthUnit.units,
+          stockQuantity: 0,
+          vialsInStock: 2,
+          reconstitutionVolume: 10,
+          finalConcentration: 100,
+        );
+        final res = await StockManagementService.recordReconstitution(
+          medication: med,
+          diluentVolume: 10,
+        );
+        expect(res.ok, true);
+        expect(med.mutableStock, 10);
+        // vials decremented by one
+        expect(med.mutableVials, 1);
+      },
+    );
 
     test('lyophilized reconstitution fails when no vials remain', () async {
       final med = TestMedicationFake(
@@ -186,4 +173,3 @@ void main() {
     });
   });
 }
-

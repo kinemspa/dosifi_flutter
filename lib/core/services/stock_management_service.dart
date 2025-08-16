@@ -43,8 +43,11 @@ class StockManagementService {
           break;
         case MedicationType.lyophilizedVial:
           // For lyophilized vials, we need to calculate from final concentration
-          if (medication.finalConcentration != null && medication.finalConcentration! > 0) {
-            unitsConsumed = doseAmount / medication.finalConcentration!; // mL from reconstituted vial
+          if (medication.finalConcentration != null &&
+              medication.finalConcentration! > 0) {
+            unitsConsumed =
+                doseAmount /
+                medication.finalConcentration!; // mL from reconstituted vial
           } else {
             unitsConsumed = doseAmount;
           }
@@ -54,10 +57,13 @@ class StockManagementService {
       }
 
       // Lightweight unit check: for liquid/vial types, we work in mL
-      if (_requiresMlStock(medication) && medication.stockUnit != null && medication.stockUnit != StrengthUnit.ml) {
+      if (_requiresMlStock(medication) &&
+          medication.stockUnit != null &&
+          medication.stockUnit != StrengthUnit.ml) {
         return StockUpdateResult.failure(
           code: StockUpdateFailureCode.invalidOperation,
-          message: 'Medication ${medication.name} expects stock in mL for ${medication.type.displayName}. Found ${medication.stockUnit?.displayName}.',
+          message:
+              'Medication ${medication.name} expects stock in mL for ${medication.type.displayName}. Found ${medication.stockUnit?.displayName}.',
         );
       }
 
@@ -65,11 +71,15 @@ class StockManagementService {
       final result = await medication.logStockChange(
         changeAmount: -unitsConsumed, // Negative for consumption
         reason: reasonAdministered,
-        notes: notes ?? 'Dose administration: $doseAmount ${medication.strengthUnit.displayName}',
+        notes:
+            notes ??
+            'Dose administration: $doseAmount ${medication.strengthUnit.displayName}',
       );
       if (!result.ok) return result;
 
-      debugPrint('$_logTag: Recorded dose administration for ${medication.name}: -$unitsConsumed units');
+      debugPrint(
+        '$_logTag: Recorded dose administration for ${medication.name}: -$unitsConsumed units',
+      );
       return result;
     } catch (e) {
       debugPrint('$_logTag: Error recording dose administration: $e');
@@ -92,7 +102,9 @@ class StockManagementService {
       );
       if (!result.ok) return result;
 
-      debugPrint('$_logTag: Recorded wastage for ${medication.name}: -$wastedAmount units');
+      debugPrint(
+        '$_logTag: Recorded wastage for ${medication.name}: -$wastedAmount units',
+      );
       return result;
     } catch (e) {
       debugPrint('$_logTag: Error recording wastage: $e');
@@ -114,7 +126,9 @@ class StockManagementService {
       );
       if (!result.ok) return result;
 
-      debugPrint('$_logTag: Recorded expiration for ${medication.name}: -$expiredAmount units');
+      debugPrint(
+        '$_logTag: Recorded expiration for ${medication.name}: -$expiredAmount units',
+      );
       return result;
     } catch (e) {
       debugPrint('$_logTag: Error recording expiration: $e');
@@ -133,7 +147,10 @@ class StockManagementService {
     try {
       final stockNotes = StringBuffer('Restock');
       if (lotNumber != null) stockNotes.write(' - Lot: $lotNumber');
-      if (expirationDate != null) stockNotes.write(' - Exp: ${expirationDate.toLocal().toString().split(' ')[0]}');
+      if (expirationDate != null)
+        stockNotes.write(
+          ' - Exp: ${expirationDate.toLocal().toString().split(' ')[0]}',
+        );
       if (notes != null) stockNotes.write(' - $notes');
 
       final result = await medication.logStockChange(
@@ -143,7 +160,9 @@ class StockManagementService {
       );
       if (!result.ok) return result;
 
-      debugPrint('$_logTag: Recorded restock for ${medication.name}: +$restockAmount units');
+      debugPrint(
+        '$_logTag: Recorded restock for ${medication.name}: +$restockAmount units',
+      );
       return result;
     } catch (e) {
       debugPrint('$_logTag: Error recording restock: $e');
@@ -193,7 +212,9 @@ class StockManagementService {
         // Safety: ensure we have a dry vial available
         final currentVials = (medication.vialsInStock ?? 0);
         if (currentVials <= 0) {
-          debugPrint('$_logTag: Cannot reconstitute ${medication.name}: no dry vials available');
+          debugPrint(
+            '$_logTag: Cannot reconstitute ${medication.name}: no dry vials available',
+          );
           return StockUpdateResult.failure(
             code: StockUpdateFailureCode.invalidOperation,
             message: 'No dry vials remaining to reconstitute.',
@@ -235,9 +256,15 @@ class StockManagementService {
   static Future<List<Medication>> getLowStockMedications() async {
     try {
       final db = await DatabaseService.database;
-      final results = await db.query('medications', where: 'is_active = ?', whereArgs: [1]);
+      final results = await db.query(
+        'medications',
+        where: 'is_active = ?',
+        whereArgs: [1],
+      );
 
-      final medications = results.map((map) => Medication.fromMap(map)).toList();
+      final medications = results
+          .map((map) => Medication.fromMap(map))
+          .toList();
       return medications.where((med) => med.isLowStock).toList();
     } catch (e) {
       debugPrint('$_logTag: Error getting low stock medications: $e');
@@ -253,7 +280,8 @@ class StockManagementService {
 
       final results = await db.query(
         'medications',
-        where: 'is_active = ? AND expiration_date IS NOT NULL AND expiration_date < ?',
+        where:
+            'is_active = ? AND expiration_date IS NOT NULL AND expiration_date < ?',
         whereArgs: [1, today],
       );
 
@@ -265,15 +293,21 @@ class StockManagementService {
   }
 
   /// Get medications expiring soon (within specified days)
-  static Future<List<Medication>> getMedicationsExpiringSoon([int days = 30]) async {
+  static Future<List<Medication>> getMedicationsExpiringSoon([
+    int days = 30,
+  ]) async {
     try {
       final db = await DatabaseService.database;
-      final futureDate = DateTime.now().add(Duration(days: days)).toIso8601String().split('T')[0];
+      final futureDate = DateTime.now()
+          .add(Duration(days: days))
+          .toIso8601String()
+          .split('T')[0];
       final today = DateTime.now().toIso8601String().split('T')[0];
 
       final results = await db.query(
         'medications',
-        where: 'is_active = ? AND expiration_date IS NOT NULL AND expiration_date > ? AND expiration_date <= ?',
+        where:
+            'is_active = ? AND expiration_date IS NOT NULL AND expiration_date > ? AND expiration_date <= ?',
         whereArgs: [1, today, futureDate],
       );
 
@@ -306,7 +340,9 @@ class StockManagementService {
   }
 
   /// Get recent stock activities across all medications
-  static Future<List<StockLogEntry>> getRecentStockActivities([int limit = 50]) async {
+  static Future<List<StockLogEntry>> getRecentStockActivities([
+    int limit = 50,
+  ]) async {
     try {
       final db = await DatabaseService.database;
 
@@ -324,7 +360,10 @@ class StockManagementService {
       return results
           .map((map) {
             final entry = StockLogEntry.fromMap(map);
-            return StockLogEntryWithName(entry: entry, medicationName: map['medication_name'] as String);
+            return StockLogEntryWithName(
+              entry: entry,
+              medicationName: map['medication_name'] as String,
+            );
           })
           .cast<StockLogEntry>()
           .toList();
@@ -363,9 +402,15 @@ class StockManagementService {
       };
     } catch (e) {
       debugPrint('$_logTag: Error calculating inventory stats: $e');
-      return {'total_medications': 0, 'total_units': 0.0, 'low_stock_count': 0, 'expired_count': 0};
+      return {
+        'total_medications': 0,
+        'total_units': 0.0,
+        'low_stock_count': 0,
+        'expired_count': 0,
+      };
     }
   }
+
   static bool _requiresMlStock(Medication m) {
     return m.type == MedicationType.liquid ||
         m.type == MedicationType.readyMadeVial ||
@@ -402,7 +447,8 @@ class StockStatus {
     );
   }
 
-  bool get hasAlerts => lowStockCount > 0 || expiredCount > 0 || expiringSoonCount > 0;
+  bool get hasAlerts =>
+      lowStockCount > 0 || expiredCount > 0 || expiringSoonCount > 0;
   int get totalAlerts => lowStockCount + expiredCount + expiringSoonCount;
 }
 
@@ -410,15 +456,17 @@ class StockStatus {
 class StockLogEntryWithName extends StockLogEntry {
   final String medicationName;
 
-  StockLogEntryWithName({required StockLogEntry entry, required this.medicationName})
-    : super(
-        id: entry.id,
-        medicationId: entry.medicationId,
-        timestamp: entry.timestamp,
-        changeAmount: entry.changeAmount,
-        newTotal: entry.newTotal,
-        reason: entry.reason,
-        notes: entry.notes,
-        createdAt: entry.createdAt,
-      );
+  StockLogEntryWithName({
+    required StockLogEntry entry,
+    required this.medicationName,
+  }) : super(
+         id: entry.id,
+         medicationId: entry.medicationId,
+         timestamp: entry.timestamp,
+         changeAmount: entry.changeAmount,
+         newTotal: entry.newTotal,
+         reason: entry.reason,
+         notes: entry.notes,
+         createdAt: entry.createdAt,
+       );
 }

@@ -112,12 +112,23 @@ class MedicationTypeUtils {
       case MedicationType.drops:
         return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.percent];
       case MedicationType.preFilledSyringe:
-        return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.percent, StrengthUnit.iu, StrengthUnit.units];
+        return [
+          StrengthUnit.mg,
+          StrengthUnit.mcg,
+          StrengthUnit.percent,
+          StrengthUnit.iu,
+          StrengthUnit.units,
+        ];
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
       case MedicationType.singleUsePen:
       case MedicationType.multiUsePen:
-        return [StrengthUnit.mg, StrengthUnit.mcg, StrengthUnit.percent, StrengthUnit.iu];
+        return [
+          StrengthUnit.mg,
+          StrengthUnit.mcg,
+          StrengthUnit.percent,
+          StrengthUnit.iu,
+        ];
       case MedicationType.cream:
       case MedicationType.ointment:
       case MedicationType.gel:
@@ -215,9 +226,10 @@ class MedicationTypeUtils {
       case MedicationType.drops:
         return 'Volume in Stock';
       case MedicationType.preFilledSyringe:
+        return 'Number of Syringes';
       case MedicationType.readyMadeVial:
       case MedicationType.lyophilizedVial:
-        return 'Number of Vials';
+        return 'Volume in Stock (mL)';
       case MedicationType.cream:
       case MedicationType.ointment:
       case MedicationType.gel:

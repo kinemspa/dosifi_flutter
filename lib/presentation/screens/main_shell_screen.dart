@@ -45,57 +45,69 @@ class MainShellScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final idx = _currentIndexFromPath(currentPath);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_getScreenTitle()),
-        automaticallyImplyLeading: true,
-        actions: [
-          if (currentPath == '/')
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                _showNotificationsBottomSheet(context);
-              },
-              tooltip: 'Notifications',
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        // Use smart back to avoid exiting app and to jump across tabs appropriately
+        context.navigateBackSmart();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_getScreenTitle()),
+          // Avoid showing a back arrow on root-level tabs for consistency
+          automaticallyImplyLeading: false,
+          actions: [
+            if (currentPath == '/')
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  _showNotificationsBottomSheet(context);
+                },
+                tooltip: 'Notifications',
+              ),
+          ],
+        ),
+        drawer: _buildNavigationDrawer(context),
+        body: SafeArea(child: child),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: idx,
+          onDestinationSelected: (i) => _onNavTap(context, i),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
             ),
-          // No global Info button on any screen
-        ],
-      ),
-      drawer: _buildNavigationDrawer(context),
-      body: SafeArea(child: child),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: idx,
-        onDestinationSelected: (i) => _onNavTap(context, i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(
-            icon: Icon(Icons.medication_outlined),
-            selectedIcon: Icon(Icons.medication),
-            label: 'Meds',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.schedule_outlined),
-            selectedIcon: Icon(Icons.schedule),
-            label: 'Schedule',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Calendar',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Supplies',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-        height: 72,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            NavigationDestination(
+              icon: Icon(Icons.medication_outlined),
+              selectedIcon: Icon(Icons.medication),
+              label: 'Meds',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.schedule_outlined),
+              selectedIcon: Icon(Icons.schedule),
+              label: 'Schedule',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.calendar_month_outlined),
+              selectedIcon: Icon(Icons.calendar_month),
+              label: 'Calendar',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
+              label: 'Supplies',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+          height: 72,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        ),
       ),
     );
   }
@@ -107,17 +119,19 @@ class MainShellScreen extends StatelessWidget {
     if (p.startsWith(RoutePaths.supplies)) return 'Supplies';
     if (p.startsWith(RoutePaths.schedule)) return 'Schedule';
     if (p.startsWith(RoutePaths.calendar)) return 'Calendar';
-    if (p.startsWith(RoutePaths.notificationTest)) return 'Notification Testing';
+    if (p.startsWith(RoutePaths.notificationTest))
+      return 'Notification Testing';
     if (p.startsWith(RoutePaths.settings)) return 'Settings';
     return 'Dosifi';
   }
-
 
   void _showNotificationsBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         maxChildSize: 0.9,
@@ -129,17 +143,25 @@ class MainShellScreen extends StatelessWidget {
               margin: const EdgeInsets.only(top: 8),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.notifications, color: Theme.of(context).primaryColor),
+                  Icon(
+                    Icons.notifications,
+                    color: Theme.of(context).primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Notifications',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -205,13 +227,23 @@ class MainShellScreen extends StatelessWidget {
           backgroundColor: iconColor.withValues(alpha: 0.1),
           child: Icon(icon, color: iconColor, size: 20),
         ),
-        title: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        title: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(message, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 4),
-            Text(time, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+            Text(
+              time,
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+            ),
           ],
         ),
         isThreeLine: true,
@@ -324,7 +356,10 @@ class MainShellScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+        ),
       ),
     );
   }
@@ -338,11 +373,20 @@ class MainShellScreen extends StatelessWidget {
   }) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey[600])),
+      title: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: Colors.grey[600]),
+      ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
-
 }

@@ -16,18 +16,26 @@ class MedicationFormScreenRefactored extends ConsumerStatefulWidget {
   final String? medicationId; // null for add, not null for edit
   final bool compactSheetMode;
 
-  const MedicationFormScreenRefactored({super.key, this.medicationId, this.compactSheetMode = false});
+  const MedicationFormScreenRefactored({
+    super.key,
+    this.medicationId,
+    this.compactSheetMode = false,
+  });
 
   @override
-  ConsumerState<MedicationFormScreenRefactored> createState() => _MedicationFormScreenRefactoredState();
+  ConsumerState<MedicationFormScreenRefactored> createState() =>
+      _MedicationFormScreenRefactoredState();
 }
 
-class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormScreenRefactored> {
+class _MedicationFormScreenRefactoredState
+    extends ConsumerState<MedicationFormScreenRefactored> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final controller = ref.read(medicationFormControllerProvider(widget.medicationId));
+      final controller = ref.read(
+        medicationFormControllerProvider(widget.medicationId),
+      );
       controller.loadMedicationData();
     });
   }
@@ -36,25 +44,27 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
-        final controller = ref.watch(medicationFormControllerProvider(widget.medicationId));
+        final controller = ref.watch(
+          medicationFormControllerProvider(widget.medicationId),
+        );
 
-          // Build the common list of form sections
-          List<Widget> sections = [
-            const SizedBox(height: 12), // top padding from app bar
-            // Helper tip before type selection only
-            if (controller.selectedType == null) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _buildStepHelper(context),
-              ),
-              const SizedBox(height: 8),
-            ],
-            // Medication Type - First and Required
+        // Build the common list of form sections
+        final List<Widget> sections = [
+          const SizedBox(height: 12), // top padding from app bar
+          // Helper tip before type selection only
+          if (controller.selectedType == null) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: MedicationTypeSection(controller: controller),
+              child: _buildStepHelper(context),
             ),
-          ];
+            const SizedBox(height: 8),
+          ],
+          // Medication Type - First and Required
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MedicationTypeSection(controller: controller),
+          ),
+        ];
 
         if (controller.selectedType != null) {
           sections.addAll([
@@ -83,7 +93,9 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: AdditionalInfoSection(controller: controller),
             ),
-            const SizedBox(height: 140), // Extra space so fields aren't hidden behind floating summary
+            const SizedBox(
+              height: 140,
+            ), // Extra space so fields aren't hidden behind floating summary
           ]);
         }
 
@@ -126,11 +138,20 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            title: Text(controller.isEditMode ? 'Edit Medication' : 'Add Medication'),
-            leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.navigateBackSmart()),
+            title: Text(
+              controller.isEditMode ? 'Edit Medication' : 'Add Medication',
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.navigateBackSmart(),
+            ),
             actions: [
               if (controller.isEditMode)
-                IconButton(icon: const Icon(Icons.delete), onPressed: () => _showDeleteDialog(context, controller)),
+                IconButton(
+                  tooltip: 'Delete medication',
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => _showDeleteDialog(context, controller),
+                ),
             ],
           ),
           body: Stack(
@@ -173,7 +194,10 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
     );
   }
 
-  Widget _buildFloatingSummary(BuildContext context, MedicationFormController controller) {
+  Widget _buildFloatingSummary(
+    BuildContext context,
+    MedicationFormController controller,
+  ) {
     final type = controller.selectedType!;
     final baseColor = MedicationTypeUtils.getMedicationTypeColor(type);
     final icon = MedicationTypeUtils.getMedicationTypeIcon(type);
@@ -189,149 +213,209 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
     String expiryTextStr() {
       if (expiry == null) return 'No expiry set';
       final now = DateTime.now();
-      final days = expiry.difference(DateTime(now.year, now.month, now.day)).inDays;
+      final days = expiry
+          .difference(DateTime(now.year, now.month, now.day))
+          .inDays;
       if (days < 0) return 'Expired';
       if (days == 0) return 'Expires today';
       if (days == 1) return 'Expires tomorrow';
       return 'Expires in $days days';
     }
 
-        // Build the summary content according to requested layout
-        Widget summaryContent({bool showTypeChip = true}) {
-          final theme = Theme.of(context);
-          final description = controller.descriptionController.text.trim();
-          final instructions = controller.instructionsController.text.trim();
-          final notes = controller.notesController.text.trim();
+    // Build the summary content according to requested layout
+    Widget summaryContent({bool showTypeChip = true}) {
+      final theme = Theme.of(context);
+      final description = controller.descriptionController.text.trim();
+      final instructions = controller.instructionsController.text.trim();
+      final notes = controller.notesController.text.trim();
 
-          Widget labelValue(String label, String value) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(text: label + '\n', style: theme.textTheme.labelMedium?.copyWith(color: Colors.white70)),
-                    TextSpan(text: value.isEmpty ? '—' : value, style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (name.isNotEmpty) labelValue('Name', name),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (brand.isNotEmpty)
-                              Expanded(child: labelValue('Brand/Manufacturer', brand)),
-                            if (showTypeChip)
-                              Container(
-                                margin: const EdgeInsets.only(left: 8, top: 6),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(icon, size: 16, color: Colors.white),
-                                    const SizedBox(width: 6),
-                                    Text(type.displayName, style: theme.textTheme.labelLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (description.isNotEmpty) labelValue('Description', description),
-                        if (strength.isNotEmpty || strengthUnit.isNotEmpty)
-                          labelValue(
-                            type == MedicationType.tablet
-                                ? 'Strength per Tablet'
-                                : type == MedicationType.capsule
-                                    ? 'Strength per Capsule'
-                                    : 'Strength',
-                            (strength.isEmpty ? '' : strength) + (strengthUnit.isEmpty ? '' : ' ' + strengthUnit),
-                          ),
-                        if (stock.isNotEmpty)
-                          labelValue(
-                            'Number of ${type.displayName}s in Stock',
-                            (stock.isEmpty ? '' : stock) + (stockUnit.isEmpty ? '' : ' ' + stockUnit),
-                          ),
-                        if (refrigerated) labelValue('Refrigeration', 'Required'),
-                        if (instructions.isNotEmpty) labelValue('Instructions', instructions),
-                        if (notes.isNotEmpty) labelValue('Notes', notes),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }
-
-        return Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(16),
-          shadowColor: Colors.black.withValues(alpha: 0.2),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [baseColor, baseColor.withValues(alpha: 0.85)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      Widget labelValue(String label, String value) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: RichText(
+            text: TextSpan(
               children: [
-                summaryContent(),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton(
-                    onPressed: controller.isLoading ? null : () => _confirmAndSave(context, controller, baseColor, summaryContent),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: baseColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: controller.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.black54)),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(controller.isEditMode ? Icons.save : Icons.save_outlined),
-                              const SizedBox(width: 8),
-                              Text(controller.isEditMode ? 'Save Changes' : 'Save Medication',
-                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                            ],
-                          ),
+                TextSpan(
+                  text: '$label\n',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+                TextSpan(
+                  text: value.isEmpty ? '—' : value,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
           ),
         );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (name.isNotEmpty) labelValue('Name', name),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (brand.isNotEmpty)
+                          Expanded(
+                            child: labelValue('Brand/Manufacturer', brand),
+                          ),
+                        if (showTypeChip)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8, top: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(icon, size: 16, color: Colors.white),
+                                const SizedBox(width: 6),
+                                Text(
+                                  type.displayName,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (description.isNotEmpty)
+                      labelValue('Description', description),
+                    if (strength.isNotEmpty || strengthUnit.isNotEmpty)
+                      labelValue(
+                        type == MedicationType.tablet
+                            ? 'Strength per Tablet'
+                            : type == MedicationType.capsule
+                            ? 'Strength per Capsule'
+                            : 'Strength',
+                        (strength.isEmpty ? '' : strength) +
+                            (strengthUnit.isEmpty ? '' : ' $strengthUnit'),
+                      ),
+                    if (stock.isNotEmpty)
+                      labelValue(
+                        'Number of ${type.displayName}s in Stock',
+                        (stock.isEmpty ? '' : stock) +
+                            (stockUnit.isEmpty ? '' : ' $stockUnit'),
+                      ),
+                    if (refrigerated) labelValue('Refrigeration', 'Required'),
+                    if (instructions.isNotEmpty)
+                      labelValue('Instructions', instructions),
+                    if (notes.isNotEmpty) labelValue('Notes', notes),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(16),
+      shadowColor: Colors.black.withValues(alpha: 0.2),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [baseColor, baseColor.withValues(alpha: 0.85)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            summaryContent(),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: Tooltip(
+                message: controller.isEditMode
+                    ? 'Save changes'
+                    : 'Save medication',
+                child: ElevatedButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : () => _confirmAndSave(
+                          context,
+                          controller,
+                          baseColor,
+                          summaryContent,
+                        ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: baseColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: controller.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black54,
+                            ),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              controller.isEditMode
+                                  ? Icons.save
+                                  : Icons.save_outlined,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              controller.isEditMode
+                                  ? 'Save Changes'
+                                  : 'Save Medication',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _tag(String label, String value) {
@@ -344,24 +428,45 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(width: 4),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSaveButton(BuildContext context, MedicationFormController controller) {
+  Widget _buildSaveButton(
+    BuildContext context,
+    MedicationFormController controller,
+  ) {
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: controller.isLoading ? null : () => _saveMedication(context, controller),
+        onPressed: controller.isLoading
+            ? null
+            : () => _saveMedication(context, controller),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[600],
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 1,
         ),
         child: controller.isLoading
@@ -379,8 +484,13 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
                   Icon(controller.isEditMode ? Icons.update : Icons.add),
                   const SizedBox(width: 8),
                   Text(
-                    controller.isEditMode ? 'Update Medication' : 'Add Medication',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    controller.isEditMode
+                        ? 'Update Medication'
+                        : 'Add Medication',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -388,7 +498,12 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
     );
   }
 
-  Future<void> _confirmAndSave(BuildContext context, MedicationFormController controller, Color baseColor, Widget Function({bool showTypeChip}) summaryBuilder) async {
+  Future<void> _confirmAndSave(
+    BuildContext context,
+    MedicationFormController controller,
+    Color baseColor,
+    Widget Function({bool showTypeChip}) summaryBuilder,
+  ) async {
     // Show a confirmation dialog that visually matches the summary card
     await showDialog(
       context: context,
@@ -396,15 +511,22 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
       builder: (ctx) {
         return AlertDialog(
           title: const Text('Save Medication'),
-          content: SingleChildScrollView(child: summaryBuilder(showTypeChip: true)),
+          content: SingleChildScrollView(
+            child: summaryBuilder(showTypeChip: true),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(ctx).pop();
                 await _saveMedication(context, controller);
               },
-              child: Text(controller.isEditMode ? 'Save Changes' : 'Save Medication'),
+              child: Text(
+                controller.isEditMode ? 'Save Changes' : 'Save Medication',
+              ),
             ),
           ],
         );
@@ -412,7 +534,10 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
     );
   }
 
-  Future<void> _saveMedication(BuildContext context, MedicationFormController controller) async {
+  Future<void> _saveMedication(
+    BuildContext context,
+    MedicationFormController controller,
+  ) async {
     if (!controller.validateForm()) {
       return;
     }
@@ -434,7 +559,11 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(controller.isEditMode ? 'Medication updated successfully' : 'Medication saved successfully'),
+            content: Text(
+              controller.isEditMode
+                  ? 'Medication updated successfully'
+                  : 'Medication saved successfully',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -443,7 +572,9 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error ${controller.isEditMode ? 'updating' : 'adding'} medication: $e'),
+            content: Text(
+              'Error ${controller.isEditMode ? 'updating' : 'adding'} medication: $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -455,14 +586,22 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
     }
   }
 
-  void _showDeleteDialog(BuildContext context, MedicationFormController controller) {
+  void _showDeleteDialog(
+    BuildContext context,
+    MedicationFormController controller,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Medication'),
-        content: const Text('Are you sure you want to delete this medication? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete this medication? This action cannot be undone.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop();
@@ -471,18 +610,27 @@ class _MedicationFormScreenRefactoredState extends ConsumerState<MedicationFormS
                 if (mounted) {
                   context.go('/medications');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Medication deleted successfully'), backgroundColor: Colors.red),
+                    const SnackBar(
+                      content: Text('Medication deleted successfully'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Error deleting medication: $e'), backgroundColor: Colors.red));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting medication: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete'),
           ),
         ],

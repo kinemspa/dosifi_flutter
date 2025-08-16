@@ -21,7 +21,8 @@ class FloatingParticles extends StatefulWidget {
   State<FloatingParticles> createState() => _FloatingParticlesState();
 }
 
-class _FloatingParticlesState extends State<FloatingParticles> with TickerProviderStateMixin {
+class _FloatingParticlesState extends State<FloatingParticles>
+    with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<Offset>> _animations;
   late List<double> _particleSizes;
@@ -40,7 +41,12 @@ class _FloatingParticlesState extends State<FloatingParticles> with TickerProvid
 
     for (int i = 0; i < widget.particleCount; i++) {
       final controller = AnimationController(
-        duration: Duration(milliseconds: widget.animationDuration.inMilliseconds + _random.nextInt(5000) - 2500),
+        duration: Duration(
+          milliseconds:
+              widget.animationDuration.inMilliseconds +
+              _random.nextInt(5000) -
+              2500,
+        ),
         vsync: this,
       );
 
@@ -49,7 +55,9 @@ class _FloatingParticlesState extends State<FloatingParticles> with TickerProvid
         end: Offset(_random.nextDouble() * 2 - 1, -1.2),
       ).animate(CurvedAnimation(parent: controller, curve: Curves.linear));
 
-      final size = widget.minSize + _random.nextDouble() * (widget.maxSize - widget.minSize);
+      final size =
+          widget.minSize +
+          _random.nextDouble() * (widget.maxSize - widget.minSize);
 
       _controllers.add(controller);
       _animations.add(animation);
@@ -82,15 +90,26 @@ class _FloatingParticlesState extends State<FloatingParticles> with TickerProvid
               animation: _animations[index],
               builder: (context, child) {
                 return Positioned(
-                  left: MediaQuery.of(context).size.width * (_animations[index].value.dx + 1) / 2,
-                  top: MediaQuery.of(context).size.height * (_animations[index].value.dy + 1) / 2,
+                  left:
+                      MediaQuery.of(context).size.width *
+                      (_animations[index].value.dx + 1) /
+                      2,
+                  top:
+                      MediaQuery.of(context).size.height *
+                      (_animations[index].value.dy + 1) /
+                      2,
                   child: Container(
                     width: _particleSizes[index],
                     height: _particleSizes[index],
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: widget.particleColor,
-                      boxShadow: [BoxShadow(color: widget.particleColor, blurRadius: _particleSizes[index] / 2)],
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.particleColor,
+                          blurRadius: _particleSizes[index] / 2,
+                        ),
+                      ],
                     ),
                   ),
                 );
