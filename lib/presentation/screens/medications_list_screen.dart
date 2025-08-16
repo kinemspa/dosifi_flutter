@@ -61,7 +61,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                       context,
                       title: 'Medications',
                       message:
-                          'Search\n\nTap the magnifier to show the search bar. Type to filter by medication name or brand.\n\nSort\n\nTap the sort button to flip A–Z and Z–A. Long-press the sort button to choose the sort field (Name, Stock, Type, Expiry).\n\nTips\n\nTap a medication card for full details.',
+                          'Search\n\nTap the magnifier to show the search bar. Type to filter by medication name or brand.\n\nSort\n\nTap the main sort button to flip A–Z and Z–A. Use the small chevron to choose the sort field (Name, Stock, Type, Expiry).\n\nTips\n\nTap a medication card for full details.',
                     );
                   },
                   icon: const Icon(Icons.info_outline),
@@ -318,39 +318,67 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
   }
 
   Widget _buildSortControls(BuildContext context) {
+    // Split sort control (previous style):
+    // - Main button toggles direction A–Z/Z–A and shows current field+dir label
+    // - Small chevron opens a popup to pick the sort field
+    final theme = Theme.of(context);
+    final label = _currentSortLabel();
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SegmentedButton<SortOption>(
-          segments: const [
-            ButtonSegment(value: SortOption.name, label: Text('Name'), icon: Icon(Icons.sort_by_alpha, size: 16)),
-            ButtonSegment(value: SortOption.stock, label: Text('Stock'), icon: Icon(Icons.inventory_2, size: 16)),
-            ButtonSegment(value: SortOption.type, label: Text('Type'), icon: Icon(Icons.category, size: 16)),
-            ButtonSegment(value: SortOption.expiry, label: Text('Expiry'), icon: Icon(Icons.event, size: 16)),
-          ],
-          selected: {_sortOption},
-          onSelectionChanged: (selection) {
-            setState(() {
-              final selected = selection.first;
-              if (selected == _sortOption) {
-                _sortAsc = !_sortAsc; // toggle direction if selecting same field
-              } else {
-                _sortOption = selected;
-                _sortAsc = true;
-              }
-            });
-          },
-          style: ButtonStyle(
-            visualDensity: VisualDensity.compact,
-            padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
+        Tooltip(
+          message: 'Toggle sort direction',
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              textStyle: theme.textTheme.labelLarge,
+            ),
+            onPressed: () {
+              setState(() => _sortAsc = !_sortAsc);
+            },
+            icon: Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward, size: 18),
+            label: Text(label),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Tooltip(
-          message: _sortAsc ? 'Ascending' : 'Descending',
-          child: IconButton(
-            onPressed: () => setState(() => _sortAsc = !_sortAsc),
-            icon: Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward),
+          message: 'Change sort field',
+          child: PopupMenuButton<SortOption>(
+            tooltip: 'Sort field',
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: SortOption.name,
+                child: ListTile(leading: Icon(Icons.sort_by_alpha), title: Text('Name')),
+              ),
+              const PopupMenuItem(
+                value: SortOption.stock,
+                child: ListTile(leading: Icon(Icons.inventory_2), title: Text('Stock')),
+              ),
+              const PopupMenuItem(
+                value: SortOption.type,
+                child: ListTile(leading: Icon(Icons.category), title: Text('Type')),
+              ),
+              const PopupMenuItem(
+                value: SortOption.expiry,
+                child: ListTile(leading: Icon(Icons.event), title: Text('Expiry')),
+              ),
+            ],
+            onSelected: (opt) {
+              setState(() {
+                _sortOption = opt;
+                // Keep current direction; do not reset _sortAsc
+              });
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(8),
+              child: const Icon(Icons.expand_more),
+            ),
           ),
         ),
       ],
