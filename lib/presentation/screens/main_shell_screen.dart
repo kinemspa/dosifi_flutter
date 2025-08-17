@@ -53,21 +53,7 @@ class MainShellScreen extends StatelessWidget {
         context.navigateBackSmart();
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(_getScreenTitle()),
-          // Avoid showing a back arrow on root-level tabs for consistency
-          automaticallyImplyLeading: false,
-          actions: [
-            if (currentPath == '/')
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {
-                  _showNotificationsBottomSheet(context);
-                },
-                tooltip: 'Notifications',
-              ),
-          ],
-        ),
+        appBar: _buildAppBar(context),
         drawer: _buildNavigationDrawer(context),
         body: SafeArea(child: child),
         bottomNavigationBar: NavigationBar(
@@ -112,6 +98,28 @@ class MainShellScreen extends StatelessWidget {
     );
   }
 
+  PreferredSizeWidget? _buildAppBar(BuildContext context) {
+    final p = (currentPath ?? '/').split('?').first;
+    // Schedule screen manages its own AppBar to host its tabs
+    if (p.startsWith(RoutePaths.schedule)) {
+      return null;
+    }
+    return AppBar(
+      title: Text(_getScreenTitle()),
+      automaticallyImplyLeading: false,
+      actions: [
+        if (p == RoutePaths.home)
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              _showNotificationsBottomSheet(context);
+            },
+            tooltip: 'Notifications',
+          ),
+      ],
+    );
+  }
+
   String _getScreenTitle() {
     final p = (currentPath ?? '/').split('?').first;
     if (p == RoutePaths.home) return 'Home';
@@ -119,8 +127,7 @@ class MainShellScreen extends StatelessWidget {
     if (p.startsWith(RoutePaths.supplies)) return 'Supplies';
     if (p.startsWith(RoutePaths.schedule)) return 'Schedule';
     if (p.startsWith(RoutePaths.calendar)) return 'Calendar';
-    if (p.startsWith(RoutePaths.notificationTest))
-      return 'Notification Testing';
+    if (p.startsWith(RoutePaths.notificationTest)) return 'Notification Testing';
     if (p.startsWith(RoutePaths.settings)) return 'Settings';
     return 'Dosifi';
   }

@@ -43,89 +43,53 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen>
   Widget build(BuildContext context) {
     final schedulesAsync = ref.watch(scheduleListProvider);
     final theme = Theme.of(context);
-
     return Scaffold(
-      body: Column(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Schedule'),
+        actions: [
+          IconButton(
+            tooltip: 'Open Calendar',
+            onPressed: () => context.navigateToCalendar(),
+            icon: const Icon(Icons.calendar_month),
+          ),
+          IconButton(
+            tooltip: 'About Schedule',
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              InfoSheet.show(
+                context,
+                title: 'Schedule',
+                message:
+                    'View your medication schedules in two ways:\n\n• Activity: See and manage today\'s doses\n• Schedules: Manage all medication schedules\n\nUse "Open Calendar" for the full calendar view.',
+              );
+            },
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          tabs: const [
+            Tab(icon: Icon(Icons.today, size: 18), text: 'Activity'),
+            Tab(icon: Icon(Icons.schedule, size: 18), text: 'Schedules'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                SegmentedButton<int>(
-                  segments: const [
-                    ButtonSegment<int>(
-                      value: 0,
-                      label: Text("Today's Activity"),
-                      icon: Icon(Icons.today, size: 18),
-                    ),
-                    ButtonSegment<int>(
-                      value: 1,
-                      label: Text('Schedules'),
-                      icon: Icon(Icons.schedule, size: 18),
-                    ),
-                  ],
-                  selected: {_tabController.index},
-                  onSelectionChanged: (Set<int> newSelection) {
-                    setState(() {
-                      _tabController.animateTo(newSelection.first);
-                    });
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                      (states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return theme.colorScheme.primaryContainer;
-                        }
-                        return theme.colorScheme.surface;
-                      },
-                    ),
-                    side: const WidgetStatePropertyAll(BorderSide(width: 0.8)),
-                    padding: const WidgetStatePropertyAll(
-                      EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                    ),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () => context.navigateToCalendar(),
-                  icon: const Icon(Icons.calendar_month),
-                  label: const Text('Open Calendar'),
-                ),
-                IconButton(
-                  tooltip: 'About Schedule',
-                  icon: Icon(
-                    Icons.info_outline,
-                    color: theme.colorScheme.primary,
-                  ),
-                  onPressed: () {
-                    InfoSheet.show(
-                      context,
-                      title: 'Schedule',
-                      message:
-                          'View your medication schedules in two ways:\n\n• Today: See and manage today\'s doses\n• Schedules: Manage all medication schedules\n\nUse "Open Calendar" for the full calendar view.',
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildTodayTab(schedulesAsync),
-                _buildSchedulesTab(schedulesAsync),
-              ],
-            ),
-          ),
+          _buildTodayTab(schedulesAsync),
+          _buildSchedulesTab(schedulesAsync),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_schedule',
-        onPressed: _showAddScheduleDialog,
+        onPressed: () => context.navigateToAddSchedule(),
         child: const Icon(Icons.add),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dosifi_flutter/data/models/supply.dart';
 import 'package:dosifi_flutter/data/repositories/supply_repository.dart';
@@ -18,8 +19,16 @@ class SupplyListNotifier extends StateNotifier<AsyncValue<List<Supply>>> {
   Future<void> loadSupplies() async {
     state = const AsyncValue.loading();
     try {
-      final supplies = await _repository.getAllSupplies();
+      // Add a timeout to prevent indefinite spinners in case of a hanging DB call
+      final supplies = await _repository
+          .getAllSupplies()
+          .timeout(const Duration(seconds: 10));
       state = AsyncValue.data(supplies);
+    } on TimeoutException catch (e, stack) {
+      state = AsyncValue.error(
+        Exception('Timed out loading supplies. Please try again.'),
+        stack,
+      );
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

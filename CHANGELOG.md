@@ -1,5 +1,19 @@
 # Changelog
 
+## 2025-08-17
+- Medications: FAB is icon-only with tooltip; no text label.
+- Supplies: Unified header with compact two-part sort (direction toggle + field menu) consistent with Medications.
+- Schedule: Fixed double AppBar and ensured proper TabBar styling.
+- Build: Removed flutter_native_timezone (namespace issue with newer AGP); removed test-only plugins from release builds; regenerated plugin registrant.
+- CI: Bumped Flutter to 3.32.8 stable for GitHub Actions.
+
+## 2025-08-15
+- Notification action wiring with standardized JSON payloads.
+- Database hardening with SQLCipher secure key in FlutterSecureStorage; backup of encrypted DB; PRAGMA foreign_keys=ON.
+- Docs updated to reflect above changes.
+
+# Changelog
+
 All notable changes to the Dosifi Flutter app will be documented in this file.
 
 ## [1.4.0] - 2025-08-05

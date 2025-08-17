@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dosifi_flutter/core/theme/app_theme.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
 import 'package:dosifi_flutter/services/notification_service.dart';
+import 'package:dosifi_flutter/core/services/database_service.dart';
 import 'package:dosifi_flutter/core/services/notification_action_handler.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -47,7 +48,13 @@ Future<void> _initializeApp() async {
     );
   }
 
-  // Database init is handled lazily by repositories as needed.
+  // Warm up database so migrations/onOpen guards run before providers query it.
+  try {
+    await DatabaseService.database; // ensures core tables exist
+  } catch (e, stackTrace) {
+    debugPrint('Database warm-up failed: $e');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(

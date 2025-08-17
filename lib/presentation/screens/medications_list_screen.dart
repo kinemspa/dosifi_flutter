@@ -26,6 +26,12 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
   SortOption _sortOption = SortOption.name;
   bool _sortAsc = true;
 
+  // Anchor for sort field popup
+  final GlobalKey _sortAnchorKey = GlobalKey();
+
+  // Demo style toggle (tonal vs faint outline) for segmented control
+  _SortStyle _sortStyle = _SortStyle.tonal;
+
   // No auto-hide controls
 
   @override
@@ -81,7 +87,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
                   style: Theme.of(context).iconButtonTheme.style,
                 ),
                 const Spacer(),
-                // Sort controls on the right (Material 3 segmented + direction toggle)
+                // Sort controls (two-part segmented)
                 _buildSortControls(context),
               ],
             ),
@@ -318,66 +324,103 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
   }
 
   Widget _buildSortControls(BuildContext context) {
-    // Split sort control (previous style):
-    // - Main button toggles direction A–Z/Z–A and shows current field+dir label
-    // - Small chevron opens a popup to pick the sort field
-    final theme = Theme.of(context);
-    final label = _currentSortLabel();
+    // Compact two-part segmented control:
+    // Left segment: arrow icon toggles asc/desc
+    // Right segment: label for current field opens picker
+    final currentFieldLabel = () {
+      switch (_sortOption) {
+        case SortOption.name:
+          return 'Name';
+        case SortOption.stock:
+          return 'Stock';
+        case SortOption.type:
+          return 'Type';
+        case SortOption.expiry:
+          return 'Expiry';
+      }
+    }();
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Tooltip(
-          message: 'Toggle sort direction',
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              textStyle: theme.textTheme.labelLarge,
-            ),
-            onPressed: () {
-              setState(() => _sortAsc = !_sortAsc);
-            },
-            icon: Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward, size: 18),
-            label: Text(label),
+    final ButtonStyle commonStyle = switch (_sortStyle) {
+      _SortStyle.tonal => ButtonStyle(
+        visualDensity: VisualDensity.compact,
+        padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.85);
+          }
+          return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.55);
+        }),
+        side: const WidgetStatePropertyAll(BorderSide(width: 0, color: Colors.transparent)),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      _SortStyle.outline => ButtonStyle(
+        visualDensity: VisualDensity.compact,
+        padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
+        backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+        side: WidgetStatePropertyAll(
+          BorderSide(
+            width: 0.7,
+            color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
           ),
         ),
-        const SizedBox(width: 6),
-        Tooltip(
-          message: 'Change sort field',
-          child: PopupMenuButton<SortOption>(
-            tooltip: 'Sort field',
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: SortOption.name,
-                child: ListTile(leading: Icon(Icons.sort_by_alpha), title: Text('Name')),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+    };
+
+    return Row(
+      key: _sortAnchorKey,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Left: compact tonal icon button for direction
+        Padding(
+          padding: const EdgeInsets.only(right: 6.0),
+          child: SizedBox(
+            height: 32,
+            width: 36,
+            child: FilledButton.tonal(
+              style: const ButtonStyle(
+                padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                visualDensity: VisualDensity.compact,
               ),
-              const PopupMenuItem(
-                value: SortOption.stock,
-                child: ListTile(leading: Icon(Icons.inventory_2), title: Text('Stock')),
+              onPressed: () {
+                setState(() => _sortAsc = !_sortAsc);
+              },
+              child: Icon(
+                _sortAsc ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 16,
               ),
-              const PopupMenuItem(
-                value: SortOption.type,
-                child: ListTile(leading: Icon(Icons.category), title: Text('Type')),
-              ),
-              const PopupMenuItem(
-                value: SortOption.expiry,
-                child: ListTile(leading: Icon(Icons.event), title: Text('Expiry')),
-              ),
-            ],
-            onSelected: (opt) {
-              setState(() {
-                _sortOption = opt;
-                // Keep current direction; do not reset _sortAsc
-              });
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: const Icon(Icons.expand_more),
+            ),
+          ),
+        ),
+        // Right: tonal button that opens a popup menu for field selection
+        PopupMenuButton<SortOption>(
+          tooltip: 'Sort field',
+          onSelected: (chosen) {
+            setState(() => _sortOption = chosen);
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: SortOption.name, child: Text('Name')),
+            PopupMenuItem(value: SortOption.stock, child: Text('Stock')),
+            PopupMenuItem(value: SortOption.type, child: Text('Type')),
+            PopupMenuItem(value: SortOption.expiry, child: Text('Expiry')),
+          ],
+          child: FilledButton.tonal(
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
+            ),
+            onPressed: null, // handled by PopupMenuButton
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.tune, size: 16),
+                const SizedBox(width: 6),
+                Text(currentFieldLabel),
+              ],
             ),
           ),
         ),
@@ -385,78 +428,83 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
     );
   }
 
-  // Filter dialog removed per simplified UI
-  void _showFilterDialog() {
-    // Intentionally left blank / deprecated
-  }
+}
 
-  Color _getMedicationTypeColor(MedicationType type) {
-    switch (type) {
-      case MedicationType.tablet:
-        return Colors.blue;
-      case MedicationType.capsule:
-        return Colors.green;
-      case MedicationType.liquid:
-        return Colors.cyan;
-      case MedicationType.preFilledSyringe:
-      case MedicationType.readyMadeVial:
-        return Colors.purple;
-      case MedicationType.lyophilizedVial:
-        return Colors.indigo;
-      case MedicationType.cream:
-      case MedicationType.ointment:
-        return Colors.orange;
-      case MedicationType.drops:
-        return Colors.lightBlue;
-      case MedicationType.inhaler:
-        return Colors.teal;
-      case MedicationType.patch:
-        return Colors.amber;
-      case MedicationType.suppository:
-        return Colors.pink;
-      case MedicationType.singleUsePen:
-      case MedicationType.multiUsePen:
-        return Colors.deepPurple;
-      case MedicationType.spray:
-        return Colors.lime;
-      case MedicationType.gel:
-        return Colors.lightGreen;
-      case MedicationType.other:
-        return Colors.grey;
-    }
-  }
+enum _TwoPartSortSeg { dir, field }
 
-  IconData _getMedicationTypeIcon(MedicationType type) {
-    switch (type) {
-      case MedicationType.tablet:
-      case MedicationType.capsule:
-        return Icons.medication;
-      case MedicationType.liquid:
-      case MedicationType.drops:
-        return Icons.water_drop;
-      case MedicationType.preFilledSyringe:
-      case MedicationType.readyMadeVial:
-      case MedicationType.lyophilizedVial:
-        return Icons.vaccines;
-      case MedicationType.cream:
-      case MedicationType.ointment:
-      case MedicationType.gel:
-        return Icons.healing;
-      case MedicationType.inhaler:
-        return Icons.air;
-      case MedicationType.patch:
-        return Icons.medical_services;
-      case MedicationType.suppository:
-        return Icons.medication_liquid;
-      case MedicationType.singleUsePen:
-      case MedicationType.multiUsePen:
-        return Icons.colorize;
-      case MedicationType.spray:
-        return Icons.water_damage;
-      case MedicationType.other:
-        return Icons.medical_information;
-    }
+enum _SortStyle { tonal, outline }
+
+enum SortOption { name, stock, type, expiry }
+
+// Filter dialog removed per simplified UI
+void _showFilterDialog() {
+  // Intentionally left blank / deprecated
+}
+
+Color _getMedicationTypeColor(MedicationType type) {
+  switch (type) {
+    case MedicationType.tablet:
+      return Colors.blue;
+    case MedicationType.capsule:
+      return Colors.green;
+    case MedicationType.liquid:
+      return Colors.cyan;
+    case MedicationType.preFilledSyringe:
+    case MedicationType.readyMadeVial:
+      return Colors.purple;
+    case MedicationType.lyophilizedVial:
+      return Colors.indigo;
+    case MedicationType.cream:
+    case MedicationType.ointment:
+      return Colors.orange;
+    case MedicationType.drops:
+      return Colors.lightBlue;
+    case MedicationType.inhaler:
+      return Colors.teal;
+    case MedicationType.patch:
+      return Colors.amber;
+    case MedicationType.suppository:
+      return Colors.pink;
+    case MedicationType.singleUsePen:
+    case MedicationType.multiUsePen:
+      return Colors.deepPurple;
+    case MedicationType.spray:
+      return Colors.lime;
+    case MedicationType.gel:
+      return Colors.lightGreen;
+    case MedicationType.other:
+      return Colors.grey;
   }
 }
 
-enum SortOption { name, stock, type, expiry }
+IconData _getMedicationTypeIcon(MedicationType type) {
+  switch (type) {
+    case MedicationType.tablet:
+    case MedicationType.capsule:
+      return Icons.medication;
+    case MedicationType.liquid:
+    case MedicationType.drops:
+      return Icons.water_drop;
+    case MedicationType.preFilledSyringe:
+    case MedicationType.readyMadeVial:
+    case MedicationType.lyophilizedVial:
+      return Icons.vaccines;
+    case MedicationType.cream:
+    case MedicationType.ointment:
+    case MedicationType.gel:
+      return Icons.healing;
+    case MedicationType.inhaler:
+      return Icons.air;
+    case MedicationType.patch:
+      return Icons.medical_services;
+    case MedicationType.suppository:
+      return Icons.medication_liquid;
+    case MedicationType.singleUsePen:
+    case MedicationType.multiUsePen:
+      return Icons.colorize;
+    case MedicationType.spray:
+      return Icons.water_damage;
+    case MedicationType.other:
+      return Icons.medical_information;
+  }
+}

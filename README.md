@@ -81,6 +81,13 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 
 ## Recent Improvements
 
+### Latest Updates (2025-08-17)
+- Medications screen: Floating Action Button is icon-only with tooltip for accessibility (removed any text label).
+- Supplies screen: Header and sorting controls unified with Medications using compact two-part sort (direction toggle + field menu).
+- Schedule screen: Fixed double AppBar issue; ensured a single AppBar with proper TabBar styling.
+- Build system: Removed flutter_native_timezone (missing AGP namespace) and cleaned dev-only plugins from release builds; forced plugin registrant regeneration.
+- CI: GitHub Actions upgraded to Flutter 3.32.8 stable.
+
 ### Navigation and Accessibility (Latest)
 - Shell back button now uses smart navigation to switch across tabs without exiting unexpectedly.
 - Removed implicit back arrows from root tabs for consistent tab experience.

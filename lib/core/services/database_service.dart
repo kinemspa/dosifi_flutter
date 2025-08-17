@@ -25,7 +25,7 @@ typedef DatabasePathProvider = Future<String> Function();
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'dosifi_encrypted.db';
-  static const int _databaseVersion = 14;
+  static const int _databaseVersion = 15;
   static ISecureStorage _secureStorage = _FlutterSecureStorageAdapter();
   static String _dbPasswordKey = 'dosifi_db_password';
   static DatabasePathProvider? databasePathProviderOverride;
@@ -64,23 +64,72 @@ class DatabaseService {
         : await getDatabasesPath();
     final path = join(databasePath, _databaseName);
 
-    final db = await openDatabase(
-      path,
-      version: _databaseVersion,
-      password: password,
-      onConfigure: (db) async {
-        // Enforce foreign keys for referential integrity
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+    Future<Database> _open() {
+      return openDatabase(
+        path,
+        version: _databaseVersion,
+        password: password,
+        onConfigure: (db) async {
+          // Enforce foreign keys for referential integrity
+          await db.execute('PRAGMA foreign_keys = ON');
+        },
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+        onOpen: (db) async {
+          // Ensure critical tables exist if the DB originated from an older schema
+          await _ensureCoreTables(db);
+        },
+      );
+    }
+
+    Database db;
+    try {
+      db = await _open();
+    } catch (e) {
+      // Handle SQLCipher open failures due to wrong key/format/corruption during development
+      final msg = e.toString();
+      final looksLikeCipherError =
+          msg.contains('file is not a database') ||
+          msg.contains('sqlcipher') ||
+          msg.contains('SQLiteNotADatabaseException') ||
+          msg.contains('open_failed') ||
+          msg.contains('Failed to open database');
+
+      if (!kReleaseMode && looksLikeCipherError) {
+        debugPrint('[DB INIT] Open failed with cipher error in non-release build. '
+            'Removing database file and retrying. Error: $msg');
+        try {
+          final f = File(path);
+          if (await f.exists()) {
+            await f.delete();
+            debugPrint('[DB INIT] Deleted corrupt/invalid DB at: $path');
+          }
+        } catch (delErr) {
+          debugPrint('[DB INIT] Failed to delete DB file: $delErr');
+        }
+        // Retry open to create a fresh encrypted database
+        db = await _open();
+      } else {
+        rethrow;
+      }
+    }
 
     // Post-open cleanup: drop any leftover temporary backup tables/triggers from failed migrations
     try {
       await _postOpenCleanup(db);
     } catch (e) {
       debugPrint('Database post-open cleanup failed: $e');
+    }
+
+    try {
+      // Basic confirmation logs for init phase
+      final ver = await db.rawQuery('PRAGMA user_version');
+      debugPrint('[DB INIT] Opened encrypted DB at: ' + path);
+      debugPrint('[DB INIT] user_version: ' + (ver.isNotEmpty ? (ver.first.values.first?.toString() ?? 'unknown') : 'unknown'));
+      final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+      debugPrint('[DB INIT] Tables: ' + tables.map((e) => e['name']).join(', '));
+    } catch (e) {
+      debugPrint('[DB INIT] Post-open verification failed: ' + e.toString());
     }
 
     return db;
@@ -812,6 +861,86 @@ class DatabaseService {
         debugPrint('Migration v13 (theme_color) failed: $e');
       }
     }
+
+    if (oldVersion < 15) {
+      // Ensure dose_logs table exists and indexes are present
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS dose_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          medication_id INTEGER NOT NULL,
+          schedule_id INTEGER,
+          scheduled_time TEXT NOT NULL,
+          taken_time TEXT,
+          status TEXT NOT NULL,
+          dose_amount REAL,
+          notes TEXT,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE,
+          FOREIGN KEY (schedule_id) REFERENCES schedules (id) ON DELETE SET NULL
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_dose_logs_medication ON dose_logs(medication_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_dose_logs_date ON dose_logs(scheduled_time)',
+      );
+    }
+  }
+
+  static Future<void> _ensureCoreTables(Database db) async {
+    // dose_logs
+    final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+    final names = tables.map((e) => (e['name'] ?? '').toString()).toSet();
+    if (!names.contains('dose_logs')) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS dose_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          medication_id INTEGER NOT NULL,
+          schedule_id INTEGER,
+          scheduled_time TEXT NOT NULL,
+          taken_time TEXT,
+          status TEXT NOT NULL,
+          dose_amount REAL,
+          notes TEXT,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (medication_id) REFERENCES medications (id) ON DELETE CASCADE,
+          FOREIGN KEY (schedule_id) REFERENCES schedules (id) ON DELETE SET NULL
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_dose_logs_medication ON dose_logs(medication_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_dose_logs_date ON dose_logs(scheduled_time)',
+      );
+    }
+
+    // schedules may be missing dose columns on some older DBs
+    try {
+      final schedCols = await db.rawQuery('PRAGMA table_info(schedules)');
+      final namesSched = schedCols.map((c) => (c['name'] ?? '').toString()).toSet();
+      if (!namesSched.contains('dose_amount')) {
+        await db.execute('ALTER TABLE schedules ADD COLUMN dose_amount REAL DEFAULT 1.0');
+      }
+      if (!namesSched.contains('dose_unit')) {
+        await db.execute("ALTER TABLE schedules ADD COLUMN dose_unit TEXT DEFAULT 'tablet'");
+      }
+      if (!namesSched.contains('dose_form')) {
+        await db.execute("ALTER TABLE schedules ADD COLUMN dose_form TEXT DEFAULT 'tablet'");
+      }
+      if (!namesSched.contains('strength_per_unit')) {
+        await db.execute('ALTER TABLE schedules ADD COLUMN strength_per_unit REAL DEFAULT 1.0');
+      }
+    } catch (e) {
+      debugPrint('ensureCoreTables schedules guard failed: $e');
+    }
+  }
+
+  // Public: ensure critical tables/columns exist on the currently opened DB
+  static Future<void> ensureCoreTables() async {
+    final db = await database;
+    await _ensureCoreTables(db);
   }
 
   // Database integrity check

@@ -27,116 +27,125 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
   SupplySortOption _sortOption = SupplySortOption.name;
   bool _ascending = true;
 
+  // Demo style switch for segmented sort
+  _SupSortStyle _style = _SupSortStyle.tonal;
+
   @override
   Widget build(BuildContext context) {
     final suppliesAsync = ref.watch(supplyListProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Medical Supplies'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        actions: [
-          IconButton(
-            tooltip: 'About Supplies',
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              InfoSheet.show(
-                context,
-                title: 'Supplies',
-                message:
-                    'Manage medical supplies inventory. Filter by type, search by name or brand, and adjust quantities as needed.',
-              );
-            },
-          ),
-          // Sort segmented control to align with Medications screen
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: SegmentedButton<SupplySortOption>(
-              segments: const [
-                ButtonSegment(value: SupplySortOption.name, label: Text('Name'), icon: Icon(Icons.sort_by_alpha, size: 16)),
-                ButtonSegment(value: SupplySortOption.quantity, label: Text('Qty'), icon: Icon(Icons.inventory_2, size: 16)),
-                ButtonSegment(value: SupplySortOption.type, label: Text('Type'), icon: Icon(Icons.category, size: 16)),
-                ButtonSegment(value: SupplySortOption.expiry, label: Text('Expiry'), icon: Icon(Icons.event, size: 16)),
-              ],
-              selected: {_sortOption},
-              onSelectionChanged: (selection) {
-                setState(() {
-                  final selected = selection.first;
-                  if (selected == _sortOption) {
-                    _ascending = !_ascending;
-                  } else {
-                    _sortOption = selected;
-                    _ascending = true;
-                  }
-                });
-              },
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: _ascending ? 'Ascending' : 'Descending',
-            icon: Icon(_ascending ? Icons.arrow_upward : Icons.arrow_downward),
-            onPressed: () {
-              setState(() {
-                _ascending = !_ascending;
-              });
-            },
-          ),
-          PopupMenuButton<SupplyCardLayout>(
-            tooltip: 'Card style',
-            icon: const Icon(Icons.view_agenda),
-            onSelected: (layout) =>
-                ref.read(supplyLayoutProvider.notifier).setLayout(layout),
-            itemBuilder: (context) => SupplyCardLayout.values
-                .map(
-                  (l) => PopupMenuItem(
-                    value: l,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l.displayName),
-                        Text(
-                          l.description,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          IconButton(
-            tooltip: 'Search',
-            icon: Icon(_isSearchExpanded ? Icons.search_off : Icons.search),
-            onPressed: () {
-              setState(() {
-                _isSearchExpanded = !_isSearchExpanded;
-                if (!_isSearchExpanded) {
-                  _searchQuery = '';
-                }
-              });
-            },
-          ),
-        ],
-      ),
+      // No AppBar here; we follow the Medications screen pattern with inline header controls
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: 'About this screen',
+                  onPressed: () {
+                    InfoSheet.show(
+                      context,
+                      title: 'Supplies',
+                      message:
+                          'Search\n\nTap the magnifier to show the search bar. Type to filter by supply name or brand.\n\nSort\n\nUse the left arrow to flip A–Z and Z–A. Tap the Sort button to choose the field (Name, Quantity, Type, Expiry).',
+                    );
+                  },
+                  icon: const Icon(Icons.info_outline),
+                ),
+                const SizedBox(width: 6),
+                IconButton(
+                  tooltip: _isSearchExpanded ? 'Hide search' : 'Show search',
+                  onPressed: () {
+                    setState(() {
+                      _isSearchExpanded = !_isSearchExpanded;
+                      if (!_isSearchExpanded) _searchQuery = '';
+                    });
+                  },
+                  icon: Icon(_isSearchExpanded ? Icons.close : Icons.search),
+                ),
+                const Spacer(),
+                _buildSortControl(context),
+              ],
+            ),
+          ),
           // Search bar
           if (_isSearchExpanded) _buildSearchBar(),
-          // Filter chips
-          _buildFilterChips(),
           // Supplies list
           Expanded(child: _buildSuppliesList(suppliesAsync)),
         ],
       ),
       floatingActionButton: _buildSuppliesFAB(),
+    );
+  }
+
+  Widget _buildSortControl(BuildContext context) {
+    final String label = () {
+      switch (_sortOption) {
+        case SupplySortOption.name:
+          return 'Name';
+        case SupplySortOption.quantity:
+          return 'Quantity';
+        case SupplySortOption.type:
+          return 'Type';
+        case SupplySortOption.expiry:
+          return 'Expiry';
+      }
+    }();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 6.0),
+          child: SizedBox(
+            height: 32,
+            width: 36,
+            child: FilledButton.tonal(
+              style: const ButtonStyle(
+                padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () {
+                setState(() => _ascending = !_ascending);
+              },
+              child: Icon(
+                _ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
+        PopupMenuButton<SupplySortOption>(
+          tooltip: 'Sort field',
+          onSelected: (chosen) {
+            setState(() => _sortOption = chosen);
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: SupplySortOption.name, child: Text('Name')),
+            PopupMenuItem(value: SupplySortOption.quantity, child: Text('Quantity')),
+            PopupMenuItem(value: SupplySortOption.type, child: Text('Type')),
+            PopupMenuItem(value: SupplySortOption.expiry, child: Text('Expiry')),
+          ],
+          child: FilledButton.tonal(
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
+            ),
+            onPressed: null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.tune, size: 16),
+                const SizedBox(width: 6),
+                Text(label),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -159,44 +168,6 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
           ),
           filled: true,
           fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            FilterChip(
-              label: const Text('All'),
-              selected: _filterType == null,
-              onSelected: (selected) {
-                setState(() {
-                  _filterType = null;
-                });
-              },
-            ),
-            const SizedBox(width: 8),
-            ...SupplyType.values.map((type) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: FilterChip(
-                  label: Text(type.displayName),
-                  selected: _filterType == type,
-                  onSelected: (selected) {
-                    setState(() {
-                      _filterType = selected ? type : null;
-                    });
-                  },
-                ),
-              );
-            }),
-          ],
         ),
       ),
     );
@@ -1175,10 +1146,9 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
   Widget _buildSuppliesFAB() {
     return Tooltip(
       message: 'Add a new supply item',
-      child: FloatingActionButton.extended(
+      child: FloatingActionButton(
         onPressed: _showAddMenu,
-        icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -1526,6 +1496,10 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
 
 enum SupplySortOption { name, quantity, type, expiry }
 
+enum _SupSortStyle { tonal, outline }
+
+enum _SupSortSeg { dir, field }
+
 extension on _SuppliesScreenState {
   List<Supply> _applySort(List<Supply> list) {
     final supplies = [...list];
@@ -1545,7 +1519,7 @@ extension on _SuppliesScreenState {
         break;
     }
     if (!_ascending) {
-      supplies.sort((a, b) => -supplies.indexOf(a).compareTo(supplies.indexOf(b))); // fallback reverse
+      // Simple reverse
       supplies.setAll(0, supplies.reversed);
     }
     return supplies;
