@@ -51,10 +51,8 @@ describe('Create one of each Medication type', function () {
     await wait(1200);
     const { ensureBottomNavVisible, tapBottomNavByIndex } = require('../helpers/ui');
     await ensureBottomNavVisible(sessionId, 5);
-    // Open drawer and navigate to Medications
-    await tapByText(sessionId, 'Menu');
-    await wait(300);
-    await tapByText(sessionId, 'Medications');
+    // Navigate to Medications via bottom nav
+    await tapBottomNavByIndex(sessionId, 1);
     await wait(800);
   });
 

@@ -32,9 +32,8 @@ describe('Schedule flow', function () {
   after(async () => { if (sessionId) await deleteSession(sessionId); });
 
   it('navigates to Schedule tab', async () => {
-    await tapByText(sessionId, 'Menu');
-    await wait(300);
-    await tapByText(sessionId, 'Schedule');
+    const { tapBottomNavByIndex } = require('../helpers/ui');
+    await tapBottomNavByIndex(sessionId, 2); // Schedule tab
     await wait(1000);
   });
 

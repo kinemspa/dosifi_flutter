@@ -32,9 +32,8 @@ describe('Supplies flow', function () {
   after(async () => { if (sessionId) await deleteSession(sessionId); });
 
   it('navigates to Supplies tab', async () => {
-    await tapByText(sessionId, 'Menu');
-    await wait(300);
-    await tapByText(sessionId, 'Supplies');
+    const { tapBottomNavByIndex } = require('../helpers/ui');
+    await tapBottomNavByIndex(sessionId, 4); // Supplies tab
     await wait(1000);
   });
 

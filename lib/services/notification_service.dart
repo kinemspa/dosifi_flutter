@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:dosifi_flutter/data/models/schedule.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';
 import 'package:dosifi_flutter/core/services/database_service.dart';
@@ -64,7 +65,9 @@ class NotificationService implements INotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    if (testMode) {
+    // Auto-detect Flutter test environment or explicit testMode
+    final inTest = Platform.environment.containsKey('FLUTTER_TEST');
+    if (testMode || inTest) {
       _initialized = true;
       if (kDebugMode) {
         print(

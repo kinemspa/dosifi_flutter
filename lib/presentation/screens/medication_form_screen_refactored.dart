@@ -460,7 +460,7 @@ class _MedicationFormScreenRefactoredState
       child: ElevatedButton(
         onPressed: controller.isLoading
             ? null
-            : () => _saveMedication(context, controller),
+            : () => _confirmAndSave(context, controller),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[600],
           foregroundColor: Colors.white,
@@ -501,18 +501,46 @@ class _MedicationFormScreenRefactoredState
   Future<void> _confirmAndSave(
     BuildContext context,
     MedicationFormController controller,
-    Color baseColor,
-    Widget Function({bool showTypeChip}) summaryBuilder,
   ) async {
-    // Show a confirmation dialog that visually matches the summary card
+    // Validate required fields first
+    if (!controller.validateForm()) {
+      return;
+    }
+
+    final theme = Theme.of(context);
+    final name = controller.nameController.text.trim();
+    final type = controller.selectedType?.displayName ?? '—';
+    final strength = controller.strengthController.text.trim();
+    final strengthUnit = controller.selectedStrengthUnit?.displayName ?? '';
+    final qty = controller.stockController.text.trim();
+    final stockUnit = controller.selectedStockUnit ?? '';
+
     await showDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Save Medication'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Text(
+            controller.isEditMode ? 'Save Changes' : 'Save Medication',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
           content: SingleChildScrollView(
-            child: summaryBuilder(showTypeChip: true),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Please review the details before saving:',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                _confirmRow(theme, 'Name', name.isEmpty ? '—' : name),
+                _confirmRow(theme, 'Type', type),
+                _confirmRow(theme, 'Strength', strength.isEmpty ? '—' : '$strength $strengthUnit'),
+                _confirmRow(theme, 'Quantity', qty.isEmpty ? '—' : '$qty $stockUnit'),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -531,6 +559,31 @@ class _MedicationFormScreenRefactoredState
           ],
         );
       },
+    );
+  }
+
+  Widget _confirmRow(ThemeData theme, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -175,81 +175,107 @@ class _DosifiAppState extends ConsumerState<DosifiApp> with WidgetsBindingObserv
 
   // Registers debug-only service extensions callable over the VM service.
   void _registerDevServiceExtensions() {
-    // Screenshot capture
-    developer.registerExtension('ext.dosifi.screenshot', (method, params) async {
-      try {
-        final context = _rootRepaintBoundaryKey.currentContext;
-        if (context == null) {
+    // Do not register extensions in test environments to avoid duplicate registrations across tests
+    if (_isTestEnvironment()) return;
+
+    // Screenshot capture (idempotent: ignore if already registered)
+    try {
+      developer.registerExtension('ext.dosifi.screenshot', (method, params) async {
+        try {
+          final context = _rootRepaintBoundaryKey.currentContext;
+          if (context == null) {
+            return developer.ServiceExtensionResponse.result(
+              jsonEncode({'ok': false, 'error': 'No repaint boundary context'}),
+            );
+          }
+          final renderObject = context.findRenderObject();
+          if (renderObject is! RenderRepaintBoundary) {
+            return developer.ServiceExtensionResponse.result(
+              jsonEncode({'ok': false, 'error': 'RenderObject is not RepaintBoundary'}),
+            );
+          }
+          final view = ui.PlatformDispatcher.instance.views.first;
+          final image = await renderObject.toImage(pixelRatio: view.devicePixelRatio);
+          final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+          if (byteData == null) {
+            return developer.ServiceExtensionResponse.result(
+              jsonEncode({'ok': false, 'error': 'Failed to encode PNG'}),
+            );
+          }
+          final pngBase64 = base64Encode(byteData.buffer.asUint8List());
           return developer.ServiceExtensionResponse.result(
-            jsonEncode({'ok': false, 'error': 'No repaint boundary context'}),
+            jsonEncode({'ok': true, 'pngBase64': pngBase64}),
+          );
+        } catch (e, st) {
+          debugPrint('screenshot error: $e');
+          debugPrintStack(stackTrace: st);
+          return developer.ServiceExtensionResponse.result(
+            jsonEncode({'ok': false, 'error': e.toString()}),
           );
         }
-        final renderObject = context.findRenderObject();
-        if (renderObject is! RenderRepaintBoundary) {
-          return developer.ServiceExtensionResponse.result(
-            jsonEncode({'ok': false, 'error': 'RenderObject is not RepaintBoundary'}),
-          );
-        }
-        final pixelRatio = ui.window.devicePixelRatio;
-        final image = await renderObject.toImage(pixelRatio: pixelRatio);
-        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-        if (byteData == null) {
-          return developer.ServiceExtensionResponse.result(
-            jsonEncode({'ok': false, 'error': 'Failed to encode PNG'}),
-          );
-        }
-        final pngBase64 = base64Encode(byteData.buffer.asUint8List());
-        return developer.ServiceExtensionResponse.result(
-          jsonEncode({'ok': true, 'pngBase64': pngBase64}),
-        );
-      } catch (e, st) {
-        debugPrint('screenshot error: $e');
-        debugPrintStack(stackTrace: st);
-        return developer.ServiceExtensionResponse.result(
-          jsonEncode({'ok': false, 'error': e.toString()}),
-        );
-      }
-    });
+      });
+    } on ArgumentError {
+      // Already registered; ignore in hot restart/devtool reconnects
+    }
 
     // Dump render tree
-    developer.registerExtension('ext.dosifi.dumpRenderTree', (method, params) async {
-      final buf = StringBuffer();
-      debugPrint = (String? message, {int? wrapWidth}) {
-        if (message != null) buf.writeln(message);
-      };
-      debugDumpRenderTree();
-      final output = buf.toString();
-      return developer.ServiceExtensionResponse.result(
-        jsonEncode({'ok': true, 'renderTree': output}),
-      );
-    });
+    try {
+      developer.registerExtension('ext.dosifi.dumpRenderTree', (method, params) async {
+        final buf = StringBuffer();
+        final prev = debugPrint;
+        debugPrint = (String? message, {int? wrapWidth}) {
+          if (message != null) buf.writeln(message);
+        };
+        debugDumpRenderTree();
+        // restore debugPrint
+        debugPrint = prev;
+        final output = buf.toString();
+        return developer.ServiceExtensionResponse.result(
+          jsonEncode({'ok': true, 'renderTree': output}),
+        );
+      });
+    } on ArgumentError {
+      // Already registered
+    }
 
     // Dump semantics tree (deep)
-    developer.registerExtension('ext.dosifi.dumpSemantics', (method, params) async {
-      final buf = StringBuffer();
-      debugPrint = (String? message, {int? wrapWidth}) {
-        if (message != null) buf.writeln(message);
-      };
-      // Ensure semantics are built
-      WidgetsBinding.instance.pipelineOwner.ensureSemantics();
-      debugDumpSemanticsTree(DebugSemanticsDumpOrder.traversalOrder);
-      final output = buf.toString();
-      return developer.ServiceExtensionResponse.result(
-        jsonEncode({'ok': true, 'semantics': output}),
-      );
-    });
+    try {
+      developer.registerExtension('ext.dosifi.dumpSemantics', (method, params) async {
+        final buf = StringBuffer();
+        final prev = debugPrint;
+        debugPrint = (String? message, {int? wrapWidth}) {
+          if (message != null) buf.writeln(message);
+        };
+        // Ensure semantics are built
+        WidgetsBinding.instance.pipelineOwner.ensureSemantics();
+        debugDumpSemanticsTree(DebugSemanticsDumpOrder.traversalOrder);
+        debugPrint = prev;
+        final output = buf.toString();
+        return developer.ServiceExtensionResponse.result(
+          jsonEncode({'ok': true, 'semantics': output}),
+        );
+      });
+    } on ArgumentError {
+      // Already registered
+    }
 
     // Dump widget tree
-    developer.registerExtension('ext.dosifi.dumpApp', (method, params) async {
-      final buf = StringBuffer();
-      debugPrint = (String? message, {int? wrapWidth}) {
-        if (message != null) buf.writeln(message);
-      };
-      debugDumpApp();
-      final output = buf.toString();
-      return developer.ServiceExtensionResponse.result(
-        jsonEncode({'ok': true, 'widgetTree': output}),
-      );
-    });
+    try {
+      developer.registerExtension('ext.dosifi.dumpApp', (method, params) async {
+        final buf = StringBuffer();
+        final prev = debugPrint;
+        debugPrint = (String? message, {int? wrapWidth}) {
+          if (message != null) buf.writeln(message);
+        };
+        debugDumpApp();
+        debugPrint = prev;
+        final output = buf.toString();
+        return developer.ServiceExtensionResponse.result(
+          jsonEncode({'ok': true, 'widgetTree': output}),
+        );
+      });
+    } on ArgumentError {
+      // Already registered
+    }
   }
 }

@@ -32,9 +32,8 @@ describe('Medications flow', function () {
   after(async () => { if (sessionId) await deleteSession(sessionId); });
 
   it('navigates to Medications tab', async () => {
-    await tapByText(sessionId, 'Menu');
-    await wait(300);
-    await tapByText(sessionId, 'Medications');
+    const { tapBottomNavByIndex } = require('../helpers/ui');
+    await tapBottomNavByIndex(sessionId, 1); // Medications tab (2nd item)
     await wait(1000);
   });
 

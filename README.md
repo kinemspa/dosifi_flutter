@@ -89,7 +89,9 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 - **Average Option**: 5mL reconstitution → 50 IU on syringe
 - **Diluted Option**: 9mL reconstitution → 90 IU on syringe
 
-## Recent Improvements
+### Recent Improvements
+- UX: Save Medication confirmation dialog now displays readable summary text (Name, Type, Strength, Quantity) with proper theme contrast.
+- E2E/UI automation: Verified Add Medication flows for all types on Android using Appium. Tests updated to use bottom nav labels/index for navigation.
 
 ### Latest Updates (2025-08-17)
 - Medications screen: Floating Action Button is icon-only with tooltip for accessibility (removed any text label).

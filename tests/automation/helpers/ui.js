@@ -151,7 +151,7 @@ async function getText(sessionId, elementId) {
 
 async function tapBottomNavByIndex(sessionId, zeroBasedIndex) {
   // Try mapping index to visible label first
-  const labels = ['Home','Meds','Schedule','Calendar','Supplies','Settings'];
+  const labels = ['Home','Medications','Meds','Schedule','Calendar','Supplies','Settings'];
   if (zeroBasedIndex >= 0 && zeroBasedIndex < labels.length) {
     try {
       // Try exact/contains on accessibility id / text
