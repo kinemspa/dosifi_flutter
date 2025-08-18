@@ -456,9 +456,12 @@ class MedicationFormController extends ChangeNotifier {
 
 // Provider for the form controller
 final medicationFormControllerProvider =
-    ChangeNotifierProvider.family<MedicationFormController, String?>((
-      ref,
-      medicationId,
-    ) {
-      return MedicationFormController(ref, medicationId);
-    });
+    ChangeNotifierProvider.autoDispose.family<MedicationFormController, String?>((
+  ref,
+  medicationId,
+) {
+  // Ensure controller is disposed when the screen is popped
+  final controller = MedicationFormController(ref, medicationId);
+  ref.onDispose(controller.dispose);
+  return controller;
+});

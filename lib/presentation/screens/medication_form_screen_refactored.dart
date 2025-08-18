@@ -36,7 +36,12 @@ class _MedicationFormScreenRefactoredState
       final controller = ref.read(
         medicationFormControllerProvider(widget.medicationId),
       );
-      controller.loadMedicationData();
+      if (controller.isEditMode) {
+        controller.loadMedicationData();
+      } else {
+        // Fresh state when entering Add flow
+        controller.resetFormState();
+      }
     });
   }
 
