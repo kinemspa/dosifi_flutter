@@ -41,12 +41,21 @@ class MedicationTypeSection extends StatelessWidget {
             button: true,
             child: DropdownButtonFormField<MedicationType>(
               value: controller.selectedType,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w400,
+              ),
+              hint: Text(
+                'Select medication type...',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
+                    ) ??
+                    TextStyle(
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
+                    ),
+              ),
               decoration: InputDecoration(
-                hintText: 'Select medication type...',
-                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey[600],
-                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -78,7 +87,13 @@ class MedicationTypeSection extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Text(type.displayName),
+                            Text(
+                              type.displayName,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w400),
+                            ),
                           ],
                         ),
                       ),
