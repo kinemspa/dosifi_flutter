@@ -59,36 +59,42 @@ class MainShellScreen extends StatelessWidget {
         bottomNavigationBar: NavigationBar(
           selectedIndex: idx,
           onDestinationSelected: (i) => _onNavTap(context, i),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
+              icon: Semantics(label: 'Home', button: true, child: Icon(Icons.home_outlined)),
+              selectedIcon: Semantics(label: 'Home', button: true, child: Icon(Icons.home)),
               label: 'Home',
+              tooltip: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.medication_outlined),
-              selectedIcon: Icon(Icons.medication),
+              icon: Semantics(label: 'Meds', button: true, child: Icon(Icons.medication_outlined)),
+              selectedIcon: Semantics(label: 'Meds', button: true, child: Icon(Icons.medication)),
               label: 'Meds',
+              tooltip: 'Meds',
             ),
             NavigationDestination(
-              icon: Icon(Icons.schedule_outlined),
-              selectedIcon: Icon(Icons.schedule),
+              icon: Semantics(label: 'Schedule', button: true, child: Icon(Icons.schedule_outlined)),
+              selectedIcon: Semantics(label: 'Schedule', button: true, child: Icon(Icons.schedule)),
               label: 'Schedule',
+              tooltip: 'Schedule',
             ),
             NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month),
+              icon: Semantics(label: 'Calendar', button: true, child: Icon(Icons.calendar_month_outlined)),
+              selectedIcon: Semantics(label: 'Calendar', button: true, child: Icon(Icons.calendar_month)),
               label: 'Calendar',
+              tooltip: 'Calendar',
             ),
             NavigationDestination(
-              icon: Icon(Icons.inventory_2_outlined),
-              selectedIcon: Icon(Icons.inventory_2),
+              icon: Semantics(label: 'Supplies', button: true, child: Icon(Icons.inventory_2_outlined)),
+              selectedIcon: Semantics(label: 'Supplies', button: true, child: Icon(Icons.inventory_2)),
               label: 'Supplies',
+              tooltip: 'Supplies',
             ),
             NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
+              icon: Semantics(label: 'Settings', button: true, child: Icon(Icons.settings_outlined)),
+              selectedIcon: Semantics(label: 'Settings', button: true, child: Icon(Icons.settings)),
               label: 'Settings',
+              tooltip: 'Settings',
             ),
           ],
           height: 72,
@@ -107,6 +113,13 @@ class MainShellScreen extends StatelessWidget {
     return AppBar(
       title: Text(_getScreenTitle()),
       automaticallyImplyLeading: false,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: 'Menu',
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       actions: [
         if (p == RoutePaths.home)
           IconButton(

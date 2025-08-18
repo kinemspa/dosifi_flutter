@@ -77,7 +77,11 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
           Expanded(child: _buildSuppliesList(suppliesAsync)),
         ],
       ),
-      floatingActionButton: _buildSuppliesFAB(),
+      floatingActionButton: Semantics(
+        label: 'Add Supply',
+        button: true,
+        child: _buildSuppliesFAB(),
+      ),
     );
   }
 
@@ -1145,7 +1149,7 @@ class _SuppliesScreenState extends ConsumerState<SuppliesScreen> {
 
   Widget _buildSuppliesFAB() {
     return Tooltip(
-      message: 'Add a new supply item',
+      message: 'Add Supply',
       child: FloatingActionButton(
         onPressed: _showAddMenu,
         child: const Icon(Icons.add),

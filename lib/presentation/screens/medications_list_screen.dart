@@ -154,11 +154,15 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
           ),
         ],
       ),
-      floatingActionButton: Tooltip(
-        message: 'Add a new medication',
-        child: FloatingActionButton(
-          onPressed: () => context.push('/medications/add'),
-          child: const Icon(Icons.add),
+      floatingActionButton: Semantics(
+        label: 'Add Medication',
+        button: true,
+        child: Tooltip(
+          message: 'Add Medication',
+          child: FloatingActionButton(
+            onPressed: () => context.push('/medications/add'),
+            child: const Icon(Icons.add),
+          ),
         ),
       ),
     );

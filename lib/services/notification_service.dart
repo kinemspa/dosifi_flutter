@@ -87,13 +87,24 @@ class NotificationService implements INotificationService {
       const androidSettings = AndroidInitializationSettings(
         '@mipmap/ic_launcher',
       );
-      const iosSettings = DarwinInitializationSettings(
+      final iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
         requestSoundPermission: true,
+        notificationCategories: [
+          DarwinNotificationCategory(
+            'medication_reminder',
+            actions: [
+              DarwinNotificationAction.plain('take', 'Take'),
+              DarwinNotificationAction.plain('snooze', 'Snooze'),
+              DarwinNotificationAction.plain('cancel', 'Cancel'),
+            ],
+            options: {DarwinNotificationCategoryOption.customDismissAction},
+          ),
+        ],
       );
 
-      const initSettings = InitializationSettings(
+      final initSettings = InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       );
@@ -498,11 +509,21 @@ class NotificationService implements INotificationService {
   }
 
   int _generateNotificationId(int scheduleId, DateTime date) {
-    // Combine schedule ID with date to create unique notification ID
-    final dateString =
-        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
-    return int.parse('$scheduleId$dateString') %
-        2147483647; // Ensure it fits in int32
+    // Combine schedule ID with date and time (to the minute) to create a unique notification ID
+    final dateString = '${date.year.toString().padLeft(4, '0')}'
+        '${date.month.toString().padLeft(2, '0')}'
+        '${date.day.toString().padLeft(2, '0')}'
+        '${date.hour.toString().padLeft(2, '0')}'
+        '${date.minute.toString().padLeft(2, '0')}';
+    final idStr = '$scheduleId$dateString';
+    // Use a stable hash fallback if the number grows too large to parse directly
+    int id;
+    try {
+      id = int.parse(idStr);
+    } catch (_) {
+      id = idStr.codeUnits.fold(0, (a, b) => (a * 31 + b) & 0x7fffffff);
+    }
+    return id % 2147483647; // Ensure it fits in int32
   }
 
   // Public helper for other layers to compute a notification id deterministically
@@ -748,10 +769,10 @@ class NotificationService implements INotificationService {
         }
       }
 
+      // Try to detect exact scheduling capability accurately
       try {
-        // Note: There's no direct method to check exact alarm permission status
-        // So we'll assume it's granted if notifications are enabled
-        result['exactAlarms'] = result['notifications'] ?? false;
+        final canExact = await androidPlugin.canScheduleExactNotifications();
+        result['exactAlarms'] = canExact ?? false;
       } catch (e) {
         result['exactAlarms'] = false;
         if (kDebugMode) {
@@ -761,7 +782,7 @@ class NotificationService implements INotificationService {
         }
       }
     } else {
-      // iOS
+      // iOS doesn't expose these the same way; assume allowed when app-level perms granted
       result['notifications'] = true;
       result['exactAlarms'] = true;
     }

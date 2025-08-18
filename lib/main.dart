@@ -1,7 +1,11 @@
 import 'dart:io';
+import 'dart:convert' show base64Encode, jsonEncode;
+import 'dart:ui' as ui;
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dosifi_flutter/core/theme/app_theme.dart';
 import 'package:dosifi_flutter/config/app_router.dart';
@@ -10,6 +14,8 @@ import 'package:dosifi_flutter/core/services/database_service.dart';
 import 'package:dosifi_flutter/core/services/notification_action_handler.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
+
+final GlobalKey _rootRepaintBoundaryKey = GlobalKey(debugLabel: 'rootRepaintBoundary');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,6 +108,12 @@ class _DosifiAppState extends ConsumerState<DosifiApp> with WidgetsBindingObserv
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // Register dev-only service extensions for Warp MCP in debug builds
+    assert(() {
+      _registerDevServiceExtensions();
+      return true;
+    }());
+
     // Register notification action handler once UI is ready (skip in test environment)
     if (!_isTestEnvironment()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,7 +154,7 @@ class _DosifiAppState extends ConsumerState<DosifiApp> with WidgetsBindingObserv
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
+    final app = MaterialApp.router(
       title: 'Dosifi',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme(),
@@ -150,5 +162,94 @@ class _DosifiAppState extends ConsumerState<DosifiApp> with WidgetsBindingObserv
       themeMode: ThemeMode.system, // Will be controlled by user preference later
       routerConfig: router,
     );
+
+    // In debug builds, wrap with a RepaintBoundary so we can capture screenshots
+    if (kDebugMode) {
+      return RepaintBoundary(
+        key: _rootRepaintBoundaryKey,
+        child: app,
+      );
+    }
+    return app;
+  }
+
+  // Registers debug-only service extensions callable over the VM service.
+  void _registerDevServiceExtensions() {
+    // Screenshot capture
+    developer.registerExtension('ext.dosifi.screenshot', (method, params) async {
+      try {
+        final context = _rootRepaintBoundaryKey.currentContext;
+        if (context == null) {
+          return developer.ServiceExtensionResponse.result(
+            jsonEncode({'ok': false, 'error': 'No repaint boundary context'}),
+          );
+        }
+        final renderObject = context.findRenderObject();
+        if (renderObject is! RenderRepaintBoundary) {
+          return developer.ServiceExtensionResponse.result(
+            jsonEncode({'ok': false, 'error': 'RenderObject is not RepaintBoundary'}),
+          );
+        }
+        final pixelRatio = ui.window.devicePixelRatio;
+        final image = await renderObject.toImage(pixelRatio: pixelRatio);
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        if (byteData == null) {
+          return developer.ServiceExtensionResponse.result(
+            jsonEncode({'ok': false, 'error': 'Failed to encode PNG'}),
+          );
+        }
+        final pngBase64 = base64Encode(byteData.buffer.asUint8List());
+        return developer.ServiceExtensionResponse.result(
+          jsonEncode({'ok': true, 'pngBase64': pngBase64}),
+        );
+      } catch (e, st) {
+        debugPrint('screenshot error: $e');
+        debugPrintStack(stackTrace: st);
+        return developer.ServiceExtensionResponse.result(
+          jsonEncode({'ok': false, 'error': e.toString()}),
+        );
+      }
+    });
+
+    // Dump render tree
+    developer.registerExtension('ext.dosifi.dumpRenderTree', (method, params) async {
+      final buf = StringBuffer();
+      debugPrint = (String? message, {int? wrapWidth}) {
+        if (message != null) buf.writeln(message);
+      };
+      debugDumpRenderTree();
+      final output = buf.toString();
+      return developer.ServiceExtensionResponse.result(
+        jsonEncode({'ok': true, 'renderTree': output}),
+      );
+    });
+
+    // Dump semantics tree (deep)
+    developer.registerExtension('ext.dosifi.dumpSemantics', (method, params) async {
+      final buf = StringBuffer();
+      debugPrint = (String? message, {int? wrapWidth}) {
+        if (message != null) buf.writeln(message);
+      };
+      // Ensure semantics are built
+      WidgetsBinding.instance.pipelineOwner.ensureSemantics();
+      debugDumpSemanticsTree(DebugSemanticsDumpOrder.traversalOrder);
+      final output = buf.toString();
+      return developer.ServiceExtensionResponse.result(
+        jsonEncode({'ok': true, 'semantics': output}),
+      );
+    });
+
+    // Dump widget tree
+    developer.registerExtension('ext.dosifi.dumpApp', (method, params) async {
+      final buf = StringBuffer();
+      debugPrint = (String? message, {int? wrapWidth}) {
+        if (message != null) buf.writeln(message);
+      };
+      debugDumpApp();
+      final output = buf.toString();
+      return developer.ServiceExtensionResponse.result(
+        jsonEncode({'ok': true, 'widgetTree': output}),
+      );
+    });
   }
 }

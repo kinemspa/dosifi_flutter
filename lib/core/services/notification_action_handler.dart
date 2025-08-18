@@ -365,9 +365,19 @@ class NotificationActionHandler {
   }
 
   int _generateNotificationId(int scheduleId, DateTime date) {
-    final dateString =
-        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}';
-    return int.parse('$scheduleId$dateString') % 2147483647;
+    final dateString = '${date.year.toString().padLeft(4, '0')}'
+        '${date.month.toString().padLeft(2, '0')}'
+        '${date.day.toString().padLeft(2, '0')}'
+        '${date.hour.toString().padLeft(2, '0')}'
+        '${date.minute.toString().padLeft(2, '0')}';
+    final idStr = '$scheduleId$dateString';
+    int id;
+    try {
+      id = int.parse(idStr);
+    } catch (_) {
+      id = idStr.codeUnits.fold(0, (a, b) =e (a * 31 + b) & 0x7fffffff);
+    }
+    return id % 2147483647;
   }
 
   void _navigateToScheduleForDate(DateTime date) {

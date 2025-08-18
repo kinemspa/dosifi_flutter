@@ -36,54 +36,62 @@ class MedicationTypeSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<MedicationType>(
-            value: controller.selectedType,
-            decoration: InputDecoration(
-              hintText: 'Select medication type...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+          Semantics(
+            label: 'Medication Type',
+            button: true,
+            child: DropdownButtonFormField<MedicationType>(
+              value: controller.selectedType,
+              decoration: InputDecoration(
+                hintText: 'Select medication type...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                prefixIcon: const Icon(Icons.medical_services),
               ),
-              filled: true,
-              fillColor: Colors.grey[50],
-              prefixIcon: const Icon(Icons.medical_services),
-            ),
-            items: MedicationType.values
-                .where(
-                  (t) =>
-                      t != MedicationType.cream &&
-                      t != MedicationType.ointment &&
-                      t != MedicationType.spray &&
-                      t != MedicationType.gel,
-                )
-                .map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Row(
-                      children: [
-                        Icon(
-                          MedicationTypeUtils.getMedicationTypeIcon(type),
-                          size: 18,
-                          color: MedicationTypeUtils.getMedicationTypeColor(
-                            type,
-                          ),
+              items: MedicationType.values
+                  .where(
+                    (t) =>
+                        t != MedicationType.cream &&
+                        t != MedicationType.ointment &&
+                        t != MedicationType.spray &&
+                        t != MedicationType.gel,
+                  )
+                  .map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Semantics(
+                        label: type.displayName,
+                        button: true,
+                        child: Row(
+                          children: [
+                            Icon(
+                              MedicationTypeUtils.getMedicationTypeIcon(type),
+                              size: 18,
+                              color: MedicationTypeUtils.getMedicationTypeColor(
+                                type,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(type.displayName),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        Text(type.displayName),
-                      ],
-                    ),
-                  );
-                })
-                .toList(),
-            onChanged: (value) {
-              controller.setSelectedType(value);
-              controller.clearFormFields();
-            },
-            validator: (value) {
-              if (value == null) {
-                return 'Please select medication type';
-              }
-              return null;
-            },
+                      ),
+                    );
+                  })
+                  .toList(),
+              onChanged: (value) {
+                controller.setSelectedType(value);
+                controller.clearFormFields();
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select medication type';
+                }
+                return null;
+              },
+            ),
           ),
         ],
       ),

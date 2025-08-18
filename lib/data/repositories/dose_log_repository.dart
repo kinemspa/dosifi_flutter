@@ -340,8 +340,9 @@ class DoseLogRepository {
     };
 
     for (final result in results) {
-      final status = result['status'] ?? '';
-      final count = int.tryParse(result['count'] ?? '0') ?? 0;
+      final status = (result['status'] ?? '').toString();
+      final raw = result['count'];
+      final count = raw is int ? raw : int.tryParse(raw?.toString() ?? '0') ?? 0;
       stats[status] = count;
     }
 

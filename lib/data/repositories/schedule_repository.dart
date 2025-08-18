@@ -9,14 +9,14 @@ class ScheduleRepository {
   // Create
   Future<int> insertSchedule(Schedule schedule) async {
     try {
-      print('🗄️ [SCHEDULE REPO] Inserting schedule: ${schedule.toMap()}');
+      debugPrint('🗄️ [SCHEDULE REPO] Inserting schedule: ${schedule.toMap()}');
       final db = await _db;
       final result = await db.insert('schedules', schedule.toMap());
-      print('🗄️ [SCHEDULE REPO] Schedule inserted with ID: $result');
+      debugPrint('🗄️ [SCHEDULE REPO] Schedule inserted with ID: $result');
       return result;
     } catch (e, stack) {
-      print('❌ [SCHEDULE REPO] Error inserting schedule: $e');
-      print('❌ [SCHEDULE REPO] Stack trace: $stack');
+      debugPrint('❌ [SCHEDULE REPO] Error inserting schedule: $e');
+      debugPrint('❌ [SCHEDULE REPO] Stack trace: $stack');
       rethrow;
     }
   }

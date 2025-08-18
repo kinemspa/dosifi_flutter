@@ -1,0 +1,15 @@
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "platformName": "Android",
+      "appium:automationName": "UiAutomator2",
+      "appium:deviceName": "emulator-5554",
+      "appium:appPackage": "com.dosifi.dosifi_flutter",
+      "appium:appActivity": ".MainActivity",
+      "appium:noReset": true,
+      "appium:newCommandTimeout": 120
+    },
+    "firstMatch": [ {} ]
+  }
+}
+

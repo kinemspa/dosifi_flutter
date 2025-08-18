@@ -87,10 +87,17 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen>
           _buildSchedulesTab(schedulesAsync),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'add_schedule',
-        onPressed: () => context.navigateToAddSchedule(),
-        child: const Icon(Icons.add),
+      floatingActionButton: Semantics(
+        label: 'Add a new schedule',
+        button: true,
+        child: Tooltip(
+          message: 'Add a new schedule',
+          child: FloatingActionButton(
+            heroTag: 'add_schedule',
+            onPressed: () => context.navigateToAddSchedule(),
+            child: const Icon(Icons.add),
+          ),
+        ),
       ),
     );
   }

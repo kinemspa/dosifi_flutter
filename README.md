@@ -51,9 +51,14 @@ Recent UI updates (2025-08-13)
    - Export capabilities for healthcare providers
 
 ### Planned/Partial Features
-- **Notifications action handling (Updated 2025-08-15)**: Notifications now standardize JSON payloads and wire taps/actions to NotificationActionHandler; deep-link routing to in-app screens can be added next
+- **Notifications action handling (Updated 2025-08-18)**: Notifications standardize JSON payloads and wire taps/actions to NotificationActionHandler; iOS action categories are registered; deep-link routing is available to schedule view on tap
 - **Analytics (Partial)**: Adherence and usage visualization present; needs real data population and more reports
 - **Settings**: Expand preferences, including configurable snooze durations and privacy settings
+
+## Documentation for Agents
+- High-level design: see `F:\Android Apps\dosifi\DesignOutline.md`
+- Technical implementation details: see `F:\Android Apps\dosifi\TECHNICAL_IMPLEMENTATION_GUIDE.md`
+- Agent operations in this repo: see `WARP.md` at repo root
 
 ### Automatic Dose Calculations
 The app now supports automatic dose calculations to ensure users enter correct dosage based on the medication's strength. Users can select the medication and adjust the dose unit, and the app will accurately convert dose amounts between tablets/capsules and mg as necessary.
@@ -95,6 +100,10 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 
 ### Build Fixes (Latest)
 - Fixed analyzer errors in medication form and view screens (missing import for MedicationType, corrected async return type, added info bottom sheet helpers, and balanced widget tree in StockInformationSection).
+- Fixed potential runtime type issue in compliance stats aggregation (COUNT typing).
+- Notification IDs now include minutes to prevent collisions on multiple daily doses.
+- iOS notification categories with action buttons registered.
+- Permission status now reports exact alarm capability explicitly on Android.
 - Re-ran static analysis to confirm zero errors; remaining items are warnings and infos for future cleanup.
 
 ### Theming and Info Buttons (Latest)

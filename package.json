@@ -1,0 +1,21 @@
+{
+  "name": "dosifi-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "description": "E2E Android UI tests for Dosifi using Appium + Mocha + wd",
+  "scripts": {
+    "e2e:bootstrap": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/android_bootstrap.ps1",
+    "appium:start": "appium server -p 4723 --base-path /wd/hub --log-no-colors",
+    "e2e:test": "mocha tests/automation/specs/**/*.spec.js --timeout 180000",
+    "e2e": "start-server-and-test appium:start http-get://127.0.0.1:4723/wd/hub/status e2e:test",
+    "e2e:all": "npm run e2e:bootstrap \u0026\u0026 npm run e2e",
+    "e2e:capture": "node scripts/capture_ui.js"
+  },
+  "devDependencies": {
+    "appium": "^2.19.0",
+    "chai": "^5.1.0",
+    "mocha": "^10.7.3",
+    "start-server-and-test": "^2.0.3",
+    "wd": "^1.14.0"
+  }
+}
