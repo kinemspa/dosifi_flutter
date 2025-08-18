@@ -43,6 +43,10 @@ class MedicationTypeSection extends StatelessWidget {
               value: controller.selectedType,
               decoration: InputDecoration(
                 hintText: 'Select medication type...',
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w400,
+                  color: Colors.grey[600],
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
