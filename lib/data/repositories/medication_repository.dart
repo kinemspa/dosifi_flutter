@@ -87,9 +87,9 @@ class MedicationRepository {
     final expiryDate = DateTime.now().add(Duration(days: daysAhead));
     final List<Map<String, dynamic>> maps = await db.query(
       'medications',
-      where: 'expiry_date <= ? AND expiry_date IS NOT NULL AND is_active = ?',
+      where: 'expiration_date <= ? AND expiration_date IS NOT NULL AND is_active = ?',
       whereArgs: [expiryDate.toIso8601String(), 1],
-      orderBy: 'expiry_date ASC',
+      orderBy: 'expiration_date ASC',
     );
     return List.generate(maps.length, (i) => Medication.fromMap(maps[i]));
   }

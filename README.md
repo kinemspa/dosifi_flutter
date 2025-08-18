@@ -172,6 +172,13 @@ dosifi_flutter/
 
 ## Getting Started
 
+### Android UI E2E Testing (Appium)
+See docs/ANDROID_E2E_TESTING.md for full instructions. Quick start:
+- Build a debug APK: flutter build apk --debug
+- Ensure an emulator is running (emulator-5554) or device connected
+- Install dev deps: npm install
+- Run full workflow: npm run e2e:all
+
 ### Prerequisites
 - Flutter SDK (3.0.0 or later)
 - Dart SDK
@@ -223,9 +230,32 @@ CI/tooling note (2025-08-15): CI runs Flutter 3.32.8 stable. Ensure local Flutte
 
 ---
 
+## Web (experimental)
+As of 2025-08-17, Flutter Web support has been enabled for this project.
+
+Run locally in a browser (Edge/Chrome):
+```bash
+# Option A: Use a built-in web server device
+flutter run -d web-server --web-hostname localhost --web-port 7357
+# then open http://localhost:7357
+
+# Option B: Build static site and serve
+flutter build web --release
+# serve build/web with any static server (IIS, nginx, http-server, dhttpd)
+```
+
+Notes:
+- Web target is primarily for rapid UI review and automated browser-based checks.
+- Some native-only features (e.g., notifications, secure storage) are stubbed or behave differently on Web.
+
+---
+
 2025-08-08 Review Addendum (Code-Verified Notes)
 
 - Notifications: Implemented scheduling with actions; need to wire onDidReceiveNotificationResponse to NotificationActionHandler and standardize payloads (recommend JSON). Use device local timezone instead of hard-coded AU.
 - Database: Encrypted via SQLCipher. backupDatabase should copy dosifi_encrypted.db (current code copies dosifi.db). Replace timestamp-based key generation with cryptographically secure random key generation stored in FlutterSecureStorage.
 - Dependencies: Prefer only sqflite_sqlcipher for DB. Decide on Riverpod code generation or remove riverpod_annotation.
 - Documentation: This README now reflects implemented schedule and inventory features; analytics remains partial.
+
+
+### Maintenance (2025-08-17)\n- Fixed expiring medications query to use 'expiration_date' column (schema-consistent).\n- Corrected timezone initialization alias in NotificationService (tzdata vs tz) for clarity and consistency.
