@@ -29,7 +29,6 @@ class FakeNotificationService implements INotificationService {
         2147483647;
   }
 
-  @override
   Future<Map<String, bool>> getPermissionStatus() async => {
     'notifications': true,
     'exactAlarms': true,
@@ -40,7 +39,6 @@ class FakeNotificationService implements INotificationService {
     calls.add('initialize');
   }
 
-  @override
   Future<bool> requestAndInitialize() async {
     calls.add('requestAndInitialize');
     return true;

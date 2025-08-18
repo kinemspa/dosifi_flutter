@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unnecessary_type_check
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dosifi_flutter/data/models/medication.dart';

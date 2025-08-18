@@ -247,7 +247,7 @@ class _DosifiAppState extends ConsumerState<DosifiApp> with WidgetsBindingObserv
           if (message != null) buf.writeln(message);
         };
         // Ensure semantics are built
-        WidgetsBinding.instance.pipelineOwner.ensureSemantics();
+        SemanticsBinding.instance.ensureSemantics();
         debugDumpSemanticsTree(DebugSemanticsDumpOrder.traversalOrder);
         debugPrint = prev;
         final output = buf.toString();

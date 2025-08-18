@@ -367,8 +367,6 @@ class _MedicationFormScreenRefactoredState
                       : () => _confirmAndSave(
                           context,
                           controller,
-                          baseColor,
-                          summaryContent,
                         ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,

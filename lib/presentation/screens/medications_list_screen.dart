@@ -350,9 +350,9 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
         padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
         backgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.85);
+            return Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.85);
           }
-          return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.55);
+          return Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.55);
         }),
         side: const WidgetStatePropertyAll(BorderSide(width: 0, color: Colors.transparent)),
         shape: WidgetStatePropertyAll(
@@ -366,7 +366,7 @@ class _MedicationsListScreenState extends ConsumerState<MedicationsListScreen> {
         side: WidgetStatePropertyAll(
           BorderSide(
             width: 0.7,
-            color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
         shape: WidgetStatePropertyAll(
