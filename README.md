@@ -228,6 +228,8 @@ For terminal agents working in this repo, see WARP.md at the repository root for
 
 CI/tooling note (2025-08-15): CI runs Flutter 3.32.8 stable. Ensure local Flutter matches for parity.
 
+MCP servers (Android): For device screenshots and automation, see docs/MCP_SETUP.md for setup and usage of the ADB and Appium MCP servers included in tools/mcp/.
+
 ---
 
 ## Web (experimental)
