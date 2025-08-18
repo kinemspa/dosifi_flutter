@@ -26,27 +26,32 @@ class CompactCard extends StatelessWidget {
     final borderColor = (accentColor ?? theme.colorScheme.primary).withValues(
       alpha: 0.10,
     );
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: borderRadius as BorderRadius,
-      child: InkWell(
+    // Apply margin outside the Material so the border hugs the content without an internal gap.
+    return Container(
+      margin: margin,
+      child: Material(
+        color: theme.colorScheme.surface,
         borderRadius: borderRadius as BorderRadius,
-        onTap: onTap,
-        child: Container(
-          margin: margin,
-          padding: padding,
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            border: outlined ? Border.all(color: borderColor, width: 1) : null,
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          borderRadius: borderRadius as BorderRadius,
+          onTap: onTap,
+          child: Container
+            (
+            padding: padding,
+            decoration: BoxDecoration(
+              borderRadius: borderRadius,
+              border: outlined ? Border.all(color: borderColor, width: 1) : null,
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: child,
           ),
-          child: child,
         ),
       ),
     );
