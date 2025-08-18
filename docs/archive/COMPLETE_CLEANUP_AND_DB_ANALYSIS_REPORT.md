@@ -1,4 +1,13 @@
-# Dosifi Flutter - Complete Cleanup & Database Analysis Report
+# Cleanup & DB Analysis (Archived)
+
+Archived from: /COMPLETE_CLEANUP_AND_DB_ANALYSIS_REPORT.md
+Archived on: 2025-08-18
+
+---
+
+# Cleanup & DB Analysis (Stub)
+
+This content is merged into TECHNICAL_DESIGN.md (Database and Maintenance). See docs/INDEX.md for the canonical documentation map.
 
 ## 📋 Executive Summary
 
@@ -170,3 +179,4 @@ The codebase contains **two completely different stock management systems**:
 4. **Migrate** to refactored medication form when ready
 
 The Dosifi Flutter app now has a significantly cleaner codebase with well-documented database architecture, ready for continued development with improved maintainability and performance.
+

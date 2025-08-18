@@ -4,6 +4,11 @@ Dosifi is a comprehensive medication management Flutter application designed to 
 
 ## Features
 
+For complete technical and architectural details, see the new consolidated docs:
+- SYSTEM_DESIGN_AND_ARCHITECTURE.md
+- DEVELOPER_GUIDE.md
+- OPERATIONS_DEBUG_AND_CLEANUP_LOG.md
+
 Recent UI updates (2025-08-13)
 - Medications screen header actions (Info, Filter) are right-aligned and spacing tightened.
 - Global AppBar Info is hidden when on Medications to avoid duplication.
@@ -144,6 +149,8 @@ For example, selecting a 2mg medication with 1 tablet as a dose will automatical
 
 ## Technical Stack
 
+Note on state management: This repo uses manual Riverpod providers (no code generation). If you wish to adopt annotations/codegen, add riverpod_generator and run build_runner; otherwise keep manual providers and omit riverpod_annotation.
+
 - **Framework**: Flutter (Dart)
 - **State Management**: Riverpod
 - **Database**: SQLite with SQLCipher encryption
@@ -182,11 +189,14 @@ dosifi_flutter/
 ## Getting Started
 
 ### Android UI E2E Testing (Appium)
-See docs/ANDROID_E2E_TESTING.md for full instructions. Quick start:
-- Build a debug APK: flutter build apk --debug
-- Ensure an emulator is running (emulator-5554) or device connected
-- Install dev deps: npm install
-- Run full workflow: npm run e2e:all
+See DEVELOPER_GUIDE.md (Build and Test) and docs/ANDROID_E2E_TESTING.md for current guidance.
+
+Tooling install (Node/Appium):
+- Do not commit node_modules/ (ignored). To prepare tooling locally, run:
+```
+npm ci
+```
+in the repo root (where package-lock.json resides) before running E2E scripts.
 
 ### Prerequisites
 - Flutter SDK (3.0.0 or later)
@@ -233,11 +243,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 ## Agent Operations (Warp)
-For terminal agents working in this repo, see WARP.md at the repository root for build/lint/test commands, architecture, and gotchas.
+For terminal agents working in this repo, see OPERATIONS_DEBUG_AND_CLEANUP_LOG.md for ops/debug playbooks and docs/MCP_SETUP.md for MCP setup and usage.
 
 CI/tooling note (2025-08-15): CI runs Flutter 3.32.8 stable. Ensure local Flutter matches for parity.
 
-MCP servers (Android): For device screenshots and automation, see docs/MCP_SETUP.md for setup and usage of the ADB and Appium MCP servers included in tools/mcp/.
+MCP servers (Android): Refer to TECHNICAL_DESIGN.md for automation notes; MCP setup details can be added there if needed.
 
 ---
 

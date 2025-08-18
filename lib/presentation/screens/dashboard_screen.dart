@@ -109,13 +109,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 12),
               _buildNextDoseBanner(context),
               const SizedBox(height: 16),
-              _buildAlertsSummary(context),
-              const SizedBox(height: 16),
-              _buildQuickStats(context),
-              const SizedBox(height: 16),
-              _buildRecentActivities(context),
-              const SizedBox(height: 16),
-              _buildAlerts(context),
+              // _buildAlertsSummary(context), // temporarily removed per request
+              // const SizedBox(height: 16),
+              // _buildQuickStats(context), // remove fake data cards
+              // const SizedBox(height: 16),
+              // _buildRecentActivities(context), // remove section
+              // const SizedBox(height: 16),
+              // _buildAlerts(context), // remove section
               const SizedBox(height: 16),
               _buildQuickActions(context),
               const SizedBox(height: 16),
@@ -472,22 +472,25 @@ class _WelcomeAndTodayContent extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        FilledButton.tonal(
-                          onPressed: () {
-                            context.go(RoutePaths.addSchedule);
-                          },
-                          child: const Text('Add Schedule'),
-                        ),
-                        OutlinedButton(
-                          onPressed: () {
-                            context.go(RoutePaths.addMedication);
-                          },
-                          child: const Text('Add Medication'),
-                        ),
-                      ],
+                    Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        children: [
+                          FilledButton.tonal(
+                            onPressed: () {
+                              context.go(RoutePaths.addSchedule);
+                            },
+                            child: const Text('Add Schedule'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () {
+                              context.go(RoutePaths.addMedication);
+                            },
+                            child: const Text('Add Medication'),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 );

@@ -375,7 +375,7 @@ class NotificationActionHandler {
     try {
       id = int.parse(idStr);
     } catch (_) {
-      id = idStr.codeUnits.fold(0, (a, b) =e (a * 31 + b) & 0x7fffffff);
+      id = idStr.codeUnits.fold(0, (acc, unit) => (acc * 31 + unit) & 0x7fffffff);
     }
     return id % 2147483647;
   }

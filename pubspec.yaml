@@ -20,6 +20,7 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.8.1
+  flutter: ">=3.32.8 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -36,7 +37,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   riverpod: ^2.6.1
   flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
   sqflite_sqlcipher: ^3.2.1
   flutter_secure_storage: ^9.2.4
   encrypt: ^5.0.3

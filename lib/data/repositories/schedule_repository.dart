@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:dosifi_flutter/core/services/database_service.dart';
 import 'package:dosifi_flutter/data/models/schedule.dart';

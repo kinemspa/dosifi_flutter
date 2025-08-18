@@ -1,4 +1,13 @@
-# Dosifi Critical Issues Fix Guide
+# Maintenance Playbooks (Archived)
+
+Archived from: /fix_issues.md
+Archived on: 2025-08-18
+
+---
+
+# Maintenance Playbooks (Stub)
+
+Content was moved to docs/DEVELOPER_GUIDE.md. See docs/INDEX.md for the canonical documentation map.
 
 ## 🔴 Critical Fixes Applied
 
@@ -203,3 +212,4 @@ _logger.info('message');
 
 **Total estimated fix time**: 2-3 hours for manual fixes
 **Automated fixes**: ~15 minutes with dart fix --apply
+

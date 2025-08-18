@@ -1,4 +1,13 @@
-# Dosifi Flutter - Completed Cleanup Summary
+# Cleanup Summary (Archived)
+
+Archived from: /cleanup_completed_summary.md
+Archived on: 2025-08-18
+
+---
+
+# Cleanup Summary (Stub)
+
+This summary has been merged into TECHNICAL_DESIGN.md (Maintenance and Cleanup). See docs/INDEX.md for the canonical documentation map.
 
 ## 🎯 Cleanup Completed Successfully
 
@@ -103,3 +112,4 @@ After migrating to the refactored medication form:
 The codebase is now cleaner, more maintainable, and performs better while preserving all essential functionality. The modular medication form refactoring combined with this cleanup represents a significant improvement to the project's technical health.
 
 **Next steps**: Test the application thoroughly to ensure all functionality works as expected, then proceed with migrating to the refactored medication form for even greater improvements.
+

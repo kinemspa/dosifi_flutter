@@ -1,4 +1,13 @@
-# Navigation Accessibility Report - Dosifi App
+# Navigation Accessibility Report (Archived)
+
+Archived from: /NAVIGATION_ACCESSIBILITY_REPORT.md
+Archived on: 2025-08-18
+
+---
+
+# Navigation Accessibility (Stub)
+
+This report is now merged into TECHNICAL_DESIGN.md (Navigation section). See docs/INDEX.md for the canonical documentation map.
 
 ## Overview
 This report analyzes all implemented screens and features in the Dosifi app to identify what is accessible through navigation and what may be missing from the user interface flow.
@@ -173,3 +182,4 @@ Add 5th tab to bottom navigation:
 
 ### Overall Assessment: 
 The app has excellent navigation structure with only the Reconstitution Calculator missing from the main user flow. This is a high-value feature that should be easily accessible to users.
+

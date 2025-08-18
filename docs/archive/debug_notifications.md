@@ -1,4 +1,13 @@
-# Notification Debugging Guide
+# Notification Debugging (Archived)
+
+Archived from: /debug_notifications.md
+Archived on: 2025-08-18
+
+---
+
+# Notification Debugging (Stub)
+
+This guide has been consolidated into docs/DEVELOPER_GUIDE.md (Troubleshooting). See docs/INDEX.md for the canonical documentation map.
 
 ## Current Status
 ✅ **Instant notifications work**  
@@ -99,3 +108,4 @@ The "Pending Notifications" section should show your scheduled notifications. If
 4. If needed, we can add more specific debugging or try alternative scheduling approaches
 
 The enhanced debugging will help us identify exactly where the issue is occurring!
+

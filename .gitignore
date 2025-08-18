@@ -44,6 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Node tooling (E2E/Appium) should not be committed
+/node_modules/
+
 # Confidential Documentation (Internal Use Only)
 # These files contain proprietary medication tracking algorithms and business logic
 DOSIFI_ARCHITECTURE_MATRIX.md

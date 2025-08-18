@@ -146,9 +146,15 @@ Future<void> main(List<String> args) async {
   String? vmFile;
   for (final a in args) {
     if (a.startsWith('--vm-service-url=')) {
-      wsUrl = a.split('=', 2)[1];
+      final idx = a.indexOf('=');
+      if (idx != -1 && idx + 1 < a.length) {
+        wsUrl = a.substring(idx + 1);
+      }
     } else if (a.startsWith('--vm-service-file=')) {
-      vmFile = a.split('=', 2)[1];
+      final idx = a.indexOf('=');
+      if (idx != -1 && idx + 1 < a.length) {
+        vmFile = a.substring(idx + 1);
+      }
     }
   }
   if (wsUrl == null && vmFile != null) {
